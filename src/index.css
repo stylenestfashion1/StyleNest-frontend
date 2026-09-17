@@ -1,0 +1,450 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant women (&:where([data-gender="women"] *));
+
+/*
+ * StyleNest design system — quiet-luxury editorial.
+ * Sharp 0px corners, hairline borders, serif display + wide-tracked sans.
+ * Gender accents are switched via [data-gender="men" | "women"] on <body>.
+ */
+
+@theme {
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+
+  --color-background: #f9f9f9;
+  --color-foreground: #1b1b1b;
+  --color-card: #ffffff;
+  --color-card-foreground: #1b1b1b;
+  --color-primary: #171717;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f2f2f0;
+  --color-secondary-foreground: #1b1b1b;
+  --color-muted: #f2f2f0;
+  --color-muted-foreground: #7a7975;
+  --color-border: #dadad6;
+  --color-destructive: #b23c2e;
+
+  --color-accent: #4d4d4d;
+  --color-accent-foreground: #ffffff;
+  --color-accent-2: #8c8a6f;
+  --color-accent-3: #b3b198;
+  --color-accent-soft: #f2f1ea;
+
+  --animate-drift: drift 26s ease-in-out infinite;
+  --animate-cart-bounce: cart-bounce 0.55s ease;
+  --animate-shimmer: shimmer 1.6s infinite;
+  --animate-float-soft: float-soft 7s ease-in-out infinite;
+  --animate-rise-in: rise-in 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-hairline-grow: hairline-grow 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @keyframes drift {
+    0% {
+      transform: translate3d(-4%, -2%, 0) scale(1.15) rotate(0deg);
+    }
+    50% {
+      transform: translate3d(4%, 3%, 0) scale(1.25) rotate(4deg);
+    }
+    100% {
+      transform: translate3d(-4%, -2%, 0) scale(1.15) rotate(0deg);
+    }
+  }
+  @keyframes cart-bounce {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    30% {
+      transform: scale(1.35);
+    }
+    60% {
+      transform: scale(0.92);
+    }
+  }
+  @keyframes shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes float-soft {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes rise-in {
+    0% {
+      opacity: 0;
+      transform: translateY(0.6em);
+      filter: blur(6px);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+      filter: blur(0);
+    }
+  }
+  @keyframes hairline-grow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
+[data-gender="men"] {
+  --color-accent: #7a4b28; /* cognac */
+  --color-accent-foreground: #ffffff;
+  --color-accent-2: #3f4a34; /* olive */
+  --color-accent-3: #1b1b1b; /* charcoal */
+  --color-accent-soft: #f1e9df;
+}
+
+[data-gender="women"] {
+  --color-accent: #c97c63; /* terracotta */
+  --color-accent-foreground: #ffffff;
+  --color-accent-2: #d4b483; /* champagne */
+  --color-accent-3: #a9b4a0; /* sage */
+  --color-accent-soft: #f6ece4;
+}
+
+.dark {
+  --color-background: #161512;
+  --color-foreground: #f3f2ef;
+  --color-card: #201f1c;
+  --color-card-foreground: #f3f2ef;
+  --color-primary: #f3f2ef;
+  --color-primary-foreground: #161512;
+  --color-secondary: #26251f;
+  --color-secondary-foreground: #f3f2ef;
+  --color-muted: #26251f;
+  --color-muted-foreground: #aaa89f;
+  --color-border: #34322b;
+  --color-accent: #cbb98a;
+  --color-accent-foreground: #161512;
+  --color-accent-2: #b9a674;
+  --color-accent-3: #ddd3b0;
+  --color-accent-soft: #29271f;
+}
+
+.dark[data-gender="men"],
+.dark [data-gender="men"] {
+  --color-accent: #b7864f;
+  --color-accent-foreground: #161512;
+  --color-accent-2: #8c9c72;
+  --color-accent-3: #ddd3b0;
+  --color-accent-soft: #2c2419;
+}
+
+.dark[data-gender="women"],
+.dark [data-gender="women"] {
+  --color-accent: #dd9c85;
+  --color-accent-foreground: #161512;
+  --color-accent-2: #e0c793;
+  --color-accent-3: #c3cdb9;
+  --color-accent-soft: #2c2420;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    transition:
+      background-color 0.6s ease,
+      color 0.6s ease;
+  }
+
+  h1,
+  h2,
+  h3,
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+  }
+}
+
+@utility label-xs {
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+@utility btn-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.75rem;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  border: 1px solid var(--color-primary);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    box-shadow 0.45s ease;
+  &:hover {
+    background: transparent;
+    color: var(--color-primary);
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+  }
+  &:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+@utility btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.9rem 1.75rem;
+  background: transparent;
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+  font-size: 0.6875rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.45s ease,
+    color 0.45s ease,
+    border-color 0.45s ease;
+  &:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-accent-foreground);
+  }
+  &:disabled {
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+@utility field {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.65rem 0;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.35s ease;
+  &:focus {
+    border-color: var(--color-accent);
+  }
+}
+
+/* Hides the native dropdown-arrow indicator Chrome/Edge render on an
+   <input list="..."> (datalist) field -- it visually implies a fixed
+   closed set of choices, which is misleading once the input is free text
+   with suggestions rather than an enforced list (see ColorInput). */
+@utility no-list-indicator {
+  &::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
+}
+
+@utility link-underline {
+  position: relative;
+  /* Swap the browser's raw default focus ring (thick, blue, off-brand --
+     e.g. the outline that showed on the footer's Legal link) for a thin
+     on-brand one. Only :focus-visible, so this never appears on a mouse
+     click, only real keyboard navigation -- accessibility is kept, not
+     reduced. */
+  outline: none;
+  &:focus-visible {
+    outline: 1px solid var(--color-accent);
+    outline-offset: 3px;
+  }
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    height: 1px;
+    width: 0;
+    background: var(--color-accent);
+    transition: width 0.4s ease;
+  }
+  &:hover::after {
+    width: 100%;
+  }
+}
+
+@utility hairline-card {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  transition:
+    box-shadow 0.45s ease,
+    transform 0.45s ease;
+  &:hover {
+    box-shadow: 0 8px 20px rgb(0 0 0 / 0.08);
+  }
+}
+
+@utility reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@utility reveal-in {
+  opacity: 1;
+  transform: none;
+}
+
+@utility zoom-media {
+  overflow: hidden;
+  & img {
+    transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  &:hover img {
+    transform: scale(1.05);
+  }
+}
+
+@utility drift-layer {
+  animation: drift 26s ease-in-out infinite;
+}
+
+@utility cart-bounce {
+  animation: cart-bounce 0.55s ease;
+}
+
+@utility skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-muted);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.6), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image: radial-gradient(rgb(0 0 0 / 0.22) 0.5px, transparent 0.6px);
+    background-size: 3px 3px;
+    mix-blend-mode: overlay;
+  }
+}
+
+@keyframes sheen-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+  }
+}
+
+@utility sheen {
+  position: relative;
+  overflow: hidden;
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 45%;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.28), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+    pointer-events: none;
+  }
+  &:hover::before {
+    animation: sheen-sweep 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@utility float-soft {
+  animation: float-soft 7s ease-in-out infinite;
+}
+
+@utility rise-in {
+  animation: rise-in 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility lift-hover {
+  transition:
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.55s ease;
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 22px 48px rgb(0 0 0 / 0.16);
+  }
+}
+
+@utility hairline-grow {
+  transform-origin: left;
+  animation: hairline-grow 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 350, "GRAD" 0, "opsz" 24;
+  font-size: 22px;
+  line-height: 1;
+}
