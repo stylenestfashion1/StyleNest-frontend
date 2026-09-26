@@ -7,17 +7,12 @@ const smoothstep = (edge0, edge1, x) => {
   return t * t * (3 - 2 * t);
 };
 
-// The source photography here is portrait-oriented editorial fashion
-// imagery (roughly 4:5). On a laptop/desktop viewport this stage is full
-// window height *and* full window width -- e.g. ~1920x950 is a ~2:1
-// landscape box -- so object-cover has to crop a 4:5 portrait down to less
-// than half its own height to fill it, which reads as "excessively
-// zoomed/cropped". On a phone viewport the box is naturally tall/narrow
-// already, close to the source ratio, so no correction is needed there.
-// Capping the stage's rendered width keeps the crop within a normal "wide
-// hero" ratio on desktop instead of an extreme one, while never doing
-// anything on viewports that are already under this ratio.
-const MAX_STAGE_ASPECT = 1.4;
+// Source photography for this component is wide/landscape (16:9, see the
+// upload guidance in AdminScrollImages) specifically so the stage can run
+// genuinely full-bleed -- full window width AND height -- on every
+// viewport, phone through ultrawide desktop, without the aggressive
+// portrait-image cropping an earlier version of this component had to
+// guard against.
 
 const ScrollExpand = ({
   src = '',
@@ -125,15 +120,6 @@ const ScrollExpand = ({
       if (stageH <= 0) return;
       stage.style.height = `${stageH}px`;
       track.style.height = `${stageH * (1 + Math.max(0, c.scrollDistance) + Math.max(0, c.holdDistance))}px`;
-
-      const cappedWidth = stageH * MAX_STAGE_ASPECT;
-      if (root.clientWidth > cappedWidth) {
-        stage.style.maxWidth = `${cappedWidth}px`;
-        stage.style.marginInline = 'auto';
-      } else {
-        stage.style.maxWidth = '';
-        stage.style.marginInline = '';
-      }
 
       const w = root.clientWidth || stageH;
       stage.style.setProperty('--se-title-size', `${clamp(w * 0.075, 20, 84)}px`);

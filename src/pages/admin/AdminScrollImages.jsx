@@ -124,7 +124,11 @@ function SlotCard({ gender, step, imageUrl, onApply, onReset }) {
           </button>
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-          Recommended: 1920 × 1080px (16:9). Minimum: 1280 × 720px.
+          Recommended: 2400 × 1350px (16:9). Minimum: 1920 × 1080px. This
+          image runs edge-to-edge on every screen size, phone through
+          ultrawide desktop -- keep the subject centered with some room on
+          both sides, since the far left/right can crop away on very wide
+          or very narrow screens.
         </p>
       </div>
 
