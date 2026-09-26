@@ -210,16 +210,30 @@ function deriveFromTokens(upperName) {
 // reached for a name that contains any real color word -- see deriveFromTokens above.
 const FALLBACK_HEX = "#999999";
 
-function resolveSwatchHex(color) {
+/**
+ * Resolves a color name to its predefined hex ONLY if it's actually recognized (exact/compound/
+ * alias match, or derivable from a known hue + modifier word) -- returns null for anything else,
+ * case-insensitive and whitespace-trimmed. This is the "is this a known standard color" check:
+ * used by the admin's color editor to decide whether typing a new color name should replace the
+ * currently selected exact shade. A name that resolves to null here must NEVER overwrite a shade
+ * the admin picked (or that was already saved) on purpose -- see VariantManager's
+ * ColorGroupEditForm. getSwatchColor below is for rendering a swatch, which always needs *some*
+ * hex; this is for that judgment call, which must be able to say "no, I don't recognize this".
+ */
+export function resolveKnownColorHex(color) {
   const trimmed = color?.trim().toUpperCase();
-  if (!trimmed) return FALLBACK_HEX;
+  if (!trimmed) return null;
 
   const aliased = COLOR_ALIASES[trimmed] ?? trimmed;
 
   if (BASE_COLOR_HEX[aliased]) return BASE_COLOR_HEX[aliased];
   if (COMPOUND_COLOR_HEX[aliased]) return COMPOUND_COLOR_HEX[aliased];
 
-  return deriveFromTokens(aliased) ?? FALLBACK_HEX;
+  return deriveFromTokens(aliased);
+}
+
+function resolveSwatchHex(color) {
+  return resolveKnownColorHex(color) ?? FALLBACK_HEX;
 }
 
 /** variant.colorHex (an exact, admin-set shade) wins when present; otherwise resolves the color name to a swatch (see module doc above). */

@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import * as adminApi from "../../api/admin";
 import { useToast } from "../../context/ToastContext";
-import { getSwatchColor } from "../../utils/swatchColor";
+import { getSwatchColor, resolveKnownColorHex } from "../../utils/swatchColor";
 import { getSizeLabel, sizesForCategory } from "../../utils/sizeLabel";
 import ImageUploadManager from "./ImageUploadManager";
 
@@ -39,6 +39,7 @@ export default function VariantManager({ productId, categoryName, variants, onCh
   const [expandedImages, setExpandedImages] = useState(null);
   const [editing, setEditing] = useState(null);
   const [editingColor, setEditingColor] = useState(null);
+  const [addingSizeFor, setAddingSizeFor] = useState(null);
 
   // Root cause of the "Jeans 28 -> XS" bug: this component can mount
   // before `categoryName` has resolved (the parent's category list is a
@@ -134,6 +135,12 @@ export default function VariantManager({ productId, categoryName, variants, onCh
               </span>
               <span className="flex gap-4">
                 <button
+                  onClick={() => setAddingSizeFor(addingSizeFor === group.color ? null : group.color)}
+                  className="label-xs link-underline"
+                >
+                  {addingSizeFor === group.color ? "Close" : "Add Size"}
+                </button>
+                <button
                   onClick={() => setEditingColor(editingColor === group.color ? null : group.color)}
                   className="label-xs link-underline"
                 >
@@ -147,6 +154,16 @@ export default function VariantManager({ productId, categoryName, variants, onCh
                 </button>
               </span>
             </div>
+
+            {addingSizeFor === group.color && (
+              <AddSizeForm
+                productId={productId}
+                categoryName={categoryName}
+                group={group}
+                onSaved={() => { setAddingSizeFor(null); onChanged(); }}
+                onCancel={() => setAddingSizeFor(null)}
+              />
+            )}
 
             {editingColor === group.color && (
               <ColorGroupEditForm
@@ -272,14 +289,123 @@ function VariantEditForm({ variant, categoryName, onSaved, onCancel }) {
   );
 }
 
+// Adds one new size to an EXISTING color group without retyping the color
+// -- color/colorHex come straight from the group the admin already has
+// open, not a free-text field, so there is no way this accidentally
+// creates a second, mismatched color group for what was meant to be the
+// same color (the risk ColorGroupEditForm's duplicate-color check exists
+// to catch). Already-used sizes for this color are filtered out of the
+// dropdown so the same size can't be added twice by mistake.
+function AddSizeForm({ productId, categoryName, group, onSaved, onCancel }) {
+  const { notify } = useToast();
+  const allSizes = sizesForCategory(categoryName);
+  const usedSizes = new Set(group.variants.map((v) => v.size));
+  const availableSizes = allSizes.filter((s) => !usedSizes.has(s.value));
+  const [size, setSize] = useState(availableSizes[0]?.value ?? "");
+  const [stock, setStock] = useState(0);
+
+  // Same defensive resync as the top-level Add form above, in case
+  // categoryName resolves after this form's first render.
+  useEffect(() => {
+    if (availableSizes.length && !availableSizes.some((s) => s.value === size)) {
+      setSize(availableSizes[0].value);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryName]);
+
+  const addSize = useMutation({
+    mutationFn: () =>
+      adminApi.createVariant(productId, {
+        color: group.color,
+        colorHex: group.colorHex || null,
+        size,
+        stock: Number(stock),
+      }),
+    onSuccess: () => {
+      notify(`${getSizeLabel(size)} added to ${group.color}`, "success");
+      onSaved();
+    },
+    onError: (err) => notify(err.message, "error"),
+  });
+
+  if (availableSizes.length === 0) {
+    return (
+      <div className="hairline-card flex flex-wrap items-center justify-between gap-4 p-5 text-xs text-muted-foreground">
+        Every available size is already added for {group.color}.
+        <button type="button" onClick={onCancel} className="label-xs link-underline">
+          Close
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        addSize.mutate();
+      }}
+      className="hairline-card flex flex-wrap items-end gap-4 p-5"
+    >
+      <div className="w-full text-xs text-muted-foreground">
+        Adding a new size to <span className="font-semibold text-foreground">{group.color}</span> -- color and photos stay exactly as they are.
+      </div>
+      <label className="block">
+        <span className="label-xs text-muted-foreground">Size</span>
+        <select value={size} onChange={(e) => setSize(e.target.value)} className="field mt-2">
+          {availableSizes.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="block">
+        <span className="label-xs text-muted-foreground">Stock</span>
+        <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} className="field mt-2 w-24" />
+      </label>
+      <button disabled={addSize.isPending} className="btn-solid">
+        {addSize.isPending ? "Adding..." : "Add size"}
+      </button>
+      <button type="button" onClick={onCancel} className="label-xs text-muted-foreground">
+        Cancel
+      </button>
+    </form>
+  );
+}
+
 // Color-GROUP level edit: renames every existing size of this color in one operation. This is
 // the ONLY place a color can be changed -- individual variant rows no longer expose a color
 // field (see VariantEditForm above). Typing a color that already exists on this product as a
 // DIFFERENT group is rejected with a clear error rather than silently merging the two groups.
 function ColorGroupEditForm({ productId, group, onSaved, onCancel }) {
   const { notify } = useToast();
+  // Seeded from the group's own PERSISTED values -- never a generic/default shade. This is the
+  // fix for "Edit Color doesn't show the actual saved shade": the old code always started
+  // newColorHex at "", which silently threw away group.colorHex and showed a name-derived
+  // (or previously-typed) shade instead of what's actually in the database.
   const [newColor, setNewColor] = useState(group.color);
-  const [newColorHex, setNewColorHex] = useState("");
+  const [newColorHex, setNewColorHex] = useState(group.colorHex || "");
+
+  // Auto-detects a recognized standard color name (NAVY, DARK BLUE, ...) as the admin retypes
+  // the color field, and switches the shade to that color's predefined hex -- e.g. typing NAVY
+  // while a custom "yellow" shade is currently selected replaces it with NAVY's predefined
+  // shade, per spec. Fires ONLY on an actual change to the name (the ref starts at the
+  // group's own color, so this never fires on mount and never clobbers the persisted shade
+  // this form just loaded above). An unrecognized/custom name (resolveKnownColorHex returns
+  // null) never touches the current shade, so a deliberately-picked custom shade for a custom
+  // name is always preserved -- see utils/swatchColor.js.
+  const previousColorRef = useRef(group.color);
+  useEffect(() => {
+    if (newColor === previousColorRef.current) return;
+    previousColorRef.current = newColor;
+    const known = resolveKnownColorHex(newColor);
+    if (known) setNewColorHex(known);
+  }, [newColor]);
+
+  const isUnchanged =
+    newColor.trim().toUpperCase() === group.color.trim().toUpperCase() &&
+    (newColorHex || "").toUpperCase() === (group.colorHex || "").toUpperCase();
 
   const rename = useMutation({
     mutationFn: () =>
@@ -300,6 +426,13 @@ function ColorGroupEditForm({ productId, group, onSaved, onCancel }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        // Nothing actually changed -- don't hit the API just to have it report back that
+        // nothing changed, and never show a misleading "Updated N sizes" message for a save
+        // that changed zero sizes.
+        if (isUnchanged) {
+          notify("No changes detected.", "default");
+          return;
+        }
         rename.mutate();
       }}
       className="hairline-card flex flex-wrap items-end gap-4 p-5"
@@ -310,7 +443,7 @@ function ColorGroupEditForm({ productId, group, onSaved, onCancel }) {
       </div>
       <ColorInput value={newColor} onChange={setNewColor} />
       <ColorHexPicker color={newColor} colorHex={newColorHex} onChange={setNewColorHex} />
-      <button disabled={rename.isPending || !newColor.trim()} className="btn-solid">
+      <button disabled={rename.isPending || !newColor.trim() || isUnchanged} className="btn-solid">
         {rename.isPending ? "Saving..." : "Save color"}
       </button>
       <button type="button" onClick={onCancel} className="label-xs text-muted-foreground">
