@@ -8,8 +8,9 @@ import * as wishlistApi from "../api/wishlist";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useGender } from "../context/GenderContext";
+import { useCurrency } from "../context/CurrencyContext";
 import { useGuestCart } from "../context/GuestCartContext";
-import { formatPrice, formatDiscountPercent } from "../utils/format";
+import { formatPrice, formatDiscountPercent, resolveProductPrice } from "../utils/format";
 import { getSwatchColor } from "../utils/swatchColor";
 import { getSizeLabel } from "../utils/sizeLabel";
 import { PageFade, Reveal } from "../components/Reveal";
@@ -26,6 +27,7 @@ export default function ProductDetails() {
   const { isAuthenticated } = useAuth();
   const { notify } = useToast();
   const { setGender } = useGender();
+  const { currency } = useCurrency();
   const guestCart = useGuestCart();
   const queryClient = useQueryClient();
 
@@ -103,8 +105,10 @@ export default function ProductDetails() {
   const { data: wishlist } = useQuery({ queryKey: ["wishlist"], queryFn: wishlistApi.getWishlist, enabled: isAuthenticated });
   const saved = wishlist?.items?.some((i) => i.productId === Number(id)) ?? false;
 
+  const activePrice = product ? resolveProductPrice(product, currency) : null;
+
   const addToCart = useMutation({
-    mutationFn: () => cartApi.addToCart({ productVariantId: activeVariant.id, quantity }),
+    mutationFn: () => cartApi.addToCart({ productVariantId: activeVariant.id, quantity, currency }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       window.dispatchEvent(new Event("stylenest:cart-bump"));
@@ -130,6 +134,10 @@ export default function ProductDetails() {
       notify("Please select a color and size", "error");
       return;
     }
+    if (!activePrice) {
+      notify(`This product is not available in ${currency} yet`, "error");
+      return;
+    }
     if (!isAuthenticated) {
       guestCart.addItem(
         {
@@ -138,7 +146,7 @@ export default function ProductDetails() {
           productName: product.name,
           color: activeVariant.color,
           size: activeVariant.size,
-          price: product.discountPrice ?? product.price,
+          price: activePrice.discountPrice ?? activePrice.regularPrice,
           stock: activeVariant.stock,
           imageUrl: gallery[0]?.imageUrl ?? product.thumbnailUrl,
         },
@@ -155,8 +163,9 @@ export default function ProductDetails() {
   if (productQuery.isLoading) return <LoadingState label="Loading product" />;
   if (productQuery.isError || !product) return <ErrorState message="Product not found." />;
 
-  const hasDiscount = product.discountPrice != null && product.discountPrice < product.price;
+  const hasDiscount = activePrice?.discountPrice != null && activePrice.discountPrice < activePrice.regularPrice;
   const outOfStock = activeVariant && activeVariant.stock <= 0;
+  const unavailableInCurrency = !activePrice;
 
   return (
     <PageFade>
@@ -203,16 +212,22 @@ export default function ProductDetails() {
           <div>
             <Reveal>
               <h1 className="text-[clamp(1.8rem,3.4vw,2.6rem)] leading-tight">{product.name}</h1>
-              <div className="mt-3 flex flex-wrap items-baseline gap-3">
-                <span className={`text-lg ${hasDiscount ? "text-accent" : ""}`}>{formatPrice(hasDiscount ? product.discountPrice : product.price)}</span>
-                {hasDiscount && (
-                  <>
-                    <span className="text-sm text-muted-foreground line-through">{formatPrice(product.price)}</span>
-                    <span className="label-xs bg-accent px-2 py-1 text-accent-foreground">Sale</span>
-                  </>
-                )}
-              </div>
-              {hasDiscount && <p className="label-xs mt-1.5 text-accent">{formatDiscountPercent(product.price, product.discountPrice)}</p>}
+              {activePrice ? (
+                <div className="mt-3 flex flex-wrap items-baseline gap-3">
+                  <span className={`text-lg ${hasDiscount ? "text-accent" : ""}`}>
+                    {formatPrice(hasDiscount ? activePrice.discountPrice : activePrice.regularPrice, currency)}
+                  </span>
+                  {hasDiscount && (
+                    <>
+                      <span className="text-sm text-muted-foreground line-through">{formatPrice(activePrice.regularPrice, currency)}</span>
+                      <span className="label-xs bg-accent px-2 py-1 text-accent-foreground">Sale</span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p className="label-xs mt-3 text-muted-foreground">Not available in {currency} yet</p>
+              )}
+              {hasDiscount && <p className="label-xs mt-1.5 text-accent">{formatDiscountPercent(activePrice.regularPrice, activePrice.discountPrice)}</p>}
               {product.shortDescription && <p className="mt-4 text-sm text-muted-foreground">{product.shortDescription}</p>}
             </Reveal>
 
@@ -283,10 +298,10 @@ export default function ProductDetails() {
             </div>
 
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-              <button className="btn-solid flex-1" disabled={outOfStock || addToCart.isPending} onClick={() => handleAddToBag(false)}>
+              <button className="btn-solid flex-1" disabled={outOfStock || unavailableInCurrency || addToCart.isPending} onClick={() => handleAddToBag(false)}>
                 {addToCart.isPending ? "Adding..." : addToCart.isSuccess ? "Added to bag" : "Add to bag"}
               </button>
-              <button className="btn-outline flex-1" disabled={outOfStock} onClick={() => handleAddToBag(true)}>
+              <button className="btn-outline flex-1" disabled={outOfStock || unavailableInCurrency} onClick={() => handleAddToBag(true)}>
                 Buy now
               </button>
               <button

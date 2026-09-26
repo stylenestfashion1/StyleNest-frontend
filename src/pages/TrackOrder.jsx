@@ -114,7 +114,7 @@ export default function TrackOrder() {
                     <span>
                       {item.productName} × {item.quantity}
                     </span>
-                    <span>{formatPrice(item.subtotal)}</span>
+                    <span>{formatPrice(item.subtotal, order.currency)}</span>
                   </div>
                 ))}
               </div>

@@ -132,7 +132,7 @@ export default function Account() {
                           <p className="mt-2 text-xs text-muted-foreground">{formatDate(o.createdAt)}</p>
                         </div>
                         <StatusPill status={o.orderStatus} />
-                        <span className="text-sm">{formatPrice(o.totalAmount)}</span>
+                        <span className="text-sm">{formatPrice(o.totalAmount, o.currency)}</span>
                       </Link>
                     </Reveal>
                   ))}

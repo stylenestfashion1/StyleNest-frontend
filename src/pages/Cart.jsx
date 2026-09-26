@@ -10,10 +10,12 @@ import ErrorState from "../components/ErrorState";
 import BackButton from "../components/BackButton";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
+import { useCurrency } from "../context/CurrencyContext";
 import { useGuestCart } from "../context/GuestCartContext";
 
 export default function Cart() {
   const { isAuthenticated } = useAuth();
+  const { currency } = useCurrency();
   const guestCart = useGuestCart();
   const queryClient = useQueryClient();
   const { notify } = useToast();
@@ -36,9 +38,12 @@ export default function Cart() {
     onError: (err) => notify(err.message, "error"),
   });
 
-  // Registered: server-authoritative cart (react-query). Guest: local
-  // context, shaped to match the same {items, totalPrice} contract so the
-  // JSX below doesn't need to branch item-by-item.
+  // Registered: server-authoritative cart (react-query), which carries its
+  // own frozen currency. Guest: local context, shaped to match the same
+  // {items, totalPrice} contract so the JSX below doesn't need to branch
+  // item-by-item -- guest items are always priced in the site's currently
+  // active currency (switching currency clears the guest cart, see
+  // CurrencyToggle).
   const cart = isAuthenticated
     ? serverCart
     : {
@@ -52,7 +57,10 @@ export default function Cart() {
           subTotal: i.price * i.quantity,
         })),
         totalPrice: guestCart.totalPrice,
+        currency,
       };
+
+  const activeCurrency = isAuthenticated ? cart?.currency ?? currency : currency;
 
   function handleUpdateQuantity(cartItemId, quantity) {
     if (isAuthenticated) {
@@ -135,7 +143,7 @@ export default function Cart() {
                           <Plus className="h-3 w-3" />
                         </button>
                       </div>
-                      <span className="text-sm">{formatPrice(item.subTotal)}</span>
+                      <span className="text-sm">{formatPrice(item.subTotal, activeCurrency)}</span>
                     </div>
                   </div>
                 </div>
@@ -147,12 +155,12 @@ export default function Cart() {
             <div className="hairline-card p-6">
               <h2 className="text-xl">Order Summary</h2>
               <dl className="mt-6 space-y-3 text-sm">
-                <Row label="Subtotal" value={formatPrice(cart.totalPrice)} />
+                <Row label="Subtotal" value={formatPrice(cart.totalPrice, activeCurrency)} />
                 <Row label="Shipping" value="Calculated at checkout" />
               </dl>
               <div className="mt-6 flex items-baseline justify-between border-t pt-5">
                 <span className="label-xs">Total</span>
-                <span className="display text-xl">{formatPrice(cart.totalPrice)}</span>
+                <span className="display text-xl">{formatPrice(cart.totalPrice, activeCurrency)}</span>
               </div>
               <Link to="/checkout" className="btn-solid mt-8 w-full">
                 Checkout

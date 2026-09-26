@@ -19,10 +19,21 @@ const EMPTY = {
   fabric: "",
   careInstructions: "",
   hsnCode: "",
+  // Admin-only internal identification code. Never present on
+  // productQuery's response (see getProductJeansCode below for why) --
+  // loaded separately and merged in once it arrives.
+  jeansCode: "",
   featured: false,
   trending: false,
   active: true,
   categoryId: "",
+  // International (USD) pricing -- completely independent of the INR
+  // fields above, never auto-derived from them. Absent/unconfigured until
+  // the admin explicitly checks "Enable international pricing" and saves.
+  internationalPricingEnabled: false,
+  usdRegularPrice: "",
+  usdDiscountPrice: "",
+  usdOnSale: false,
 };
 
 export default function AdminProductForm() {
@@ -37,12 +48,21 @@ export default function AdminProductForm() {
 
   const productQuery = useQuery({ queryKey: ["admin", "product", id], queryFn: () => adminApi.getAdminProduct(id), enabled: !isNew });
   const variantsQuery = useQuery({ queryKey: ["admin", "variants", id], queryFn: () => productsApi.getProductVariants(id), enabled: !isNew });
+  // Separate call: jeansCode deliberately isn't on getAdminProduct's
+  // response (see api/admin.js) since that DTO is shared with the public
+  // storefront API.
+  const jeansCodeQuery = useQuery({
+    queryKey: ["admin", "product", id, "jeansCode"],
+    queryFn: () => adminApi.getProductJeansCode(id),
+    enabled: !isNew,
+  });
 
   const [loadedForm, setLoadedForm] = useState(null);
 
   useEffect(() => {
     if (productQuery.data) {
       const p = productQuery.data;
+      const usdEntry = p.prices?.find((pr) => pr.currency === "USD") ?? null;
       const next = {
         name: p.name ?? "",
         shortDescription: p.shortDescription ?? "",
@@ -53,15 +73,30 @@ export default function AdminProductForm() {
         fabric: p.fabric ?? "",
         careInstructions: p.careInstructions ?? "",
         hsnCode: p.hsnCode ?? "",
+        jeansCode: "",
         featured: p.featured ?? false,
         trending: p.trending ?? false,
         active: p.active ?? true,
         categoryId: categories?.find((c) => c.name === p.categoryName)?.id ?? "",
+        internationalPricingEnabled: usdEntry != null,
+        usdRegularPrice: usdEntry?.regularPrice ?? "",
+        usdDiscountPrice: usdEntry?.discountPrice ?? "",
+        usdOnSale: usdEntry?.discountPrice != null,
       };
       setForm(next);
       setLoadedForm(next);
     }
   }, [productQuery.data, categories]);
+
+  // Merged in once it arrives, into both form and loadedForm so isDirty
+  // doesn't false-positive on a field the admin never touched.
+  useEffect(() => {
+    if (jeansCodeQuery.data) {
+      const code = jeansCodeQuery.data.jeansCode ?? "";
+      setForm((f) => ({ ...f, jeansCode: code }));
+      setLoadedForm((f) => (f ? { ...f, jeansCode: code } : f));
+    }
+  }, [jeansCodeQuery.data]);
 
   const isDirty = loadedForm !== null && JSON.stringify(form) !== JSON.stringify(loadedForm);
 
@@ -77,14 +112,24 @@ export default function AdminProductForm() {
 
   const save = useMutation({
     mutationFn: () => {
-      const { onSale, ...rest } = form;
+      const { onSale, internationalPricingEnabled, usdRegularPrice, usdDiscountPrice, usdOnSale, ...rest } = form;
       const payload = {
         ...rest,
         price: Number(form.price),
         discountPrice: onSale && form.discountPrice !== "" ? Number(form.discountPrice) : null,
         categoryId: Number(form.categoryId),
         hsnCode: form.hsnCode !== "" ? form.hsnCode : null,
+        jeansCode: form.jeansCode.trim() !== "" ? form.jeansCode.trim() : null,
       };
+      if (internationalPricingEnabled) {
+        payload.internationalPrice = {
+          regularPrice: Number(usdRegularPrice),
+          discountPrice: usdOnSale && usdDiscountPrice !== "" ? Number(usdDiscountPrice) : null,
+        };
+        payload.clearInternationalPricing = false;
+      } else {
+        payload.clearInternationalPricing = true;
+      }
       return isNew ? adminApi.createProduct(payload) : adminApi.updateProduct(id, payload);
     },
     onSuccess: (data) => {
@@ -110,6 +155,19 @@ export default function AdminProductForm() {
             notify("Sale price must be lower than the regular price.", "error");
             return;
           }
+          if (form.internationalPricingEnabled && form.usdRegularPrice === "") {
+            notify("Enter an international regular price, or disable international pricing.", "error");
+            return;
+          }
+          if (
+            form.internationalPricingEnabled &&
+            form.usdOnSale &&
+            form.usdDiscountPrice !== "" &&
+            Number(form.usdDiscountPrice) >= Number(form.usdRegularPrice)
+          ) {
+            notify("International sale price must be lower than the international regular price.", "error");
+            return;
+          }
           save.mutate();
         }}
         className="hairline-card mt-8 grid grid-cols-1 gap-6 p-6 sm:grid-cols-2"
@@ -126,6 +184,10 @@ export default function AdminProductForm() {
             ))}
           </select>
         </label>
+
+        <div className="sm:col-span-2">
+          <p className="label-xs text-accent">India pricing (INR)</p>
+        </div>
         <Field label="Price" type="number" value={form.price} onChange={(v) => setForm((f) => ({ ...f, price: v }))} required />
         <div className="block">
           <label className="flex items-center gap-2 text-sm">
@@ -158,8 +220,80 @@ export default function AdminProductForm() {
             </div>
           )}
         </div>
+
+        <div className="sm:col-span-2 border-t pt-6">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.internationalPricingEnabled}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  internationalPricingEnabled: e.target.checked,
+                  usdRegularPrice: e.target.checked ? f.usdRegularPrice : "",
+                  usdDiscountPrice: e.target.checked ? f.usdDiscountPrice : "",
+                  usdOnSale: e.target.checked ? f.usdOnSale : false,
+                }))
+              }
+            />
+            <span className="label-xs text-accent">Enable international pricing (USD)</span>
+          </label>
+          <p className="label-xs mt-1.5 text-muted-foreground">
+            Set independently of the India price above -- never derived from it. Uncheck and save to remove international pricing.
+          </p>
+
+          {form.internationalPricingEnabled && (
+            <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <Field
+                label="International price (USD)"
+                type="number"
+                value={form.usdRegularPrice}
+                onChange={(v) => setForm((f) => ({ ...f, usdRegularPrice: v }))}
+                required
+              />
+              <div className="block">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.usdOnSale}
+                    onChange={(e) => setForm((f) => ({ ...f, usdOnSale: e.target.checked, usdDiscountPrice: e.target.checked ? f.usdDiscountPrice : "" }))}
+                  />
+                  On Sale (USD)
+                </label>
+                {form.usdOnSale && (
+                  <div className="mt-3">
+                    <span className="label-xs text-muted-foreground">International sale price</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.usdDiscountPrice}
+                      onChange={(e) => setForm((f) => ({ ...f, usdDiscountPrice: e.target.value }))}
+                      className="field mt-2"
+                      placeholder="Must be lower than international price"
+                    />
+                    {form.usdRegularPrice && form.usdDiscountPrice && Number(form.usdDiscountPrice) >= Number(form.usdRegularPrice) && (
+                      <p className="mt-1.5 text-xs text-destructive">Sale price should be lower than the international regular price.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <Field label="Fabric" value={form.fabric} onChange={(v) => setForm((f) => ({ ...f, fabric: v }))} />
         <Field label="HSN/SAC Code" value={form.hsnCode} onChange={(v) => setForm((f) => ({ ...f, hsnCode: v }))} />
+        <div className="block">
+          <Field
+            label="Jeans Code"
+            value={form.jeansCode}
+            onChange={(v) => setForm((f) => ({ ...f, jeansCode: v }))}
+            placeholder="Enter internal jeans code (optional)"
+          />
+          <p className="label-xs mt-1.5 text-muted-foreground">
+            Internal only -- admin search, never shown to customers.
+          </p>
+        </div>
         <Field label="Short description" value={form.shortDescription} onChange={(v) => setForm((f) => ({ ...f, shortDescription: v }))} />
         <TextArea label="Description" value={form.description} onChange={(v) => setForm((f) => ({ ...f, description: v }))} className="sm:col-span-2" />
         <TextArea label="Care instructions" value={form.careInstructions} onChange={(v) => setForm((f) => ({ ...f, careInstructions: v }))} className="sm:col-span-2" />
@@ -211,11 +345,18 @@ export default function AdminProductForm() {
   );
 }
 
-function Field({ label, value, onChange, type = "text", required }) {
+function Field({ label, value, onChange, type = "text", required, placeholder }) {
   return (
     <label className="block">
       <span className="label-xs text-muted-foreground">{label}</span>
-      <input type={type} required={required} value={value} onChange={(e) => onChange(e.target.value)} className="field mt-2" />
+      <input
+        type={type}
+        required={required}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="field mt-2"
+      />
     </label>
   );
 }

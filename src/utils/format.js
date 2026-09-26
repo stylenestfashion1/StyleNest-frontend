@@ -1,5 +1,13 @@
-export function formatPrice(value) {
+// currency defaults to "INR" so every pre-existing call site (which never
+// passed a second argument) keeps behaving exactly as before.
+export function formatPrice(value, currency = "INR") {
   if (value === null || value === undefined) return "";
+  if (currency === "USD") {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(value);
+  }
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
@@ -25,4 +33,17 @@ export function discountPercent(originalPrice, salePrice) {
 export function formatDiscountPercent(originalPrice, salePrice) {
   const pct = discountPercent(originalPrice, salePrice);
   return pct === null ? null : `${pct.toFixed(2)}% OFF`;
+}
+
+// Picks the price entry for the given currency out of a ProductResponse's
+// `prices[]` (see backend ProductPrice/ProductPricingService) -- INR falls
+// back to the product's own flat price/discountPrice fields as a safety
+// net (those two are always supposed to agree, see PricingBackfillRunner),
+// but any other currency returns null when the admin hasn't configured it
+// yet. Never derives one currency's price from another's.
+export function resolveProductPrice(product, currency) {
+  const entry = product?.prices?.find((p) => p.currency === currency);
+  if (entry) return { regularPrice: entry.regularPrice, discountPrice: entry.discountPrice };
+  if (currency === "INR") return { regularPrice: product?.price, discountPrice: product?.discountPrice };
+  return null;
 }

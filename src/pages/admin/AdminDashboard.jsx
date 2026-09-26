@@ -73,7 +73,7 @@ export default function AdminDashboard() {
                     <td className="py-4">
                       <StatusPill status={o.orderStatus} />
                     </td>
-                    <td className="py-4">{formatPrice(o.totalAmount)}</td>
+                    <td className="py-4">{formatPrice(o.totalAmount, o.currency)}</td>
                   </tr>
                 ))}
               </tbody>

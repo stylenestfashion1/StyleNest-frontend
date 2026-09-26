@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
 import { Heart } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatPrice, formatDiscountPercent } from "../utils/format";
+import { formatPrice, formatDiscountPercent, resolveProductPrice } from "../utils/format";
 import { useAuth } from "../context/AuthContext";
+import { useCurrency } from "../context/CurrencyContext";
 import * as wishlistApi from "../api/wishlist";
 
 export default function ProductCard({ product }) {
   const { isAuthenticated } = useAuth();
+  const { currency } = useCurrency();
   const queryClient = useQueryClient();
 
   const { data: wishlist } = useQuery({
@@ -28,14 +30,15 @@ export default function ProductCard({ product }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
   });
 
-  const hasDiscount = product.discountPrice != null && product.discountPrice < product.price;
-  const offLabel = hasDiscount ? formatDiscountPercent(product.price, product.discountPrice) : null;
+  const activePrice = resolveProductPrice(product, currency);
+  const hasDiscount = activePrice?.discountPrice != null && activePrice.discountPrice < activePrice.regularPrice;
+  const offLabel = hasDiscount ? formatDiscountPercent(activePrice.regularPrice, activePrice.discountPrice) : null;
 
   return (
     <div className="group hairline-card relative women:border-transparent women:bg-transparent">
       <Link to={`/products/${product.id}`} className="zoom-media block aspect-[4/5] overflow-hidden bg-muted">
         {product.thumbnailUrl ? (
-          <img src={product.thumbnailUrl} alt={product.name} loading="lazy" className="h-full w-full object-cover" />
+          <img src={product.thumbnailUrl} alt={product.name} loading="lazy" className="h-full w-full object-cover object-top" />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <span className="label-xs text-muted-foreground">No Image</span>
@@ -64,12 +67,16 @@ export default function ProductCard({ product }) {
         <Link to={`/products/${product.id}`} className="display block text-base women:text-lg women:italic">
           {product.name}
         </Link>
-        <div className="flex items-baseline gap-2 text-xs">
-          <span className={hasDiscount ? "text-accent" : "text-foreground"}>
-            {formatPrice(hasDiscount ? product.discountPrice : product.price)}
-          </span>
-          {hasDiscount && <span className="text-muted-foreground line-through">{formatPrice(product.price)}</span>}
-        </div>
+        {activePrice ? (
+          <div className="flex items-baseline gap-2 text-xs">
+            <span className={hasDiscount ? "text-accent" : "text-foreground"}>
+              {formatPrice(hasDiscount ? activePrice.discountPrice : activePrice.regularPrice, currency)}
+            </span>
+            {hasDiscount && <span className="text-muted-foreground line-through">{formatPrice(activePrice.regularPrice, currency)}</span>}
+          </div>
+        ) : (
+          <p className="label-xs text-muted-foreground">Not available in {currency} yet</p>
+        )}
         {offLabel && <p className="label-xs text-accent">{offLabel}</p>}
       </div>
     </div>

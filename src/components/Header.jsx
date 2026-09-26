@@ -9,6 +9,7 @@ import { useGuestCart } from "../context/GuestCartContext";
 import * as cartApi from "../api/cart";
 import * as wishlistApi from "../api/wishlist";
 import * as productsApi from "../api/products";
+import CurrencyToggle from "./CurrencyToggle";
 
 const NAV = [
   { label: "Men", to: "/men", gender: "men" },
@@ -193,6 +194,7 @@ export function Header() {
         </Link>
 
         <div className="col-start-3 flex min-w-0 items-center justify-end gap-3 xl:gap-4">
+          <CurrencyToggle />
           <button
             aria-label="Search"
             onClick={() => setSearchOpen((s) => !s)}
@@ -356,10 +358,13 @@ export function Header() {
               </NavLink>
             ))}
           </nav>
-          <button onClick={toggleTheme} className="label-xs mt-auto flex items-center gap-2 text-muted-foreground">
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            {theme === "dark" ? "Light mode" : "Dark mode"}
-          </button>
+          <div className="mt-auto flex items-center justify-between">
+            <CurrencyToggle />
+            <button onClick={toggleTheme} className="label-xs flex items-center gap-2 text-muted-foreground">
+              {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              {theme === "dark" ? "Light mode" : "Dark mode"}
+            </button>
+          </div>
         </div>
       </div>
     )}

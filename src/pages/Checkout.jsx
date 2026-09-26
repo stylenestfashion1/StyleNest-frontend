@@ -13,6 +13,7 @@ import AddressForm from "../components/AddressForm";
 import BackButton from "../components/BackButton";
 import { useToast } from "../context/ToastContext";
 import { useAuth } from "../context/AuthContext";
+import { useCurrency } from "../context/CurrencyContext";
 import { useGuestCart } from "../context/GuestCartContext";
 
 const PAYMENT_METHODS = [
@@ -21,6 +22,24 @@ const PAYMENT_METHODS = [
   { id: "UPI", title: "UPI", note: "Pay instantly with any UPI app." },
   { id: "NETBANKING", title: "Net banking", note: "Pay directly from your bank account." },
 ];
+
+// Shown in place of the payment-method picker (and disables the final
+// place-order/pay button) whenever the active cart/checkout currency is
+// USD -- Easebuzz is India/INR-only and Razorpay isn't integrated yet.
+// This is a UX convenience only; the real, authoritative block lives
+// server-side in OrderServiceImpl.reserveOrder, which rejects a USD order
+// before it's ever persisted or Easebuzz is contacted, independent of
+// whatever this page does or doesn't disable.
+function UsdPaymentBlockedNotice() {
+  return (
+    <div className="hairline-card border-accent p-5 text-sm">
+      <p className="label-xs text-accent">International payments</p>
+      <p className="mt-3 text-muted-foreground">
+        International online payments will be available soon. Please try again once international payment support is enabled.
+      </p>
+    </div>
+  );
+}
 
 export default function Checkout() {
   const { isAuthenticated } = useAuth();
@@ -49,8 +68,11 @@ function RegisteredCheckout() {
     },
   });
 
+  const checkout = checkoutQuery.data;
+  const isUsd = checkout?.currency === "USD";
+
   async function handlePlaceOrder() {
-    if (placing) return;
+    if (placing || isUsd) return;
     setPlacing(true);
     try {
       if (paymentMethod === "COD") {
@@ -100,8 +122,6 @@ function RegisteredCheckout() {
   if (checkoutQuery.isError && !needsAddress) {
     return <ErrorState message="Could not load checkout." onRetry={checkoutQuery.refetch} />;
   }
-
-  const checkout = checkoutQuery.data;
 
   if (!needsAddress && !checkout?.items?.length) {
     return (
@@ -164,9 +184,12 @@ function RegisteredCheckout() {
                 </div>
               ))}
 
-            {step === 1 && (
-              <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} upiVa={upiVa} setUpiVa={setUpiVa} bankCode={bankCode} setBankCode={setBankCode} />
-            )}
+            {step === 1 &&
+              (isUsd ? (
+                <UsdPaymentBlockedNotice />
+              ) : (
+                <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} upiVa={upiVa} setUpiVa={setUpiVa} bankCode={bankCode} setBankCode={setBankCode} />
+              ))}
 
             {step === 2 && checkout && (
               <div className="space-y-8">
@@ -179,7 +202,11 @@ function RegisteredCheckout() {
                 </div>
                 <div className="hairline-card p-5">
                   <p className="label-xs">Payment</p>
-                  <p className="mt-3 text-sm text-muted-foreground">{PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.title}</p>
+                  {isUsd ? (
+                    <UsdPaymentBlockedNotice />
+                  ) : (
+                    <p className="mt-3 text-sm text-muted-foreground">{PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.title}</p>
+                  )}
                 </div>
                 <ul className="border-t">
                   {checkout.items.map((item) => (
@@ -187,7 +214,7 @@ function RegisteredCheckout() {
                       <span>
                         {item.productName} ({item.color}/{getSizeLabel(item.size)}) <span className="text-muted-foreground">× {item.quantity}</span>
                       </span>
-                      <span>{formatPrice(item.subtotal)}</span>
+                      <span>{formatPrice(item.subtotal, checkout.currency)}</span>
                     </li>
                   ))}
                 </ul>
@@ -205,7 +232,7 @@ function RegisteredCheckout() {
                   Continue
                 </button>
               ) : (
-                <button className="btn-solid" disabled={placing} onClick={handlePlaceOrder}>
+                <button className="btn-solid" disabled={placing || isUsd} onClick={handlePlaceOrder}>
                   {placing ? "Placing order..." : paymentMethod === "COD" ? "Place order" : "Proceed to pay"}
                 </button>
               )}
@@ -223,13 +250,13 @@ function RegisteredCheckout() {
                         <dt className="text-muted-foreground">
                           {item.productName} × {item.quantity}
                         </dt>
-                        <dd>{formatPrice(item.subtotal)}</dd>
+                        <dd>{formatPrice(item.subtotal, checkout.currency)}</dd>
                       </div>
                     ))}
                   </dl>
                   <div className="mt-6 flex items-baseline justify-between border-t pt-5">
                     <span className="label-xs">Total</span>
-                    <span className="display text-xl">{formatPrice(checkout.totalAmount)}</span>
+                    <span className="display text-xl">{formatPrice(checkout.totalAmount, checkout.currency)}</span>
                   </div>
                 </>
               ) : (
@@ -269,6 +296,7 @@ const EMPTY_ADDRESS = { addressLine1: "", addressLine2: "", city: "", state: "",
 function GuestCheckout() {
   const STEPS = ["Contact", "Shipping", "Payment", "Review"];
   const guestCart = useGuestCart();
+  const { currency } = useCurrency();
   const { notify } = useToast();
   const [step, setStep] = useState(0);
   const [contact, setContact] = useState(EMPTY_CONTACT);
@@ -282,6 +310,7 @@ function GuestCheckout() {
   const [looking, setLooking] = useState(false);
 
   const isIndia = address.countryCode === "IN";
+  const isUsd = currency === "USD";
 
   function setContactField(key, value) {
     setContact((c) => ({ ...c, [key]: value }));
@@ -353,11 +382,12 @@ function GuestCheckout() {
       },
       paymentMethod,
       items: guestCart.items.map((i) => ({ productVariantId: i.productVariantId, quantity: i.quantity })),
+      currency,
     };
   }
 
   async function handlePlaceOrder() {
-    if (placing) return;
+    if (placing || isUsd) return;
     setPlacing(true);
     try {
       const payload = buildPayload();
@@ -466,9 +496,12 @@ function GuestCheckout() {
               </div>
             )}
 
-            {step === 2 && (
-              <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} upiVa={upiVa} setUpiVa={setUpiVa} bankCode={bankCode} setBankCode={setBankCode} />
-            )}
+            {step === 2 &&
+              (isUsd ? (
+                <UsdPaymentBlockedNotice />
+              ) : (
+                <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} upiVa={upiVa} setUpiVa={setUpiVa} bankCode={bankCode} setBankCode={setBankCode} />
+              ))}
 
             {step === 3 && (
               <div className="space-y-8">
@@ -487,7 +520,11 @@ function GuestCheckout() {
                 </div>
                 <div className="hairline-card p-5">
                   <p className="label-xs">Payment</p>
-                  <p className="mt-3 text-sm text-muted-foreground">{PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.title}</p>
+                  {isUsd ? (
+                    <UsdPaymentBlockedNotice />
+                  ) : (
+                    <p className="mt-3 text-sm text-muted-foreground">{PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.title}</p>
+                  )}
                 </div>
                 <ul className="border-t">
                   {guestCart.items.map((item) => (
@@ -495,7 +532,7 @@ function GuestCheckout() {
                       <span>
                         {item.productName} ({item.color}/{getSizeLabel(item.size)}) <span className="text-muted-foreground">× {item.quantity}</span>
                       </span>
-                      <span>{formatPrice(item.price * item.quantity)}</span>
+                      <span>{formatPrice(item.price * item.quantity, currency)}</span>
                     </li>
                   ))}
                 </ul>
@@ -513,7 +550,7 @@ function GuestCheckout() {
                   Continue
                 </button>
               ) : (
-                <button className="btn-solid" disabled={placing} onClick={handlePlaceOrder}>
+                <button className="btn-solid" disabled={placing || isUsd} onClick={handlePlaceOrder}>
                   {placing ? "Placing order..." : paymentMethod === "COD" ? "Place order" : "Proceed to pay"}
                 </button>
               )}
@@ -529,13 +566,13 @@ function GuestCheckout() {
                     <dt className="text-muted-foreground">
                       {item.productName} × {item.quantity}
                     </dt>
-                    <dd>{formatPrice(item.price * item.quantity)}</dd>
+                    <dd>{formatPrice(item.price * item.quantity, currency)}</dd>
                   </div>
                 ))}
               </dl>
               <div className="mt-6 flex items-baseline justify-between border-t pt-5">
                 <span className="label-xs">Total</span>
-                <span className="display text-xl">{formatPrice(totalPrice)}</span>
+                <span className="display text-xl">{formatPrice(totalPrice, currency)}</span>
               </div>
             </div>
           </Reveal>
@@ -568,13 +605,13 @@ function GuestOrderConfirmation({ order, contact }) {
                 <span>
                   {item.productName} ({item.color}/{getSizeLabel(item.size)}) × {item.quantity}
                 </span>
-                <span>{formatPrice(item.subtotal)}</span>
+                <span>{formatPrice(item.subtotal, order.currency)}</span>
               </li>
             ))}
           </ul>
           <div className="mt-4 flex items-baseline justify-between border-t pt-4">
             <span className="label-xs">Total</span>
-            <span className="display text-xl">{formatPrice(order.totalAmount)}</span>
+            <span className="display text-xl">{formatPrice(order.totalAmount, order.currency)}</span>
           </div>
 
           <div className="mt-10 flex flex-wrap justify-center gap-3">

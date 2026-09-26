@@ -40,7 +40,7 @@ export default function Orders() {
                   <p className="mt-2 text-xs text-muted-foreground">{formatDate(order.createdAt)}</p>
                 </div>
                 <StatusPill status={order.orderStatus} />
-                <span className="text-sm">{formatPrice(order.totalAmount)}</span>
+                <span className="text-sm">{formatPrice(order.totalAmount, order.currency)}</span>
               </Link>
             </Reveal>
           ))}

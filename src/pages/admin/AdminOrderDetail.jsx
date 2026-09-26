@@ -77,13 +77,13 @@ export default function AdminOrderDetail() {
                 <span>
                   {item.productName} ({item.color}/{getSizeLabel(item.size)}) × {item.quantity}
                 </span>
-                <span>{formatPrice(item.subtotal)}</span>
+                <span>{formatPrice(item.subtotal, order.currency)}</span>
               </li>
             ))}
           </ul>
           <div className="mt-4 flex justify-between border-t pt-4 text-sm">
             <span className="label-xs">Total</span>
-            <span className="display text-lg">{formatPrice(order.totalAmount)}</span>
+            <span className="display text-lg">{formatPrice(order.totalAmount, order.currency)}</span>
           </div>
           {order.shippingAddress && (
             <div className="mt-4 space-y-1 text-sm text-muted-foreground">

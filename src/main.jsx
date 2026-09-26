@@ -8,6 +8,7 @@ import { AuthProvider } from "./context/AuthContext.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import { GenderProvider } from "./context/GenderContext.jsx";
+import { CurrencyProvider } from "./context/CurrencyContext.jsx";
 import { ScrollExpandImagesProvider } from "./context/ScrollExpandImagesContext.jsx";
 import { GuestCartProvider } from "./context/GuestCartContext.jsx";
 import { BulkCartProvider } from "./context/BulkCartContext.jsx";
@@ -42,17 +43,19 @@ createRoot(document.getElementById("root")).render(
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <GenderProvider>
-            <ToastProvider>
-              <AuthProvider>
-                <GuestCartProvider>
-                  <BulkCartProvider>
-                    <ScrollExpandImagesProvider>
-                      <App />
-                    </ScrollExpandImagesProvider>
-                  </BulkCartProvider>
-                </GuestCartProvider>
-              </AuthProvider>
-            </ToastProvider>
+            <CurrencyProvider>
+              <ToastProvider>
+                <AuthProvider>
+                  <GuestCartProvider>
+                    <BulkCartProvider>
+                      <ScrollExpandImagesProvider>
+                        <App />
+                      </ScrollExpandImagesProvider>
+                    </BulkCartProvider>
+                  </GuestCartProvider>
+                </AuthProvider>
+              </ToastProvider>
+            </CurrencyProvider>
           </GenderProvider>
         </ThemeProvider>
       </QueryClientProvider>

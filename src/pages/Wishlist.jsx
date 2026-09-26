@@ -9,10 +9,16 @@ import LoadingState from "../components/LoadingState";
 import ErrorState from "../components/ErrorState";
 import BackButton from "../components/BackButton";
 import { useToast } from "../context/ToastContext";
+import { useCurrency } from "../context/CurrencyContext";
 
+// Wishlist prices are always shown in INR -- the wishlist endpoint doesn't
+// carry per-currency prices (it's a "saved for later" list, not part of
+// cart/checkout), so this intentionally doesn't follow the site-wide
+// currency toggle the way ProductCard/Cart/Checkout do.
 export default function Wishlist() {
   const queryClient = useQueryClient();
   const { notify } = useToast();
+  const { currency } = useCurrency();
 
   const { data: wishlist, isLoading, isError, refetch } = useQuery({ queryKey: ["wishlist"], queryFn: wishlistApi.getWishlist });
 
@@ -23,7 +29,7 @@ export default function Wishlist() {
 
   const moveToBag = useMutation({
     mutationFn: async (item) => {
-      await cartApi.addToCart({ productVariantId: item.productVariantId, quantity: 1 });
+      await cartApi.addToCart({ productVariantId: item.productVariantId, quantity: 1, currency });
       await wishlistApi.removeWishlistItem(item.wishlistItemId);
     },
     onSuccess: () => {

@@ -77,14 +77,14 @@ export default function OrderDetail() {
                         {item.color} — {getSizeLabel(item.size)} — Qty {item.quantity}
                       </p>
                     </div>
-                    <span className="text-sm">{formatPrice(item.subtotal)}</span>
+                    <span className="text-sm">{formatPrice(item.subtotal, order.currency)}</span>
                   </div>
                 </Reveal>
               ))}
             </ul>
             <div className="mt-6 flex items-center justify-between border-t pt-6">
               <span className="label-xs">Total paid</span>
-              <span className="display text-xl">{formatPrice(order.totalAmount)}</span>
+              <span className="display text-xl">{formatPrice(order.totalAmount, order.currency)}</span>
             </div>
 
             {CANCELLABLE.includes(order.orderStatus) && (
