@@ -1,4 +1,5 @@
 import client from "./client";
 
-export const initiateEasebuzzPayment = (data) => client.post("/payments/easebuzz/initiate", data);
-export const initiateGuestEasebuzzPayment = (data) => client.post("/payments/easebuzz/guest/initiate", data);
+export const initiateRazorpayPayment = () => client.post("/payments/razorpay/initiate");
+export const initiateGuestRazorpayPayment = (data) => client.post("/payments/razorpay/guest/initiate", data);
+export const verifyRazorpayPayment = (data) => client.post("/payments/razorpay/verify", data);

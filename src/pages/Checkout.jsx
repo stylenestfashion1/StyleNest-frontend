@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ordersApi from "../api/orders";
 import * as addressesApi from "../api/addresses";
 import * as paymentsApi from "../api/payments";
+import { payWithRazorpay } from "../utils/razorpayCheckout";
 import { formatPrice } from "../utils/format";
 import { getSizeLabel } from "../utils/sizeLabel";
 import { PageFade, Reveal } from "../components/Reveal";
@@ -18,18 +19,17 @@ import { useGuestCart } from "../context/GuestCartContext";
 
 const PAYMENT_METHODS = [
   { id: "COD", title: "Cash on delivery", note: "Pay in cash when your order arrives." },
-  { id: "CARD", title: "Credit / Debit card", note: "Secured checkout via our payment partner." },
-  { id: "UPI", title: "UPI", note: "Pay instantly with any UPI app." },
-  { id: "NETBANKING", title: "Net banking", note: "Pay directly from your bank account." },
+  { id: "ONLINE", title: "Pay online", note: "Card, UPI, netbanking or wallet — secured by Razorpay." },
 ];
 
 // Shown in place of the payment-method picker (and disables the final
 // place-order/pay button) whenever the active cart/checkout currency is
-// USD -- Easebuzz is India/INR-only and Razorpay isn't integrated yet.
-// This is a UX convenience only; the real, authoritative block lives
-// server-side in OrderServiceImpl.reserveOrder, which rejects a USD order
-// before it's ever persisted or Easebuzz is contacted, independent of
-// whatever this page does or doesn't disable.
+// USD -- browsing/cart/checkout work fully in USD, but payment stays
+// blocked until the merchant's Razorpay account is confirmed activated
+// for international payments. This is a UX convenience only; the real,
+// authoritative block lives server-side in OrderServiceImpl.reserveOrder,
+// which rejects a USD order before it's ever persisted or Razorpay is
+// contacted, independent of whatever this page does or doesn't disable.
 function UsdPaymentBlockedNotice() {
   return (
     <div className="hairline-card border-accent p-5 text-sm">
@@ -51,10 +51,9 @@ function RegisteredCheckout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notify } = useToast();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("COD");
-  const [upiVa, setUpiVa] = useState("");
-  const [bankCode, setBankCode] = useState("");
   const [placing, setPlacing] = useState(false);
 
   const checkoutQuery = useQuery({ queryKey: ["checkout"], queryFn: ordersApi.getCheckout });
@@ -82,21 +81,26 @@ function RegisteredCheckout() {
         navigate(`/orders/${order.id}`, { replace: true });
         return;
       }
-      const payload = { paymentMethod };
-      if (paymentMethod === "UPI") payload.upiVa = upiVa;
-      if (paymentMethod === "NETBANKING") payload.bankCode = bankCode;
 
-      const result = await paymentsApi.initiateEasebuzzPayment(payload);
+      const initiation = await paymentsApi.initiateRazorpayPayment();
       queryClient.invalidateQueries({ queryKey: ["cart"] });
 
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
-      } else if (result.bankRedirectHtml) {
-        document.open();
-        document.write(result.bankRedirectHtml);
-        document.close();
+      const result = await payWithRazorpay(initiation, {
+        prefill: {
+          name: checkout?.shippingAddress?.fullName || user?.fullName,
+          email: user?.email,
+          contact: checkout?.shippingAddress?.phone,
+        },
+        onPaymentFailed: () => notify("That payment method didn't work. You can try another in the same window.", "error"),
+      });
+
+      if (result.outcome === "success") {
+        notify("Payment successful", "success");
+        navigate(`/orders/${initiation.orderId}`, { replace: true });
+      } else if (result.outcome === "dismissed") {
+        notify("Payment was not completed. You can try again.");
       } else {
-        notify(result.message || "Payment could not be initiated.", "error");
+        notify(result.error?.message || "Could not verify the payment. Please check your orders.", "error");
       }
     } catch (err) {
       notify(err.message, "error");
@@ -188,7 +192,7 @@ function RegisteredCheckout() {
               (isUsd ? (
                 <UsdPaymentBlockedNotice />
               ) : (
-                <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} upiVa={upiVa} setUpiVa={setUpiVa} bankCode={bankCode} setBankCode={setBankCode} />
+                <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
               ))}
 
             {step === 2 && checkout && (
@@ -295,6 +299,7 @@ const EMPTY_ADDRESS = { addressLine1: "", addressLine2: "", city: "", state: "",
 
 function GuestCheckout() {
   const STEPS = ["Contact", "Shipping", "Payment", "Review"];
+  const navigate = useNavigate();
   const guestCart = useGuestCart();
   const { currency } = useCurrency();
   const { notify } = useToast();
@@ -302,8 +307,6 @@ function GuestCheckout() {
   const [contact, setContact] = useState(EMPTY_CONTACT);
   const [address, setAddress] = useState(EMPTY_ADDRESS);
   const [paymentMethod, setPaymentMethod] = useState("COD");
-  const [upiVa, setUpiVa] = useState("");
-  const [bankCode, setBankCode] = useState("");
   const [errors, setErrors] = useState({});
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
@@ -365,7 +368,10 @@ function GuestCheckout() {
     setStep((s) => s + 1);
   }
 
-  function buildPayload() {
+  // Shared by both the COD placement payload and the Razorpay guest
+  // initiate payload -- the latter has no paymentMethod field (Razorpay
+  // Checkout itself is where the customer picks the sub-method).
+  function buildGuestOrderBase() {
     return {
       guestEmail: contact.email.trim(),
       shippingAddress: {
@@ -380,7 +386,6 @@ function GuestCheckout() {
         country: address.country.trim(),
         countryCode: address.countryCode,
       },
-      paymentMethod,
       items: guestCart.items.map((i) => ({ productVariantId: i.productVariantId, quantity: i.quantity })),
       currency,
     };
@@ -390,34 +395,31 @@ function GuestCheckout() {
     if (placing || isUsd) return;
     setPlacing(true);
     try {
-      const payload = buildPayload();
-
       if (paymentMethod === "COD") {
-        const order = await ordersApi.createGuestOrder(payload);
+        const order = await ordersApi.createGuestOrder({ ...buildGuestOrderBase(), paymentMethod: "COD" });
         guestCart.clear();
         setPlacedOrder(order);
         notify("Order placed", "success");
         return;
       }
 
-      if (paymentMethod === "UPI") payload.upiVa = upiVa;
-      if (paymentMethod === "NETBANKING") payload.bankCode = bankCode;
+      const initiation = await paymentsApi.initiateGuestRazorpayPayment(buildGuestOrderBase());
 
-      const result = await paymentsApi.initiateGuestEasebuzzPayment(payload);
+      const result = await payWithRazorpay(initiation, {
+        prefill: { name: contact.fullName, email: contact.email, contact: contact.phone },
+        onPaymentFailed: () => notify("That payment method didn't work. You can try another in the same window.", "error"),
+      });
 
-      // Stock is already reserved server-side at this point regardless of
-      // eventual payment outcome (mirrors the registered flow's optimistic
-      // cart-invalidate right before the same redirect).
-      guestCart.clear();
-
-      if (result.redirectUrl) {
-        window.location.href = result.redirectUrl;
-      } else if (result.bankRedirectHtml) {
-        document.open();
-        document.write(result.bankRedirectHtml);
-        document.close();
+      if (result.outcome === "success") {
+        // Only clear the guest's local cart once payment is genuinely
+        // confirmed -- clearing it any earlier would leave a dismissed/
+        // failed retry with no items to resubmit.
+        guestCart.clear();
+        navigate(`/track-order?orderNumber=${encodeURIComponent(initiation.orderNumber)}&payment=success`);
+      } else if (result.outcome === "dismissed") {
+        notify("Payment was not completed. You can try again.");
       } else {
-        notify(result.message || "Payment could not be initiated.", "error");
+        notify(result.error?.message || "Could not verify the payment. Please check your order via Track Order.", "error");
       }
     } catch (err) {
       notify(err.message, "error");
@@ -500,7 +502,7 @@ function GuestCheckout() {
               (isUsd ? (
                 <UsdPaymentBlockedNotice />
               ) : (
-                <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} upiVa={upiVa} setUpiVa={setUpiVa} bankCode={bankCode} setBankCode={setBankCode} />
+                <PaymentMethodPicker paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} />
               ))}
 
             {step === 3 && (
@@ -666,7 +668,7 @@ function StepBar({ steps, step }) {
   );
 }
 
-function PaymentMethodPicker({ paymentMethod, setPaymentMethod, upiVa, setUpiVa, bankCode, setBankCode }) {
+function PaymentMethodPicker({ paymentMethod, setPaymentMethod }) {
   return (
     <div className="space-y-4">
       {PAYMENT_METHODS.map((opt) => (
@@ -682,18 +684,6 @@ function PaymentMethodPicker({ paymentMethod, setPaymentMethod, upiVa, setUpiVa,
           </span>
         </button>
       ))}
-      {paymentMethod === "UPI" && (
-        <label className="relative block pt-5">
-          <span className="label-xs absolute left-0 top-0 text-muted-foreground">UPI ID</span>
-          <input value={upiVa} onChange={(e) => setUpiVa(e.target.value)} placeholder="name@bank" className="field" />
-        </label>
-      )}
-      {paymentMethod === "NETBANKING" && (
-        <label className="relative block pt-5">
-          <span className="label-xs absolute left-0 top-0 text-muted-foreground">Bank code</span>
-          <input value={bankCode} onChange={(e) => setBankCode(e.target.value)} className="field" />
-        </label>
-      )}
     </div>
   );
 }
