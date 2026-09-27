@@ -68,11 +68,11 @@ export default function Wishlist() {
             const hasDiscount = item.discountPrice != null && item.discountPrice < item.price;
             return (
               <Reveal key={item.wishlistItemId} delay={i * 60} className="hairline-card">
-                <Link to={`/products/${item.productId}`} className="zoom-media block aspect-[4/5] overflow-hidden bg-muted">
+                <Link to={`/products/${item.slug ?? item.productId}`} className="zoom-media block aspect-[4/5] overflow-hidden bg-muted">
                   {item.imageUrl && <img src={item.imageUrl} alt={item.productName} className="h-full w-full object-cover" />}
                 </Link>
                 <div className="space-y-1 p-4">
-                  <Link to={`/products/${item.productId}`} className="display block text-base">
+                  <Link to={`/products/${item.slug ?? item.productId}`} className="display block text-base">
                     {item.productName}
                   </Link>
                   {(item.color || item.size) && <p className="label-xs text-muted-foreground">{[item.color, item.size && getSizeLabel(item.size)].filter(Boolean).join(" / ")}</p>}
@@ -87,7 +87,7 @@ export default function Wishlist() {
                         Move to bag
                       </button>
                     ) : (
-                      <Link to={`/products/${item.productId}`} className="label-xs link-underline text-accent">
+                      <Link to={`/products/${item.slug ?? item.productId}`} className="label-xs link-underline text-accent">
                         Select options
                       </Link>
                     )}

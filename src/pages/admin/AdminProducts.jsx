@@ -13,6 +13,15 @@ export default function AdminProducts() {
   const [gender, setGender] = useState("ALL");
 
   const { data, isLoading } = useQuery({ queryKey: ["admin", "products"], queryFn: () => adminApi.getAdminProducts() });
+  // Admin-only internal identification code -- not on the product list
+  // response itself (see api/admin.js), fetched separately and merged in
+  // here purely for search/display; never sent to any customer-facing
+  // page.
+  const { data: jeansCodes } = useQuery({
+    queryKey: ["admin", "products", "jeansCodes"],
+    queryFn: () => adminApi.getAllProductJeansCodes(),
+  });
+  const jeansCodeById = new Map((jeansCodes ?? []).map((j) => [j.productId, j.jeansCode]));
 
   const remove = useMutation({
     mutationFn: (id) => adminApi.deleteProduct(id),
@@ -23,9 +32,24 @@ export default function AdminProducts() {
     onError: (err) => notify(err.message, "error"),
   });
 
-  const rows = (data ?? []).filter(
-    (p) => (gender === "ALL" || p.gender === gender) && (!q || p.name.toLowerCase().includes(q.toLowerCase()) || p.categoryName?.toLowerCase().includes(q.toLowerCase()))
-  );
+  // Case-insensitive substring match against name, category or Jeans
+  // Code -- the same one predicate already covers both "exact" and
+  // "partial" code search, since an exact match is just a substring that
+  // happens to equal the whole value. matchedViaJeansCode is only true
+  // when the code is what actually matched (not name/category too), so
+  // the "Matched via Jeans Code" indicator below only shows when it's the
+  // real reason the row is in the results.
+  const query = q.trim().toLowerCase();
+  const rows = (data ?? [])
+    .filter((p) => gender === "ALL" || p.gender === gender)
+    .map((p) => {
+      const jeansCode = jeansCodeById.get(p.id) ?? null;
+      const nameMatch = p.name.toLowerCase().includes(query);
+      const categoryMatch = p.categoryName?.toLowerCase().includes(query) ?? false;
+      const jeansCodeMatch = Boolean(jeansCode) && jeansCode.toLowerCase().includes(query);
+      return { ...p, jeansCode, matches: !query || nameMatch || categoryMatch || jeansCodeMatch, matchedViaJeansCode: Boolean(query) && jeansCodeMatch && !nameMatch && !categoryMatch };
+    })
+    .filter((p) => p.matches);
 
   return (
     <div>
@@ -74,7 +98,12 @@ export default function AdminProducts() {
                         ) : (
                           <div className="h-14 w-11 bg-muted" />
                         )}
-                        <span>{p.name}</span>
+                        <div>
+                          <span>{p.name}</span>
+                          {p.matchedViaJeansCode && (
+                            <p className="label-xs mt-1 text-accent">Matched via Jeans Code: {p.jeansCode}</p>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="py-4 text-muted-foreground">{p.categoryName}</td>
@@ -89,10 +118,10 @@ export default function AdminProducts() {
                     </td>
                     <td className="py-4 text-right">
                       <div className="flex justify-end gap-4">
-                        <Link to={`/products/${p.id}`} target="_blank" rel="noopener noreferrer" className="label-xs link-underline">
+                        <Link to={`/products/${p.slug ?? p.id}`} target="_blank" rel="noopener noreferrer" className="label-xs link-underline">
                           View
                         </Link>
-                        <Link to={`/admin/products/${p.id}`} className="label-xs link-underline">
+                        <Link to={`/admin/products/${p.slug ?? p.id}/edit`} className="label-xs link-underline">
                           Edit
                         </Link>
                         <button className="label-xs link-underline text-destructive" onClick={() => remove.mutate(p.id)}>
@@ -124,15 +153,18 @@ export default function AdminProducts() {
                   <p className="label-xs mt-1.5 text-muted-foreground">
                     {p.categoryName} · {p.gender}
                   </p>
+                  {p.matchedViaJeansCode && (
+                    <p className="label-xs mt-1 text-accent">Matched via Jeans Code: {p.jeansCode}</p>
+                  )}
                   <p className="mt-2 text-sm">
                     {formatPrice(p.discountPrice ?? p.price)}
                     {p.discountPrice && <span className="label-xs ml-2 text-muted-foreground line-through">{formatPrice(p.price)}</span>}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-4">
-                    <Link to={`/products/${p.id}`} target="_blank" rel="noopener noreferrer" className="label-xs link-underline">
+                    <Link to={`/products/${p.slug ?? p.id}`} target="_blank" rel="noopener noreferrer" className="label-xs link-underline">
                       View
                     </Link>
-                    <Link to={`/admin/products/${p.id}`} className="label-xs link-underline">
+                    <Link to={`/admin/products/${p.slug ?? p.id}/edit`} className="label-xs link-underline">
                       Edit
                     </Link>
                     <button className="label-xs link-underline text-destructive" onClick={() => remove.mutate(p.id)}>

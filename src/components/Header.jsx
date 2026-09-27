@@ -303,7 +303,7 @@ export function Header() {
                       onClick={() => {
                         setSearchOpen(false);
                         setQ("");
-                        navigate(`/products/${p.id}`);
+                        navigate(`/products/${p.slug ?? p.id}`);
                       }}
                     >
                       {p.name}

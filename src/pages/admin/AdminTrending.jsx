@@ -113,7 +113,7 @@ export default function AdminTrending() {
                     </td>
                     <td className="py-4 text-right">
                       <div className="flex justify-end gap-4">
-                        <Link to={`/admin/products/${p.id}`} className="label-xs link-underline">
+                        <Link to={`/admin/products/${p.slug ?? p.id}/edit`} className="label-xs link-underline">
                           Edit
                         </Link>
                         <button
@@ -149,7 +149,7 @@ export default function AdminTrending() {
                     {p.discountPrice && <span className="label-xs ml-2 text-muted-foreground line-through">{formatPrice(p.price)}</span>}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-4">
-                    <Link to={`/admin/products/${p.id}`} className="label-xs link-underline">
+                    <Link to={`/admin/products/${p.slug ?? p.id}/edit`} className="label-xs link-underline">
                       Edit
                     </Link>
                     <button

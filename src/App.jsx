@@ -10,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProductListing from "./pages/ProductListing";
+import CategoryListing from "./pages/CategoryListing";
 import ProductDetails from "./pages/ProductDetails";
 import Sale from "./pages/Sale";
 import Trending from "./pages/Trending";
@@ -88,6 +89,12 @@ function App() {
           <Route index element={<Home />} />
           <Route path="men" element={<Men />} />
           <Route path="women" element={<Women />} />
+          {/* Clean category browse -- /women/kurti, /men/cordset -- see
+              CategoryListing. The only public entry point into this used
+              to be /products?gender=&categoryId= (see CategoryScrollStack);
+              that generic route stays fully working below, unremoved. */}
+          <Route path="men/:categorySlug" element={<CategoryListing gender="MEN" />} />
+          <Route path="women/:categorySlug" element={<CategoryListing gender="WOMEN" />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
@@ -211,7 +218,12 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="products" element={<AdminProducts />} />
+          {/* Legacy bare-ID URL (and "new") -- kept working for any
+              existing bookmark; AdminProductForm client-redirects an
+              existing product to the canonical .../edit slug route below
+              once it resolves. */}
           <Route path="products/:id" element={<AdminProductForm />} />
+          <Route path="products/:id/edit" element={<AdminProductForm />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="trending" element={<AdminTrending />} />
           <Route path="orders" element={<AdminOrders />} />

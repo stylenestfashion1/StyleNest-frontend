@@ -1,16 +1,23 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as adminApi from "../../api/admin";
 import * as productsApi from "../../api/products";
 import * as categoriesApi from "../../api/categories";
 import { useToast } from "../../context/ToastContext";
 import LoadingState from "../../components/LoadingState";
+import ErrorState from "../../components/ErrorState";
 import BackButton from "../../components/BackButton";
 import VariantManager from "../../components/admin/VariantManager";
 
 const EMPTY = {
   name: "",
+  // Public URL slug. Blank on a new product -> backend auto-generates one
+  // from the name. On an existing product, pre-filled with the current
+  // value and left exactly as-is unless the admin deliberately edits it --
+  // the backend never regenerates it just because the name changes (that
+  // would break bookmarks/shared links/SEO). See ProductServiceImpl.
+  slug: "",
   shortDescription: "",
   description: "",
   price: "",
@@ -37,8 +44,10 @@ const EMPTY = {
 };
 
 export default function AdminProductForm() {
-  const { id } = useParams();
-  const isNew = id === "new";
+  const { id: idOrSlug } = useParams();
+  const location = useLocation();
+  const isNew = idOrSlug === "new";
+  const isNumericId = !isNew && /^\d+$/.test(idOrSlug);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notify } = useToast();
@@ -46,16 +55,52 @@ export default function AdminProductForm() {
 
   const { data: categories } = useQuery({ queryKey: ["admin", "categories"], queryFn: () => categoriesApi.getCategories() });
 
-  const productQuery = useQuery({ queryKey: ["admin", "product", id], queryFn: () => adminApi.getAdminProduct(id), enabled: !isNew });
-  const variantsQuery = useQuery({ queryKey: ["admin", "variants", id], queryFn: () => productsApi.getProductVariants(id), enabled: !isNew });
+  // The canonical route (/admin/products/{slug}/edit) arrives here with a
+  // slug, not a numeric ID -- resolved via the same PUBLIC slug lookup the
+  // customer product page uses (it already returns the numeric id, and
+  // nothing admin-sensitive is needed just to resolve which product this
+  // is), then every admin-only call below uses that resolved numeric ID
+  // exactly as it always did. The legacy bare /admin/products/{id} route
+  // skips this step entirely.
+  const slugResolveQuery = useQuery({
+    queryKey: ["admin", "product-slug-resolve", idOrSlug],
+    queryFn: () => productsApi.getProductBySlug(idOrSlug),
+    enabled: !isNew && !isNumericId,
+  });
+
+  const resolvedId = isNew ? null : isNumericId ? idOrSlug : slugResolveQuery.data?.id;
+
+  const productQuery = useQuery({
+    queryKey: ["admin", "product", resolvedId],
+    queryFn: () => adminApi.getAdminProduct(resolvedId),
+    enabled: !isNew && Boolean(resolvedId),
+  });
+  const variantsQuery = useQuery({
+    queryKey: ["admin", "variants", resolvedId],
+    queryFn: () => productsApi.getProductVariants(resolvedId),
+    enabled: !isNew && Boolean(resolvedId),
+  });
   // Separate call: jeansCode deliberately isn't on getAdminProduct's
   // response (see api/admin.js) since that DTO is shared with the public
   // storefront API.
   const jeansCodeQuery = useQuery({
-    queryKey: ["admin", "product", id, "jeansCode"],
-    queryFn: () => adminApi.getProductJeansCode(id),
-    enabled: !isNew,
+    queryKey: ["admin", "product", resolvedId, "jeansCode"],
+    queryFn: () => adminApi.getProductJeansCode(resolvedId),
+    enabled: !isNew && Boolean(resolvedId),
   });
+
+  // Canonicalize the legacy bare /admin/products/{id} URL to
+  // /admin/products/{slug}/edit once the product resolves -- client-side
+  // only (this is a static SPA with no server-side slug awareness), never
+  // claimed as a true 301. Never fires for the new-product route or for a
+  // request already on its own canonical URL.
+  useEffect(() => {
+    if (isNew || !productQuery.data?.slug) return;
+    const canonical = `/admin/products/${productQuery.data.slug}/edit`;
+    if (location.pathname !== canonical) {
+      navigate(canonical, { replace: true });
+    }
+  }, [isNew, productQuery.data, location.pathname, navigate]);
 
   const [loadedForm, setLoadedForm] = useState(null);
 
@@ -65,6 +110,7 @@ export default function AdminProductForm() {
       const usdEntry = p.prices?.find((pr) => pr.currency === "USD") ?? null;
       const next = {
         name: p.name ?? "",
+        slug: p.slug ?? "",
         shortDescription: p.shortDescription ?? "",
         description: p.description ?? "",
         price: p.price ?? "",
@@ -118,6 +164,7 @@ export default function AdminProductForm() {
         price: Number(form.price),
         discountPrice: onSale && form.discountPrice !== "" ? Number(form.discountPrice) : null,
         categoryId: Number(form.categoryId),
+        slug: form.slug.trim() !== "" ? form.slug.trim() : null,
         hsnCode: form.hsnCode !== "" ? form.hsnCode : null,
         jeansCode: form.jeansCode.trim() !== "" ? form.jeansCode.trim() : null,
       };
@@ -130,18 +177,19 @@ export default function AdminProductForm() {
       } else {
         payload.clearInternationalPricing = true;
       }
-      return isNew ? adminApi.createProduct(payload) : adminApi.updateProduct(id, payload);
+      return isNew ? adminApi.createProduct(payload) : adminApi.updateProduct(resolvedId, payload);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       notify(isNew ? "Product created" : "Product updated", "success");
       setLoadedForm(form);
-      if (isNew) navigate(`/admin/products/${data.id}`, { replace: true });
+      if (isNew) navigate(`/admin/products/${data.slug}/edit`, { replace: true });
     },
     onError: (err) => notify(err.message, "error"),
   });
 
-  if (!isNew && productQuery.isLoading) return <LoadingState label="Loading product" />;
+  if (!isNew && slugResolveQuery.isError) return <ErrorState message="Product not found." />;
+  if (!isNew && (!resolvedId || productQuery.isLoading)) return <LoadingState label="Loading product" />;
 
   return (
     <div>
@@ -173,6 +221,18 @@ export default function AdminProductForm() {
         className="hairline-card mt-8 grid grid-cols-1 gap-6 p-6 sm:grid-cols-2"
       >
         <Field label="Name" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} required />
+        <div className="block">
+          <Field
+            label="Product URL Slug"
+            value={form.slug}
+            onChange={(v) => setForm((f) => ({ ...f, slug: v }))}
+            placeholder={isNew ? "Leave blank to auto-generate from name" : undefined}
+          />
+          <p className="label-xs mt-1.5 text-muted-foreground">
+            stylenestfashion.com/products/{form.slug.trim() || "..."} — changing this on an existing product breaks
+            its old link, so it never changes automatically.
+          </p>
+        </div>
         <label className="block">
           <span className="label-xs text-muted-foreground">Category</span>
           <select required value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))} className="field mt-2">
@@ -334,7 +394,7 @@ export default function AdminProductForm() {
       {!isNew && (
         <div className="mt-10">
           <VariantManager
-            productId={id}
+            productId={resolvedId}
             categoryName={categories?.find((c) => String(c.id) === String(form.categoryId))?.name}
             variants={variantsQuery.data ?? []}
             onChanged={() => variantsQuery.refetch()}

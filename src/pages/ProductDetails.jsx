@@ -22,7 +22,7 @@ import BackButton from "../components/BackButton";
 const SECTIONS = ["Details", "Fabric & Care", "Shipping & Returns"];
 
 export default function ProductDetails() {
-  const { id } = useParams();
+  const { id: slugOrId } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const { notify } = useToast();
@@ -37,11 +37,38 @@ export default function ProductDetails() {
   const [activeImage, setActiveImage] = useState(0);
   const [open, setOpen] = useState("Details");
 
-  const productQuery = useQuery({ queryKey: ["product", id], queryFn: () => productsApi.getProduct(id) });
-  const variantsQuery = useQuery({ queryKey: ["product-variants", id], queryFn: () => productsApi.getProductVariants(id) });
+  // /products/:id supports BOTH the canonical slug (e.g. "pink-cotton-
+  // kurti") and a legacy numeric product ID, for old bookmarked/shared/
+  // indexed links -- SlugUtil on the backend guarantees a generated slug
+  // is never purely numeric, so this check is never ambiguous.
+  const isNumericId = /^\d+$/.test(slugOrId);
+
+  const productQuery = useQuery({
+    queryKey: ["product", slugOrId],
+    queryFn: () => (isNumericId ? productsApi.getProduct(slugOrId) : productsApi.getProductBySlug(slugOrId)),
+  });
+  const variantsQuery = useQuery({
+    queryKey: ["product-variants", isNumericId ? slugOrId : productQuery.data?.id],
+    queryFn: () => productsApi.getProductVariants(isNumericId ? slugOrId : productQuery.data.id),
+    enabled: isNumericId || Boolean(productQuery.data?.id),
+  });
 
   const product = productQuery.data;
   const variants = useMemo(() => variantsQuery.data ?? [], [variantsQuery.data]);
+
+  // A legacy numeric URL is resolved above like any other lookup, then
+  // canonicalized to the slug URL here -- replace: true so it doesn't add
+  // a Back-button entry (avoiding a redirect loop/history stack growth).
+  // This is a CLIENT-SIDE redirect, not a true HTTP 301: the SPA is served
+  // as static files with no server-side knowledge of slugs, so a crawler
+  // that doesn't execute JS still sees the numeric URL respond 200 rather
+  // than 301. See the SEO migration report for what a true 301 would
+  // require here.
+  useEffect(() => {
+    if (isNumericId && product?.slug) {
+      navigate(`/products/${product.slug}`, { replace: true });
+    }
+  }, [isNumericId, product, navigate]);
 
   // Root cause of the "images don't load after clicking a recommended
   // product" bug: React Router reuses this same component instance across
@@ -52,15 +79,15 @@ export default function ProductDetails() {
   // that leftover value (e.g. "BLUE") was still truthy on product B, so the
   // gallery looked up images for a color that doesn't exist there and found
   // nothing. A manual reload "fixed" it only because a fresh mount
-  // re-initializes useState to null. Resetting on id change is the real
-  // fix -- not a reload/timeout hack.
+  // re-initializes useState to null. Resetting on route-param change is the
+  // real fix -- not a reload/timeout hack.
   useEffect(() => {
     setSelectedColor(null);
     setSelectedSize(null);
     setQuantity(1);
     setActiveImage(0);
     setOpen("Details");
-  }, [id]);
+  }, [slugOrId]);
 
   useEffect(() => {
     if (product?.gender) setGender(product.gender.toLowerCase());
@@ -103,7 +130,7 @@ export default function ProductDetails() {
   });
 
   const { data: wishlist } = useQuery({ queryKey: ["wishlist"], queryFn: wishlistApi.getWishlist, enabled: isAuthenticated });
-  const saved = wishlist?.items?.some((i) => i.productId === Number(id)) ?? false;
+  const saved = wishlist?.items?.some((i) => i.productId === product?.id) ?? false;
 
   const activePrice = product ? resolveProductPrice(product, currency) : null;
 
@@ -119,10 +146,10 @@ export default function ProductDetails() {
   const toggleWishlist = useMutation({
     mutationFn: async () => {
       if (saved) {
-        const item = wishlist.items.find((i) => i.productId === Number(id));
+        const item = wishlist.items.find((i) => i.productId === product.id);
         await wishlistApi.removeWishlistItem(item.wishlistItemId);
       } else {
-        await wishlistApi.addToWishlist({ productId: Number(id), productVariantId: activeVariant?.id });
+        await wishlistApi.addToWishlist({ productId: product.id, productVariantId: activeVariant?.id });
       }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["wishlist"] }),
@@ -167,17 +194,37 @@ export default function ProductDetails() {
   const outOfStock = activeVariant && activeVariant.stock <= 0;
   const unavailableInCurrency = !activePrice;
 
+  // The category slug the backend sends is already gender-prefixed (e.g.
+  // "women-kurti" -- see CategoryServiceImpl.buildSlug); the gender is
+  // already its own path segment here, so only the bare part is needed.
+  const genderPath = product.gender ? `/${product.gender.toLowerCase()}` : "/";
+  const categoryPath =
+    product.categorySlug && product.gender
+      ? `${genderPath}/${
+          product.categorySlug.startsWith(`${product.gender.toLowerCase()}-`)
+            ? product.categorySlug.slice(product.gender.length + 1)
+            : product.categorySlug
+        }`
+      : null;
+
   return (
     <PageFade>
       <div className="mx-auto max-w-[1440px] px-5 py-10 md:px-10">
-        <BackButton fallback={`/products?gender=${product.gender}`} className="mb-6" />
+        <BackButton fallback={categoryPath ?? genderPath} className="mb-6" />
         <p className="label-xs text-muted-foreground">
-          <Link to={`/products?gender=${product.gender}`} className="link-underline">
+          <Link to={genderPath} className="link-underline">
             {product.gender?.toLowerCase()}
           </Link>{" "}
           {product.categoryName && (
             <>
-              / <span>{product.categoryName}</span>
+              /{" "}
+              {categoryPath ? (
+                <Link to={categoryPath} className="link-underline">
+                  {product.categoryName}
+                </Link>
+              ) : (
+                <span>{product.categoryName}</span>
+              )}
             </>
           )}
         </p>

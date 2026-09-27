@@ -36,7 +36,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="group hairline-card relative women:border-transparent women:bg-transparent">
-      <Link to={`/products/${product.id}`} className="zoom-media block aspect-[4/5] overflow-hidden bg-muted">
+      <Link to={`/products/${product.slug ?? product.id}`} className="zoom-media block aspect-[4/5] overflow-hidden bg-muted">
         {product.thumbnailUrl ? (
           <img src={product.thumbnailUrl} alt={product.name} loading="lazy" className="h-full w-full object-cover object-top" />
         ) : (
@@ -64,7 +64,7 @@ export default function ProductCard({ product }) {
         </span>
       )}
       <div className="space-y-1 p-4 women:space-y-1.5 women:p-0 women:pt-4">
-        <Link to={`/products/${product.id}`} className="display block text-base women:text-lg women:italic">
+        <Link to={`/products/${product.slug ?? product.id}`} className="display block text-base women:text-lg women:italic">
           {product.name}
         </Link>
         {activePrice ? (

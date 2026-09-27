@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { SlidersHorizontal } from "lucide-react";
 import * as productsApi from "../api/products";
@@ -18,14 +18,23 @@ const SORT_OPTIONS = [
   { value: "name:asc", label: "Name: A–Z" },
 ];
 
-export default function ProductListing() {
+// overrideGender/overrideCategoryId/overrideCategoryName let a clean
+// /women/{categorySlug} route (see CategoryListing.jsx) drive this exact
+// same listing/filter logic without duplicating it -- the only other
+// difference in that mode is how a category CHANGE from the filter drawer
+// is handled (see updateFilter below): the clean route's category is part
+// of the URL PATH, not a query param, so switching categories there means
+// navigating to a different path rather than setting ?categoryId=.
+export default function ProductListing({ overrideGender, overrideCategoryId, overrideCategoryName } = {}) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(0);
   const { setGender } = useGender();
 
-  const gender = searchParams.get("gender") || undefined;
-  const categoryId = searchParams.get("categoryId") || undefined;
+  const cleanCategoryPath = Boolean(overrideCategoryId);
+  const gender = overrideGender ?? (searchParams.get("gender") || undefined);
+  const categoryId = overrideCategoryId ?? (searchParams.get("categoryId") || undefined);
   const color = searchParams.get("color") || undefined;
   const size = searchParams.get("size") || undefined;
   const minPrice = searchParams.get("minPrice") || undefined;
@@ -71,7 +80,29 @@ export default function ProductListing() {
     setItems((prev) => (page === 0 ? data.content : [...prev, ...data.content]));
   }, [data, page]);
 
+  // On the clean /women/{categorySlug} route, the category is part of the
+  // URL PATH, not a query param -- switching categories there means
+  // navigating to a different path (or back to the generic /products
+  // listing when the drawer's "Clear" is used), never adding a redundant
+  // ?categoryId= that would contradict what the path itself says.
+  function navigateToCategoryPath(nextCategoryId) {
+    if (nextCategoryId == null) {
+      navigate(`/products?gender=${gender}`);
+      return;
+    }
+    const target = categories?.find((c) => String(c.id) === String(nextCategoryId));
+    if (!target?.slug) return;
+    const barSlug = target.slug.startsWith(`${gender.toLowerCase()}-`)
+      ? target.slug.slice(gender.length + 1)
+      : target.slug;
+    navigate(`/${gender.toLowerCase()}/${barSlug}`);
+  }
+
   function updateFilter(patch) {
+    if (cleanCategoryPath && "categoryId" in patch) {
+      navigateToCategoryPath(patch.categoryId);
+      return;
+    }
     setPage(0);
     const next = new URLSearchParams(searchParams);
     Object.entries(patch).forEach(([key, value]) => {
@@ -81,10 +112,12 @@ export default function ProductListing() {
     setSearchParams(next);
   }
 
-  const heading = search
-    ? `Results for "${search}"`
-    : categories?.find((c) => String(c.id) === String(categoryId))?.name ||
-      (gender === "MEN" ? "Men's Collection" : gender === "WOMEN" ? "Women's Collection" : "All Products");
+  const heading =
+    overrideCategoryName ||
+    (search
+      ? `Results for "${search}"`
+      : categories?.find((c) => String(c.id) === String(categoryId))?.name ||
+        (gender === "MEN" ? "Men's Collection" : gender === "WOMEN" ? "Women's Collection" : "All Products"));
 
   return (
     <PageFade>
