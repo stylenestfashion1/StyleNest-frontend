@@ -54,6 +54,15 @@ import SpecialOffer from "./pages/SpecialOffer";
 import AdminRewardsOffers from "./pages/admin/AdminRewardsOffers";
 import AdminRewardsDiscountConfig from "./pages/admin/AdminRewardsDiscountConfig";
 import AdminRewardsQr from "./pages/admin/AdminRewardsQr";
+import RentalLanding from "./pages/RentalLanding";
+import RentalCatalog from "./pages/RentalCatalog";
+import RentalItemDetail from "./pages/RentalItemDetail";
+import RentalBookingFlow from "./pages/RentalBookingFlow";
+import AdminRentalCatalogs from "./pages/admin/AdminRentalCatalogs";
+import AdminRentalCatalogDetail from "./pages/admin/AdminRentalCatalogDetail";
+import AdminRentalBookings from "./pages/admin/AdminRentalBookings";
+import AdminRentalBookingDetail from "./pages/admin/AdminRentalBookingDetail";
+import AdminRentalSettings from "./pages/admin/AdminRentalSettings";
 
 /**
  * React Router never resets scroll position on client-side navigation (that
@@ -207,6 +216,26 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Route>
 
+        {/* NAVRATRI RENTAL CATALOG -- standalone module, outside <Layout>
+            on purpose (a sibling <Route>, not nested inside it) -- no
+            header, nav, currency toggle, search/theme/account/wishlist/
+            cart icons, or footer, just the catalog itself. Fully isolated
+            from the normal products/cart/checkout/order flow -- see
+            backend RentalCatalog* classes and SecurityConfig's rental
+            permitAll rules.
+
+            Two entry points now share this same set of routes: an
+            admin-generated /rental/<token> link (unchanged, still works
+            exactly as before), and the main-site "Rentals" nav link (see
+            Header.jsx), which has no token of its own -- "rental" (bare)
+            resolves whichever catalog is currently ACTIVE and hands off
+            into /rental/<token> below, so there's still only one rental
+            catalog/booking implementation either way. */}
+        <Route path="rental" element={<RentalLanding />} />
+        <Route path="rental/:shareToken" element={<RentalCatalog />} />
+        <Route path="rental/:shareToken/:itemId" element={<RentalItemDetail />} />
+        <Route path="rental/:shareToken/:itemId/book" element={<RentalBookingFlow />} />
+
         <Route path="admin/login" element={<AdminLogin />} />
         <Route
           path="admin"
@@ -246,6 +275,14 @@ function App() {
           <Route path="rewards/offers" element={<AdminRewardsOffers />} />
           <Route path="rewards/discount-config" element={<AdminRewardsDiscountConfig />} />
           <Route path="rewards/qr" element={<AdminRewardsQr />} />
+
+          {/* NAVRATRI RENTAL CATALOG (TEMPORARY) -- see the public route
+              above for the full rationale; admin side only. */}
+          <Route path="rental" element={<AdminRentalCatalogs />} />
+          <Route path="rental/:id" element={<AdminRentalCatalogDetail />} />
+          <Route path="rental/bookings" element={<AdminRentalBookings />} />
+          <Route path="rental/bookings/:reference" element={<AdminRentalBookingDetail />} />
+          <Route path="rental/settings" element={<AdminRentalSettings />} />
         </Route>
       </Routes>
     </>

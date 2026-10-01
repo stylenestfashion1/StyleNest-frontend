@@ -60,7 +60,7 @@ export default function AdminCategories() {
           value={form.imageUrl}
           onChange={(v) => setForm((f) => ({ ...f, imageUrl: v }))}
           aspect={4 / 5}
-          guidance="Recommended: 1200 × 1500 px (4:5 portrait). Minimum: 800 × 1000 px. Keep the main subject centered and safely inside the frame — this image fills a squarish category card on the storefront, so avoid busy edges."
+          guidance="Recommended: 1200 × 1500 px (4:5 portrait). Minimum: 800 × 1000 px. Keep the main subject centered and safely inside the frame — this image fills a portrait category card in the homepage carousel, so avoid busy edges."
         />
         <label className="block sm:col-span-2">
           <span className="label-xs text-muted-foreground">Description</span>

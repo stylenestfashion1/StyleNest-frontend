@@ -65,8 +65,11 @@ export default function GenderLanding({ gender }) {
             <Reveal className="md:col-span-2 md:row-span-2">
               <CategoryHeroTile category={hero} gender={gender} blurb={hero.description || copy.label} />
             </Reveal>
+            {/* Delay capped low (was up to 340ms) -- see ProductGrid.jsx
+                for why a long stagger widens the window for a late
+                IntersectionObserver callback to read as shake/jitter. */}
             {rest.map((cat, i) => (
-              <Reveal key={cat.id} delay={120 + i * 110}>
+              <Reveal key={cat.id} delay={60 + i * 50}>
                 <CategoryTile category={cat} gender={gender} />
               </Reveal>
             ))}

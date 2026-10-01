@@ -4,11 +4,6 @@ import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import heroMen from "../assets/hero-men.jpg";
 import heroWomen from "../assets/hero-women.jpg";
 import { useGender } from "../context/GenderContext";
-import { useFluidCursorEnabled } from "../hooks/useFluidCursorEnabled";
-import SplashCursor from "../components/SplashCursor";
-
-/** A neutral warm gold between the Men (cognac) and Women (champagne) accents — this gateway page is gender-agnostic. */
-const GATEWAY_CURSOR_COLOR = "#c2a568";
 
 const COPY = {
   men: { label: "Men", head: "WELL TAILORED", tag: "Structure, softened by wear." },
@@ -53,7 +48,6 @@ export default function Home() {
   const [active, setActive] = useState("women");
   const navigate = useNavigate();
   const copy = COPY[active];
-  const fluidCursorEnabled = useFluidCursorEnabled();
 
   // Neutral accent on the gateway itself — gender-specific theming should
   // only kick in once the visitor actually enters that section.
@@ -66,12 +60,6 @@ export default function Home() {
 
   return (
     <>
-      {/* This whole page is the entry/dashboard experience — no separate
-          scroll-gated section, so the cursor stays active for as long as the
-          visitor is on this route (still gated by fine-pointer + motion
-          preference via useFluidCursorEnabled, same as the Men/Women entry). */}
-      {fluidCursorEnabled && <SplashCursor color={GATEWAY_CURSOR_COLOR} />}
-
       {/* Mobile: stacked tappable panels, no hover-dependent interaction */}
       <section className="md:hidden">
         {["men", "women"].map((g) => (

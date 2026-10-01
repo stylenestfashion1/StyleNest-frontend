@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Crop, RefreshCw, Trash2, UploadCloud } from "lucide-react";
+import { ArrowDown, ArrowUp, Crop, Pencil, RefreshCw, Trash2, UploadCloud } from "lucide-react";
 import * as adminApi from "../../api/admin";
 import CropModal from "./CropModal";
 import { useToast } from "../../context/ToastContext";
@@ -26,6 +26,62 @@ export default function ImageUploadManager({ images, onAddImage, onDeleteImage, 
   const [replaceTarget, setReplaceTarget] = useState(null);
   const [replaceStaged, setReplaceStaged] = useState(null);
   const [replacing, setReplacing] = useState(false);
+
+  // Editing an EXISTING already-uploaded image, as opposed to Replace
+  // (which requires picking a brand new file from disk). editSrc holds an
+  // object URL created from the actual stored image's own bytes (fetched
+  // once, up front) so CropModal opens on the real current image -- never
+  // a stand-in or a fresh file picker.
+  const [editTarget, setEditTarget] = useState(null);
+  const [editSrc, setEditSrc] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+
+  async function startEdit(image) {
+    setEditLoading(true);
+    try {
+      const res = await fetch(image.imageUrl, { mode: "cors" });
+      if (!res.ok) throw new Error("Could not load the image to edit");
+      const blob = await res.blob();
+      setEditTarget(image);
+      setEditSrc(URL.createObjectURL(blob));
+    } catch (err) {
+      notify(err.message || "Could not load the image to edit", "error");
+    } finally {
+      setEditLoading(false);
+    }
+  }
+
+  function cancelEdit() {
+    if (editSrc) URL.revokeObjectURL(editSrc);
+    setEditSrc(null);
+    setEditTarget(null);
+  }
+
+  // Same delete-old-then-add-new sequence as confirmReplace below (the
+  // only way to change a saved image's pixels in the current backend --
+  // there is no update-in-place endpoint). Reusing that exact, already
+  // in-production pattern here -- rather than inventing a second one --
+  // is what keeps this safe: same displayOrder preserved, same color
+  // scope (onAddImage/onDeleteImage are already bound to this one color
+  // group by the caller), no new duplicate-record or cross-color risk.
+  async function confirmEdit(croppedFile) {
+    setEditSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", croppedFile);
+      const uploaded = await adminApi.uploadAdminImage(formData);
+      await onDeleteImage(editTarget.id);
+      await onAddImage({ imageUrl: uploaded.url, displayOrder: editTarget.displayOrder });
+      await onChanged?.();
+      notify("Image updated", "success");
+    } catch (err) {
+      notify(err.message, "error");
+    } finally {
+      setEditSaving(false);
+      cancelEdit();
+    }
+  }
 
   function startReplace(image) {
     setReplaceTarget(image);
@@ -156,22 +212,38 @@ export default function ImageUploadManager({ images, onAddImage, onDeleteImage, 
               </div>
               {i === 0 && <span className="absolute left-1 top-1 bg-accent px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-accent-foreground">Primary</span>}
               <div className="mt-1 flex items-center justify-center gap-1">
-                <button disabled={reordering || i === 0} onClick={() => moveSaved(img, -1)} aria-label="Move earlier" className="disabled:opacity-30">
+                <button disabled={reordering || i === 0} onClick={() => moveSaved(img, -1)} aria-label="Move earlier" title="Move earlier" className="disabled:opacity-30">
                   <ArrowUp className="h-3.5 w-3.5" />
                 </button>
-                <button disabled={reordering || replacing} onClick={() => startReplace(img)} aria-label="Replace image">
+                <button disabled={reordering || replacing || editLoading} onClick={() => startEdit(img)} aria-label="Edit image" title="Edit image">
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button disabled={reordering || replacing || editLoading} onClick={() => startReplace(img)} aria-label="Replace image" title="Replace image">
                   <RefreshCw className="h-3.5 w-3.5" />
                 </button>
-                <button disabled={reordering} onClick={() => onDeleteImage(img.id)} aria-label="Delete" className="text-destructive">
+                <button disabled={reordering || editLoading} onClick={() => onDeleteImage(img.id)} aria-label="Remove image" title="Remove image" className="text-destructive">
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
-                <button disabled={reordering || i === savedSorted.length - 1} onClick={() => moveSaved(img, 1)} aria-label="Move later" className="disabled:opacity-30">
+                <button disabled={reordering || i === savedSorted.length - 1} onClick={() => moveSaved(img, 1)} aria-label="Move later" title="Move later" className="disabled:opacity-30">
                   <ArrowDown className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
           ))}
         </div>
+      )}
+
+      {editSrc && (
+        <CropModal
+          src={editSrc}
+          fileName={editTarget?.imageUrl?.split("/").pop() || "image.jpg"}
+          aspect={aspect}
+          onCancel={cancelEdit}
+          onConfirm={confirmEdit}
+          applying={editSaving}
+          cancelLabel="Cancel"
+          helperText="This is the actual saved image, shown at its full framing by default -- Apply with no changes keeps it exactly as-is. Crop, zoom, or rotate only if you want to trim or adjust it. Only this one image for this color is affected."
+        />
       )}
 
       <input ref={replaceInputRef} type="file" accept="image/*" onChange={handleReplaceSelect} className="hidden" />
@@ -184,7 +256,7 @@ export default function ImageUploadManager({ images, onAddImage, onDeleteImage, 
           onConfirm={confirmReplace}
           applying={replacing}
           cancelLabel="Use full image"
-          helperText="The box is a suggested 4:5 framing, not a requirement -- skip it to upload your photo exactly as selected, uncropped."
+          helperText="The crop box starts matching your full photo -- Apply with no changes uploads it exactly as selected, uncropped."
         />
       )}
 
@@ -238,7 +310,7 @@ export default function ImageUploadManager({ images, onAddImage, onDeleteImage, 
           onCancel={() => setCropping(null)}
           onConfirm={applyCrop}
           cancelLabel="Use full image"
-          helperText="The box is a suggested 4:5 framing, not a requirement -- skip it to upload your photo exactly as selected, uncropped."
+          helperText="The crop box starts matching your full photo -- Apply with no changes uploads it exactly as selected, uncropped."
         />
       )}
     </div>

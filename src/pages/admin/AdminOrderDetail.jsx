@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Send } from "lucide-react";
+import { FileText, Send, Truck, Download, RefreshCw, XCircle } from "lucide-react";
 import * as adminApi from "../../api/admin";
 import { formatDate, formatPrice } from "../../utils/format";
 import { getSizeLabel } from "../../utils/sizeLabel";
@@ -19,6 +19,8 @@ export default function AdminOrderDetail() {
   const { notify } = useToast();
   const [shipment, setShipment] = useState({ shipmentStatus: "PROCESSING", trackingNumber: "", courierName: "", estimatedDeliveryDate: "", description: "", location: "" });
   const [resending, setResending] = useState(false);
+  const [dtdcForm, setDtdcForm] = useState({ weightKg: "", lengthCm: "", widthCm: "", heightCm: "", numPieces: "1" });
+  const [downloadingLabel, setDownloadingLabel] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "order", id], queryFn: () => adminApi.getAdminOrder(id) });
 
@@ -39,6 +41,57 @@ export default function AdminOrderDetail() {
     },
     onError: (err) => notify(err.message, "error"),
   });
+
+  const bookDtdc = useMutation({
+    mutationFn: () =>
+      adminApi.bookDtdcShipment(id, {
+        weightKg: Number(dtdcForm.weightKg),
+        lengthCm: Number(dtdcForm.lengthCm),
+        widthCm: Number(dtdcForm.widthCm),
+        heightCm: Number(dtdcForm.heightCm),
+        numPieces: Number(dtdcForm.numPieces) || 1,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "order", id] });
+      notify("Shipment booked with DTDC", "success");
+    },
+    onError: (err) => notify(err.message, "error"),
+  });
+
+  const cancelDtdc = useMutation({
+    mutationFn: () => adminApi.cancelDtdcShipment(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "order", id] });
+      notify("Shipment cancelled with DTDC", "success");
+    },
+    onError: (err) => notify(err.message, "error"),
+  });
+
+  const refreshTracking = useMutation({
+    mutationFn: () => adminApi.refreshDtdcTracking(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "order", id] });
+      notify("Tracking refreshed from DTDC", "success");
+    },
+    onError: (err) => notify(err.message, "error"),
+  });
+
+  async function handleDownloadLabel() {
+    setDownloadingLabel(true);
+    try {
+      const blob = await adminApi.getDtdcLabelPdfBlob(id);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `DTDC-Label-${order.orderNumber}.pdf`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      notify(err.message, "error");
+    } finally {
+      setDownloadingLabel(false);
+    }
+  }
 
   async function handleResendInvoice() {
     setResending(true);
@@ -149,6 +202,53 @@ export default function AdminOrderDetail() {
             <p className="label-xs mt-4 text-muted-foreground">
               Current: {order.shipmentStatus} {order.trackingNumber && `· ${order.trackingNumber}`}
             </p>
+          )}
+
+          <h3 className="label-xs mt-8 flex items-center gap-2 text-muted-foreground">
+            <Truck className="h-3.5 w-3.5" />
+            DTDC Courier
+          </h3>
+
+          {!order.trackingNumber && (
+            <div className="mt-3">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <ShipField label="Weight (kg)" type="number" value={dtdcForm.weightKg} onChange={(v) => setDtdcForm((s) => ({ ...s, weightKg: v }))} />
+                <ShipField label="Length (cm)" type="number" value={dtdcForm.lengthCm} onChange={(v) => setDtdcForm((s) => ({ ...s, lengthCm: v }))} />
+                <ShipField label="Width (cm)" type="number" value={dtdcForm.widthCm} onChange={(v) => setDtdcForm((s) => ({ ...s, widthCm: v }))} />
+                <ShipField label="Height (cm)" type="number" value={dtdcForm.heightCm} onChange={(v) => setDtdcForm((s) => ({ ...s, heightCm: v }))} />
+                <ShipField label="Pieces" type="number" value={dtdcForm.numPieces} onChange={(v) => setDtdcForm((s) => ({ ...s, numPieces: v }))} />
+              </div>
+              <button onClick={() => bookDtdc.mutate()} disabled={bookDtdc.isPending} className="btn-solid mt-4 inline-flex items-center gap-2">
+                <Truck className="h-3.5 w-3.5" />
+                {bookDtdc.isPending ? "Booking..." : "Book shipment with DTDC"}
+              </button>
+              <p className="label-xs mt-2 text-muted-foreground">
+                Customer, address, COD/declared value and invoice reference are taken from the order itself -- only the packed
+                weight/dimensions are entered here. Domestic (India) orders only.
+              </p>
+            </div>
+          )}
+
+          {order.courierName === "DTDC" && order.trackingNumber && (
+            <div className="mt-3 flex flex-wrap items-center gap-4">
+              <p className="label-xs text-muted-foreground">
+                AWB: <span className="text-foreground">{order.trackingNumber}</span>
+              </p>
+              <button onClick={() => refreshTracking.mutate()} disabled={refreshTracking.isPending} className="label-xs link-underline inline-flex items-center gap-2 text-accent">
+                <RefreshCw className="h-3.5 w-3.5" />
+                {refreshTracking.isPending ? "Refreshing..." : "Refresh tracking"}
+              </button>
+              <button onClick={handleDownloadLabel} disabled={downloadingLabel} className="label-xs link-underline inline-flex items-center gap-2 text-accent">
+                <Download className="h-3.5 w-3.5" />
+                {downloadingLabel ? "Downloading..." : "Download label"}
+              </button>
+              {order.shipmentStatus !== "DELIVERED" && order.shipmentStatus !== "CANCELLED" && order.shipmentStatus !== "RETURNED" && (
+                <button onClick={() => cancelDtdc.mutate()} disabled={cancelDtdc.isPending} className="label-xs link-underline inline-flex items-center gap-2 text-destructive">
+                  <XCircle className="h-3.5 w-3.5" />
+                  {cancelDtdc.isPending ? "Cancelling..." : "Cancel DTDC shipment"}
+                </button>
+              )}
+            </div>
           )}
         </section>
       </div>

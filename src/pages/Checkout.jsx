@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as ordersApi from "../api/orders";
 import * as addressesApi from "../api/addresses";
 import * as paymentsApi from "../api/payments";
-import { payWithRazorpay } from "../utils/razorpayCheckout";
+import { payWithCashfree } from "../utils/cashfreeCheckout";
 import { formatPrice } from "../utils/format";
 import { getSizeLabel } from "../utils/sizeLabel";
 import { PageFade, Reveal } from "../components/Reveal";
@@ -19,16 +19,16 @@ import { useGuestCart } from "../context/GuestCartContext";
 
 const PAYMENT_METHODS = [
   { id: "COD", title: "Cash on delivery", note: "Pay in cash when your order arrives." },
-  { id: "ONLINE", title: "Pay online", note: "Card, UPI, netbanking or wallet — secured by Razorpay." },
+  { id: "ONLINE", title: "Pay online", note: "Card, UPI, netbanking or wallet — secured by Cashfree." },
 ];
 
 // Shown in place of the payment-method picker (and disables the final
 // place-order/pay button) whenever the active cart/checkout currency is
 // USD -- browsing/cart/checkout work fully in USD, but payment stays
-// blocked until the merchant's Razorpay account is confirmed activated
+// blocked until the merchant's Cashfree account is confirmed activated
 // for international payments. This is a UX convenience only; the real,
 // authoritative block lives server-side in OrderServiceImpl.reserveOrder,
-// which rejects a USD order before it's ever persisted or Razorpay is
+// which rejects a USD order before it's ever persisted or Cashfree is
 // contacted, independent of whatever this page does or doesn't disable.
 function UsdPaymentBlockedNotice() {
   return (
@@ -51,7 +51,6 @@ function RegisteredCheckout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { notify } = useToast();
-  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [placing, setPlacing] = useState(false);
@@ -82,23 +81,18 @@ function RegisteredCheckout() {
         return;
       }
 
-      const initiation = await paymentsApi.initiateRazorpayPayment();
+      const initiation = await paymentsApi.initiatePayment();
       queryClient.invalidateQueries({ queryKey: ["cart"] });
 
-      const result = await payWithRazorpay(initiation, {
-        prefill: {
-          name: checkout?.shippingAddress?.fullName || user?.fullName,
-          email: user?.email,
-          contact: checkout?.shippingAddress?.phone,
-        },
-        onPaymentFailed: () => notify("That payment method didn't work. You can try another in the same window.", "error"),
-      });
+      const result = await payWithCashfree(initiation);
 
       if (result.outcome === "success") {
         notify("Payment successful", "success");
         navigate(`/orders/${initiation.orderId}`, { replace: true });
-      } else if (result.outcome === "dismissed") {
+      } else if (result.outcome === "pending") {
         notify("Payment was not completed. You can try again.");
+      } else if (result.outcome === "redirected") {
+        notify("Completing your payment...");
       } else {
         notify(result.error?.message || "Could not verify the payment. Please check your orders.", "error");
       }
@@ -368,8 +362,8 @@ function GuestCheckout() {
     setStep((s) => s + 1);
   }
 
-  // Shared by both the COD placement payload and the Razorpay guest
-  // initiate payload -- the latter has no paymentMethod field (Razorpay
+  // Shared by both the COD placement payload and the Cashfree guest
+  // initiate payload -- the latter has no paymentMethod field (Cashfree
   // Checkout itself is where the customer picks the sub-method).
   function buildGuestOrderBase() {
     return {
@@ -403,12 +397,9 @@ function GuestCheckout() {
         return;
       }
 
-      const initiation = await paymentsApi.initiateGuestRazorpayPayment(buildGuestOrderBase());
+      const initiation = await paymentsApi.initiateGuestPayment(buildGuestOrderBase());
 
-      const result = await payWithRazorpay(initiation, {
-        prefill: { name: contact.fullName, email: contact.email, contact: contact.phone },
-        onPaymentFailed: () => notify("That payment method didn't work. You can try another in the same window.", "error"),
-      });
+      const result = await payWithCashfree(initiation);
 
       if (result.outcome === "success") {
         // Only clear the guest's local cart once payment is genuinely
@@ -416,8 +407,10 @@ function GuestCheckout() {
         // failed retry with no items to resubmit.
         guestCart.clear();
         navigate(`/track-order?orderNumber=${encodeURIComponent(initiation.orderNumber)}&payment=success`);
-      } else if (result.outcome === "dismissed") {
+      } else if (result.outcome === "pending") {
         notify("Payment was not completed. You can try again.");
+      } else if (result.outcome === "redirected") {
+        notify("Completing your payment...");
       } else {
         notify(result.error?.message || "Could not verify the payment. Please check your order via Track Order.", "error");
       }

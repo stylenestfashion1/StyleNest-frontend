@@ -14,10 +14,27 @@ export const resendAdminOrderInvoiceEmail = (id) => client.post(`/admin/orders/$
 export const updateOrderStatus = (id, data) => client.put(`/admin/orders/${id}/status`, data);
 export const updateOrderShipment = (id, data) => client.put(`/admin/orders/${id}/shipment`, data);
 
+// DTDC courier integration -- see ShipmentService.bookDtdcShipment/etc.
+// Booking only takes the package weight/dimensions (everything else about
+// the shipment comes from the order itself on the backend).
+export const bookDtdcShipment = (id, data) => client.post(`/admin/orders/${id}/shipment/dtdc/book`, data);
+export const cancelDtdcShipment = (id) => client.post(`/admin/orders/${id}/shipment/dtdc/cancel`);
+export const refreshDtdcTracking = (id) => client.post(`/admin/orders/${id}/shipment/dtdc/track`);
+export const getDtdcLabelPdfBlob = (id) => client.get(`/admin/orders/${id}/shipment/dtdc/label`, { responseType: "blob" });
+
 export const getAdminProducts = (params) => client.get("/admin/products", { params });
 export const getAdminProduct = (id) => client.get(`/admin/products/${id}`);
 export const createProduct = (data) => client.post("/admin/products", data);
 export const updateProduct = (id, data) => client.put(`/admin/products/${id}`, data);
+
+// Admin-only internal identification code -- deliberately not part of
+// getAdminProduct/ProductResponse (that DTO is shared with the public,
+// unauthenticated storefront API), so it is read via these separate
+// endpoints instead. Writing it goes through the normal createProduct /
+// updateProduct payload above, since every write to those endpoints is
+// already admin-gated.
+export const getProductJeansCode = (id) => client.get(`/admin/products/${id}/jeans-code`);
+export const getAllProductJeansCodes = () => client.get("/admin/products/jeans-codes");
 export const deleteProduct = (id) => client.delete(`/admin/products/${id}`);
 
 export const createCategory = (data) => client.post("/categories", data);

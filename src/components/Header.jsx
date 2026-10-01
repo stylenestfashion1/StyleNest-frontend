@@ -22,6 +22,13 @@ const NAV = [
 // catalog, not a normal storefront section.
 const BULK_ORDERS_LINK = { label: "Bulk Orders", to: "/bulk-orders" };
 
+// Unlike BULK_ORDERS_LINK, this is meant to feel like a normal first-class
+// section -- to: "/rental" (bare, no token) resolves the currently ACTIVE
+// rental catalog via RentalLanding.jsx. NavLink's default prefix matching
+// keeps this highlighted for the whole /rental/* section (catalog, item
+// detail, booking flow), not just this landing page.
+const RENTALS_LINK = { label: "Rentals", to: "/rental" };
+
 /**
  * Hide the header on scroll-down, reveal it on scroll-up, and always show it
  * near the very top — direction-based (not a raw position threshold) with a
@@ -194,6 +201,14 @@ export function Header() {
         </Link>
 
         <div className="col-start-3 flex min-w-0 items-center justify-end gap-3 xl:gap-4">
+          <NavLink
+            to={RENTALS_LINK.to}
+            className={({ isActive }) =>
+              `label-xs link-underline hidden whitespace-nowrap xl:inline ${isActive ? "text-accent" : ""}`
+            }
+          >
+            {RENTALS_LINK.label}
+          </NavLink>
           <CurrencyToggle />
           <button
             aria-label="Search"
@@ -344,7 +359,7 @@ export function Header() {
             </button>
           </div>
           <nav className="flex flex-col gap-6">
-            {[...NAV, { label: "Sale", to: "/sale" }, { label: "Track Order", to: "/track-order" }, BULK_ORDERS_LINK].map((item) => (
+            {[...NAV, { label: "Sale", to: "/sale" }, { label: "Track Order", to: "/track-order" }, BULK_ORDERS_LINK, RENTALS_LINK].map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

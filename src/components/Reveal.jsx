@@ -7,6 +7,17 @@ export function Reveal({ children, delay = 0, as: Tag = "div", className = "", s
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    // rootMargin extends the trigger zone 20% of the viewport height
+    // *below* the visible area, so a card is marked shown before it's
+    // actually scrolled into view rather than after. IntersectionObserver
+    // callbacks are async and can lag behind a fast or direction-reversing
+    // scroll; with the old shrink-inward margin ("-8%"), a laggy callback
+    // could fire only once the user had already scrolled past the card
+    // (or reversed direction), kicking off its reveal transition on an
+    // element no longer where it triggered -- reading as a sudden
+    // shake/flicker disconnected from the current scroll. Triggering
+    // early leaves enough lead time that the callback resolves, and the
+    // transition finishes, before the card is actually on screen.
     const io = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
@@ -14,7 +25,7 @@ export function Reveal({ children, delay = 0, as: Tag = "div", className = "", s
           io.disconnect();
         }
       },
-      { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0, rootMargin: "0px 0px 20% 0px" }
     );
     io.observe(el);
     return () => io.disconnect();

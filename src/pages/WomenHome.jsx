@@ -1,19 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useGender } from "../context/GenderContext";
 import { useGenderStorefront } from "../hooks/useGenderStorefront";
 import { useScrollExpandImages } from "../context/ScrollExpandImagesContext";
-import { useInView } from "../hooks/useInView";
-import { useFluidCursorEnabled } from "../hooks/useFluidCursorEnabled";
 import ProductGrid from "../components/ProductGrid";
-import CategoryScrollStack from "../components/CategoryScrollStack";
+import CategoryDepthCarousel from "../components/CategoryDepthCarousel";
 import ScrollExpand from "../components/ScrollExpand";
 import ParticleText from "../components/ParticleText";
-import SplashCursor from "../components/SplashCursor";
 import { PageFade, Reveal } from "../components/Reveal";
-
-const ENTRY_IN_VIEW_OPTIONS = { threshold: 0 };
 
 const SCROLL_EXPAND_CONFIG = {
   mediaZoom: 1.35,
@@ -31,9 +26,6 @@ export default function WomenHome() {
   const { setGender } = useGender();
   const { categories, featured, trending } = useGenderStorefront("WOMEN");
   const { getImage } = useScrollExpandImages();
-  const entryRef = useRef(null);
-  const entryInView = useInView(entryRef, ENTRY_IN_VIEW_OPTIONS);
-  const fluidCursorEnabled = useFluidCursorEnabled();
 
   useEffect(() => setGender("women"), [setGender]);
 
@@ -44,11 +36,7 @@ export default function WomenHome() {
   return (
     <PageFade>
       {/* ============ SHOP WOMENSWEAR — particle-text intro ============ */}
-      {/* SplashCursor is scoped to exactly this section's viewport visibility — mounted only
-          while the entry section is in view, unmounted (with full cleanup) the moment it isn't.
-          Responds to both mouse and touch (see useFluidCursorEnabled) — same simulation either way. */}
-      {entryInView && fluidCursorEnabled && <SplashCursor color="#e0c793" />}
-      <section ref={entryRef} className="relative h-[70vh] min-h-[460px] w-full bg-[#161512] md:h-[85vh]">
+      <section className="relative h-[70vh] min-h-[460px] w-full bg-[#161512] md:h-[85vh]">
         <ParticleText
           text="SHOP WOMENSWEAR"
           color="#f3f2ef"
@@ -76,8 +64,8 @@ export default function WomenHome() {
         </p>
       </ScrollExpand>
 
-      {/* ============ CATEGORIES — ScrollStack, final and sole category presentation ============ */}
-      <CategoryScrollStack categories={cats} gender="WOMEN" />
+      {/* ============ CATEGORIES — DepthCarousel, final and sole category presentation ============ */}
+      <CategoryDepthCarousel categories={cats} gender="WOMEN" />
 
       {/* ============ SCROLL-EXPAND #2 — collection editorial ============ */}
       <ScrollExpand

@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Menu, X, BarChart3 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+
+// GA4 is already installed on the storefront (see index.html) -- this just
+// opens the existing Google Analytics property in a new tab, no embedding,
+// no Data API, no OAuth. Standard GA entry point, not a specific property
+// URL, since the property ID isn't available to the frontend -- the admin
+// picks the StyleNest property after logging in.
+const ANALYTICS_URL = "https://analytics.google.com/analytics/web/";
 
 const LINKS = [
   { to: "/admin", label: "Dashboard", end: true },
@@ -29,6 +36,14 @@ const REWARDS_LINKS = [
   { to: "/admin/rewards/offers", label: "Redeemed Offers", end: false },
   { to: "/admin/rewards/discount-config", label: "Custom Discount", end: false },
   { to: "/admin/rewards/qr", label: "Show Discount QR", end: false },
+];
+
+// Temporary Navratri rental-catalog module -- see App.jsx/RentalCatalog*
+// for the full rationale. Safe to delete this whole block after Navratri.
+const RENTAL_LINKS = [
+  { to: "/admin/rental", label: "Rental Catalogs", end: true },
+  { to: "/admin/rental/bookings", label: "Rental Bookings", end: false },
+  { to: "/admin/rental/settings", label: "Rental Settings", end: false },
 ];
 
 export default function AdminLayout() {
@@ -81,6 +96,17 @@ export default function AdminLayout() {
             </NavLink>
           ))}
 
+          <a
+            href={ANALYTICS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={closeNav}
+            className="label-xs link-underline flex items-center gap-1.5"
+          >
+            <BarChart3 className="h-3.5 w-3.5" />
+            Show Website Analytics
+          </a>
+
           <div className="mt-2 border-t pt-5">
             <p className="label-xs mb-3 text-muted-foreground">Bulk Orders</p>
             <div className="flex flex-col gap-4">
@@ -96,6 +122,17 @@ export default function AdminLayout() {
             <p className="label-xs mb-3 text-muted-foreground">Rewards</p>
             <div className="flex flex-col gap-4">
               {REWARDS_LINKS.map((l) => (
+                <NavLink key={l.to} to={l.to} end={l.end} onClick={closeNav} className={navLinkClass}>
+                  {l.label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-2 border-t pt-5">
+            <p className="label-xs mb-3 text-muted-foreground">Rental (Navratri)</p>
+            <div className="flex flex-col gap-4">
+              {RENTAL_LINKS.map((l) => (
                 <NavLink key={l.to} to={l.to} end={l.end} onClick={closeNav} className={navLinkClass}>
                   {l.label}
                 </NavLink>

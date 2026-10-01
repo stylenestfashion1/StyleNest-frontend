@@ -15,6 +15,19 @@ export function formatPrice(value, currency = "INR") {
   }).format(value);
 }
 
+// Rental catalog colour labels are free-typed by admins ("green", "GREEN",
+// "Green" all mean the same thing) -- this normalizes only the DISPLAY
+// casing, never the underlying stored value, so card/detail pages always
+// read consistently regardless of how it was originally entered.
+export function titleCase(value) {
+  if (!value) return "";
+  return value
+    .toLowerCase()
+    .split(" ")
+    .map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word))
+    .join(" ");
+}
+
 export function formatDate(value) {
   if (!value) return "";
   return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(value));

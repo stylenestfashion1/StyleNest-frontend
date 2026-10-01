@@ -1,12 +1,13 @@
 import { useState } from "react";
 import Cropper from "react-easy-crop";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Minus, Plus, RotateCcw, X } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Minus, Plus, RotateCcw, RotateCw, Undo2, X } from "lucide-react";
 import { getCroppedImageFile } from "../../utils/cropImage";
 
 const ZOOM_MIN = 1;
 const ZOOM_MAX = 3;
 const ZOOM_STEP = 0.1;
 const NUDGE_STEP = 15;
+const ROTATE_STEP = 90;
 
 export default function CropModal({
   src,
@@ -20,27 +21,44 @@ export default function CropModal({
   // mandatory crop -- callers whose Cancel path keeps the full original
   // image (see ImageUploadManager) should override this to say so, since
   // that's easy to miss otherwise.
-  helperText = "The box is a suggested 4:5 framing, not a requirement -- only the area inside it is saved if you apply a crop.",
+  helperText = "The crop box starts matching your full image, so Apply with no changes keeps the whole photo -- zoom, drag or rotate only if you actually want to trim something.",
 }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [croppedPixels, setCroppedPixels] = useState(null);
   const [saving, setSaving] = useState(false);
+  // Starts null (no forced ratio) and is set from the image's own real
+  // dimensions once it loads (onMediaLoaded below), so the crop box
+  // defaults to the image's actual shape -- not the `aspect` prop's fixed
+  // ratio. That prop is still honored (falls back to it, then 1, before
+  // the real size is known), but it no longer hard-crops every image into
+  // that shape: at zoom 1 with the natural aspect, the box covers the
+  // *whole* photo, so "Apply" with no adjustments genuinely keeps the
+  // full original instead of silently trimming it to fit a mismatched
+  // rectangle (this was the root cause of admins being unable to save an
+  // edit without losing part of the photo).
+  const [naturalAspect, setNaturalAspect] = useState(null);
 
   function nudge(dx, dy) {
     setCrop((c) => ({ x: c.x + dx, y: c.y + dy }));
   }
 
+  function rotateBy(deg) {
+    setRotation((r) => (r + deg + 360) % 360);
+  }
+
   function reset() {
     setCrop({ x: 0, y: 0 });
     setZoom(1);
+    setRotation(0);
   }
 
   async function handleConfirm() {
     if (!croppedPixels) return;
     setSaving(true);
     try {
-      const file = await getCroppedImageFile(src, croppedPixels, fileName);
+      const file = await getCroppedImageFile(src, croppedPixels, fileName, rotation);
       onConfirm(file);
     } finally {
       setSaving(false);
@@ -64,10 +82,13 @@ export default function CropModal({
             image={src}
             crop={crop}
             zoom={zoom}
-            aspect={aspect}
+            rotation={rotation}
+            aspect={naturalAspect ?? aspect ?? 1}
             onCropChange={setCrop}
             onZoomChange={setZoom}
+            onRotationChange={setRotation}
             onCropComplete={(_, pixels) => setCroppedPixels(pixels)}
+            onMediaLoaded={(mediaSize) => setNaturalAspect(mediaSize.naturalWidth / mediaSize.naturalHeight)}
             // Default objectFit is already "contain" (the full photo stays
             // visible, letterboxed) -- kept explicit since that's exactly
             // what makes the 4:5 box read as a guide over the whole image
@@ -109,7 +130,7 @@ export default function CropModal({
             </div>
           </div>
 
-          <div className="flex items-center gap-4 self-center">
+          <div className="flex flex-wrap items-center justify-center gap-4 self-center">
             <div>
               <span className="label-xs block text-center text-muted-foreground">Move</span>
               <div className="mt-2 grid grid-cols-3 grid-rows-2 gap-1">
@@ -129,8 +150,31 @@ export default function CropModal({
                 </button>
               </div>
             </div>
-            <button type="button" onClick={reset} className="label-xs flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
-              <RotateCcw className="h-3.5 w-3.5" />
+            <div>
+              <span className="label-xs block text-center text-muted-foreground">Rotate</span>
+              <div className="mt-2 flex items-center gap-1">
+                <button
+                  type="button"
+                  aria-label="Rotate left"
+                  title="Rotate left"
+                  onClick={() => rotateBy(-ROTATE_STEP)}
+                  className="flex h-8 w-8 items-center justify-center border transition-colors hover:border-accent"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Rotate right"
+                  title="Rotate right"
+                  onClick={() => rotateBy(ROTATE_STEP)}
+                  className="flex h-8 w-8 items-center justify-center border transition-colors hover:border-accent"
+                >
+                  <RotateCw className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+            <button type="button" onClick={reset} title="Reset all changes" className="label-xs flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+              <Undo2 className="h-3.5 w-3.5" />
               Reset
             </button>
           </div>
