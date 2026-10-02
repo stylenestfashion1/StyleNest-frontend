@@ -35,7 +35,16 @@ function groupByColor(variants) {
 export default function VariantManager({ productId, categoryName, variants, onChanged }) {
   const { notify } = useToast();
   const sizes = sizesForCategory(categoryName);
-  const [form, setForm] = useState({ color: "", colorHex: "", size: sizes[0].value, stock: 0 });
+  const [form, setForm] = useState({
+    color: "",
+    colorHex: "",
+    size: sizes[0].value,
+    stock: 0,
+    shippingWeightGrams: "",
+    packageLengthCm: "",
+    packageWidthCm: "",
+    packageHeightCm: "",
+  });
   const [expandedImages, setExpandedImages] = useState(null);
   const [editing, setEditing] = useState(null);
   const [editingColor, setEditingColor] = useState(null);
@@ -60,7 +69,17 @@ export default function VariantManager({ productId, categoryName, variants, onCh
   }, [categoryName]);
 
   const addVariant = useMutation({
-    mutationFn: () => adminApi.createVariant(productId, { ...form, colorHex: form.colorHex || null, stock: Number(form.stock) }),
+    mutationFn: () =>
+      adminApi.createVariant(productId, {
+        color: form.color,
+        colorHex: form.colorHex || null,
+        size: form.size,
+        stock: Number(form.stock),
+        shippingWeightGrams: form.shippingWeightGrams !== "" ? Number(form.shippingWeightGrams) : null,
+        packageLengthCm: form.packageLengthCm !== "" ? Number(form.packageLengthCm) : null,
+        packageWidthCm: form.packageWidthCm !== "" ? Number(form.packageWidthCm) : null,
+        packageHeightCm: form.packageHeightCm !== "" ? Number(form.packageHeightCm) : null,
+      }),
     onSuccess: () => {
       onChanged();
       notify("Variant added", "success");
@@ -83,6 +102,22 @@ export default function VariantManager({ productId, categoryName, variants, onCh
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (form.shippingWeightGrams !== "" && (Number(form.shippingWeightGrams) <= 0 || Number(form.shippingWeightGrams) > 100000)) {
+            notify("Shipping weight must be between 0.01 and 100,000 grams.", "error");
+            return;
+          }
+          if (form.packageLengthCm !== "" && (Number(form.packageLengthCm) <= 0 || Number(form.packageLengthCm) > 500)) {
+            notify("Package length must be between 0.1 and 500 cm.", "error");
+            return;
+          }
+          if (form.packageWidthCm !== "" && (Number(form.packageWidthCm) <= 0 || Number(form.packageWidthCm) > 500)) {
+            notify("Package width must be between 0.1 and 500 cm.", "error");
+            return;
+          }
+          if (form.packageHeightCm !== "" && (Number(form.packageHeightCm) <= 0 || Number(form.packageHeightCm) > 500)) {
+            notify("Package height must be between 0.1 and 500 cm.", "error");
+            return;
+          }
           addVariant.mutate();
         }}
         className="hairline-card mt-4 flex flex-wrap items-end gap-4 p-5"
@@ -111,6 +146,60 @@ export default function VariantManager({ productId, categoryName, variants, onCh
           <span className="label-xs text-muted-foreground">Stock</span>
           <input type="number" min="0" value={form.stock} onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))} className="field mt-2 w-24" />
         </label>
+        <div className="w-full border-t pt-3">
+          <div className="text-xs font-medium text-foreground">Shipping / Package Details</div>
+          <p className="label-xs text-muted-foreground">Used for automatic DTDC shipment booking.</p>
+          <div className="mt-2 flex flex-wrap gap-3">
+            <label className="block">
+              <span className="label-xs text-muted-foreground">Shipping Weight (grams)</span>
+              <input
+                type="number"
+                min="0.01"
+                step="any"
+                value={form.shippingWeightGrams}
+                onChange={(e) => setForm((f) => ({ ...f, shippingWeightGrams: e.target.value }))}
+                placeholder="e.g. 350"
+                className="field mt-1 w-36"
+              />
+            </label>
+            <label className="block">
+              <span className="label-xs text-muted-foreground">Package Length (cm)</span>
+              <input
+                type="number"
+                min="0.1"
+                step="any"
+                value={form.packageLengthCm}
+                onChange={(e) => setForm((f) => ({ ...f, packageLengthCm: e.target.value }))}
+                placeholder="e.g. 30"
+                className="field mt-1 w-32"
+              />
+            </label>
+            <label className="block">
+              <span className="label-xs text-muted-foreground">Package Width (cm)</span>
+              <input
+                type="number"
+                min="0.1"
+                step="any"
+                value={form.packageWidthCm}
+                onChange={(e) => setForm((f) => ({ ...f, packageWidthCm: e.target.value }))}
+                placeholder="e.g. 20"
+                className="field mt-1 w-32"
+              />
+            </label>
+            <label className="block">
+              <span className="label-xs text-muted-foreground">Package Height (cm)</span>
+              <input
+                type="number"
+                min="0.1"
+                step="any"
+                value={form.packageHeightCm}
+                onChange={(e) => setForm((f) => ({ ...f, packageHeightCm: e.target.value }))}
+                placeholder="e.g. 5"
+                className="field mt-1 w-32"
+              />
+            </label>
+          </div>
+        </div>
         <button disabled={addVariant.isPending || !form.color.trim()} className="btn-solid">
           Add variant
         </button>
@@ -204,6 +293,15 @@ export default function VariantManager({ productId, categoryName, variants, onCh
                       <span>
                         {getSizeLabel(v.size)} — {v.stock} in stock <span className={`label-xs ${status.className}`}>· {status.label}</span>
                         {v.sku && <span className="text-muted-foreground"> · SKU: {v.sku}</span>}
+                        {(v.shippingWeightGrams != null || v.packageLengthCm != null) && (
+                          <span className="text-muted-foreground">
+                            {" · "}
+                            {v.shippingWeightGrams != null ? `${v.shippingWeightGrams}g` : ""}
+                            {v.packageLengthCm != null && v.packageWidthCm != null && v.packageHeightCm != null
+                              ? ` (${v.packageLengthCm}×${v.packageWidthCm}×${v.packageHeightCm} cm)`
+                              : ""}
+                          </span>
+                        )}
                       </span>
                       <div className="flex gap-4">
                         <button onClick={() => setEditing(editing === v.id ? null : v.id)} className="label-xs link-underline">
@@ -240,7 +338,14 @@ export default function VariantManager({ productId, categoryName, variants, onCh
 function VariantEditForm({ variant, categoryName, onSaved, onCancel }) {
   const { notify } = useToast();
   const sizes = sizesForCategory(categoryName);
-  const [form, setForm] = useState({ size: variant.size, stock: variant.stock });
+  const [form, setForm] = useState({
+    size: variant.size,
+    stock: variant.stock,
+    shippingWeightGrams: variant.shippingWeightGrams ?? "",
+    packageLengthCm: variant.packageLengthCm ?? "",
+    packageWidthCm: variant.packageWidthCm ?? "",
+    packageHeightCm: variant.packageHeightCm ?? "",
+  });
 
   const update = useMutation({
     mutationFn: () =>
@@ -249,6 +354,10 @@ function VariantEditForm({ variant, categoryName, onSaved, onCancel }) {
         colorHex: variant.colorHex ?? null,
         size: form.size,
         stock: Number(form.stock),
+        shippingWeightGrams: form.shippingWeightGrams !== "" ? Number(form.shippingWeightGrams) : null,
+        packageLengthCm: form.packageLengthCm !== "" ? Number(form.packageLengthCm) : null,
+        packageWidthCm: form.packageWidthCm !== "" ? Number(form.packageWidthCm) : null,
+        packageHeightCm: form.packageHeightCm !== "" ? Number(form.packageHeightCm) : null,
       }),
     onSuccess: () => {
       notify("Variant updated", "success");
@@ -261,6 +370,22 @@ function VariantEditForm({ variant, categoryName, onSaved, onCancel }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        if (form.shippingWeightGrams !== "" && (Number(form.shippingWeightGrams) <= 0 || Number(form.shippingWeightGrams) > 100000)) {
+          notify("Shipping weight must be between 0.01 and 100,000 grams.", "error");
+          return;
+        }
+        if (form.packageLengthCm !== "" && (Number(form.packageLengthCm) <= 0 || Number(form.packageLengthCm) > 500)) {
+          notify("Package length must be between 0.1 and 500 cm.", "error");
+          return;
+        }
+        if (form.packageWidthCm !== "" && (Number(form.packageWidthCm) <= 0 || Number(form.packageWidthCm) > 500)) {
+          notify("Package width must be between 0.1 and 500 cm.", "error");
+          return;
+        }
+        if (form.packageHeightCm !== "" && (Number(form.packageHeightCm) <= 0 || Number(form.packageHeightCm) > 500)) {
+          notify("Package height must be between 0.1 and 500 cm.", "error");
+          return;
+        }
         update.mutate();
       }}
       className="hairline-card flex flex-wrap items-end gap-4 p-5"
@@ -279,6 +404,60 @@ function VariantEditForm({ variant, categoryName, onSaved, onCancel }) {
         <span className="label-xs text-muted-foreground">Stock</span>
         <input type="number" min="0" value={form.stock} onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))} className="field mt-2 w-24" />
       </label>
+      <div className="w-full border-t pt-3">
+        <div className="text-xs font-medium text-foreground">Shipping / Package Details</div>
+        <p className="label-xs text-muted-foreground">Used for automatic DTDC shipment booking.</p>
+        <div className="mt-2 flex flex-wrap gap-3">
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Shipping Weight (grams)</span>
+            <input
+              type="number"
+              min="0.01"
+              step="any"
+              value={form.shippingWeightGrams}
+              onChange={(e) => setForm((f) => ({ ...f, shippingWeightGrams: e.target.value }))}
+              placeholder="e.g. 350"
+              className="field mt-1 w-36"
+            />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Package Length (cm)</span>
+            <input
+              type="number"
+              min="0.1"
+              step="any"
+              value={form.packageLengthCm}
+              onChange={(e) => setForm((f) => ({ ...f, packageLengthCm: e.target.value }))}
+              placeholder="e.g. 30"
+              className="field mt-1 w-32"
+            />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Package Width (cm)</span>
+            <input
+              type="number"
+              min="0.1"
+              step="any"
+              value={form.packageWidthCm}
+              onChange={(e) => setForm((f) => ({ ...f, packageWidthCm: e.target.value }))}
+              placeholder="e.g. 20"
+              className="field mt-1 w-32"
+            />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Package Height (cm)</span>
+            <input
+              type="number"
+              min="0.1"
+              step="any"
+              value={form.packageHeightCm}
+              onChange={(e) => setForm((f) => ({ ...f, packageHeightCm: e.target.value }))}
+              placeholder="e.g. 5"
+              className="field mt-1 w-32"
+            />
+          </label>
+        </div>
+      </div>
       <button disabled={update.isPending} className="btn-solid">
         {update.isPending ? "Saving..." : "Save"}
       </button>
@@ -303,6 +482,10 @@ function AddSizeForm({ productId, categoryName, group, onSaved, onCancel }) {
   const availableSizes = allSizes.filter((s) => !usedSizes.has(s.value));
   const [size, setSize] = useState(availableSizes[0]?.value ?? "");
   const [stock, setStock] = useState(0);
+  const [shippingWeightGrams, setShippingWeightGrams] = useState("");
+  const [packageLengthCm, setPackageLengthCm] = useState("");
+  const [packageWidthCm, setPackageWidthCm] = useState("");
+  const [packageHeightCm, setPackageHeightCm] = useState("");
 
   // Same defensive resync as the top-level Add form above, in case
   // categoryName resolves after this form's first render.
@@ -320,6 +503,10 @@ function AddSizeForm({ productId, categoryName, group, onSaved, onCancel }) {
         colorHex: group.colorHex || null,
         size,
         stock: Number(stock),
+        shippingWeightGrams: shippingWeightGrams !== "" ? Number(shippingWeightGrams) : null,
+        packageLengthCm: packageLengthCm !== "" ? Number(packageLengthCm) : null,
+        packageWidthCm: packageWidthCm !== "" ? Number(packageWidthCm) : null,
+        packageHeightCm: packageHeightCm !== "" ? Number(packageHeightCm) : null,
       }),
     onSuccess: () => {
       notify(`${getSizeLabel(size)} added to ${group.color}`, "success");
@@ -343,6 +530,22 @@ function AddSizeForm({ productId, categoryName, group, onSaved, onCancel }) {
     <form
       onSubmit={(e) => {
         e.preventDefault();
+        if (shippingWeightGrams !== "" && (Number(shippingWeightGrams) <= 0 || Number(shippingWeightGrams) > 100000)) {
+          notify("Shipping weight must be between 0.01 and 100,000 grams.", "error");
+          return;
+        }
+        if (packageLengthCm !== "" && (Number(packageLengthCm) <= 0 || Number(packageLengthCm) > 500)) {
+          notify("Package length must be between 0.1 and 500 cm.", "error");
+          return;
+        }
+        if (packageWidthCm !== "" && (Number(packageWidthCm) <= 0 || Number(packageWidthCm) > 500)) {
+          notify("Package width must be between 0.1 and 500 cm.", "error");
+          return;
+        }
+        if (packageHeightCm !== "" && (Number(packageHeightCm) <= 0 || Number(packageHeightCm) > 500)) {
+          notify("Package height must be between 0.1 and 500 cm.", "error");
+          return;
+        }
         addSize.mutate();
       }}
       className="hairline-card flex flex-wrap items-end gap-4 p-5"
@@ -364,6 +567,60 @@ function AddSizeForm({ productId, categoryName, group, onSaved, onCancel }) {
         <span className="label-xs text-muted-foreground">Stock</span>
         <input type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} className="field mt-2 w-24" />
       </label>
+      <div className="w-full border-t pt-3">
+        <div className="text-xs font-medium text-foreground">Shipping / Package Details</div>
+        <p className="label-xs text-muted-foreground">Used for automatic DTDC shipment booking.</p>
+        <div className="mt-2 flex flex-wrap gap-3">
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Shipping Weight (grams)</span>
+            <input
+              type="number"
+              min="0.01"
+              step="any"
+              value={shippingWeightGrams}
+              onChange={(e) => setShippingWeightGrams(e.target.value)}
+              placeholder="e.g. 350"
+              className="field mt-1 w-36"
+            />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Package Length (cm)</span>
+            <input
+              type="number"
+              min="0.1"
+              step="any"
+              value={packageLengthCm}
+              onChange={(e) => setPackageLengthCm(e.target.value)}
+              placeholder="e.g. 30"
+              className="field mt-1 w-32"
+            />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Package Width (cm)</span>
+            <input
+              type="number"
+              min="0.1"
+              step="any"
+              value={packageWidthCm}
+              onChange={(e) => setPackageWidthCm(e.target.value)}
+              placeholder="e.g. 20"
+              className="field mt-1 w-32"
+            />
+          </label>
+          <label className="block">
+            <span className="label-xs text-muted-foreground">Package Height (cm)</span>
+            <input
+              type="number"
+              min="0.1"
+              step="any"
+              value={packageHeightCm}
+              onChange={(e) => setPackageHeightCm(e.target.value)}
+              placeholder="e.g. 5"
+              className="field mt-1 w-32"
+            />
+          </label>
+        </div>
+      </div>
       <button disabled={addSize.isPending} className="btn-solid">
         {addSize.isPending ? "Adding..." : "Add size"}
       </button>

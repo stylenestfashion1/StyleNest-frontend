@@ -12,3 +12,5 @@ export const createGuestOrder = (data) => client.post("/guest/orders", data);
 export const getGuestOrderInvoiceView = (params) => client.get("/guest/orders/invoice/view", { params });
 export const getGuestOrderInvoicePdfBlob = (params) => client.get("/guest/orders/invoice", { params, responseType: "blob" });
 export const trackGuestOrder = (data) => client.post("/guest/orders/track", data);
+
+export const calculateShipping = (data) => client.post("/shipping/calculate", data);

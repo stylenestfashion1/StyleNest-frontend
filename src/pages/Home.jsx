@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 import heroMen from "../assets/hero-men.jpg";
 import heroWomen from "../assets/hero-women.jpg";
 import { useGender } from "../context/GenderContext";
+import * as categoriesApi from "../api/categories";
+import HomeCategoryDiscovery from "../components/HomeCategoryDiscovery";
 
 const COPY = {
   men: { label: "Men", head: "WELL TAILORED", tag: "Structure, softened by wear." },
@@ -52,6 +55,12 @@ export default function Home() {
   // Neutral accent on the gateway itself — gender-specific theming should
   // only kick in once the visitor actually enters that section.
   useEffect(() => setGender(null), [setGender]);
+
+  const categoriesQuery = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => categoriesApi.getCategories(),
+    staleTime: 5 * 60 * 1000,
+  });
 
   const choose = (g) => {
     setGender(g);
@@ -152,6 +161,24 @@ export default function Home() {
           All
         </Link>
       </section>
+
+      {/* Scroll-down Category Discovery: MEN */}
+      <HomeCategoryDiscovery
+        gender="MEN"
+        title="SHOP MEN"
+        subtitle="Essential tailoring, casual staples, and everyday layers."
+        categories={categoriesQuery.data}
+        isLoading={categoriesQuery.isLoading}
+      />
+
+      {/* Scroll-down Category Discovery: WOMEN */}
+      <HomeCategoryDiscovery
+        gender="WOMEN"
+        title="SHOP WOMEN"
+        subtitle="Flowing silhouettes, festive wear, and modern essentials."
+        categories={categoriesQuery.data}
+        isLoading={categoriesQuery.isLoading}
+      />
     </>
   );
 }

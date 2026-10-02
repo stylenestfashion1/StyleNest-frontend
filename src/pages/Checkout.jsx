@@ -199,6 +199,20 @@ function RegisteredCheckout() {
                   </p>
                 </div>
                 <div className="hairline-card p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="label-xs">Shipping method</p>
+                    <span className="rounded bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">DTDC 7D Surface</span>
+                  </div>
+                  <p className="mt-2 text-sm text-foreground">DTDC Ground Express</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {checkout.shippingFee != null && Number(checkout.shippingFee) > 0 ? (
+                      <span>Shipping fee: {formatPrice(checkout.shippingFee, checkout.currency)}</span>
+                    ) : (
+                      <span>Standard delivery included</span>
+                    )}
+                  </p>
+                </div>
+                <div className="hairline-card p-5">
                   <p className="label-xs">Payment</p>
                   {isUsd ? (
                     <UsdPaymentBlockedNotice />
@@ -252,7 +266,24 @@ function RegisteredCheckout() {
                       </div>
                     ))}
                   </dl>
-                  <div className="mt-6 flex items-baseline justify-between border-t pt-5">
+                  <div className="mt-6 space-y-2 border-t pt-4 text-sm">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Subtotal</span>
+                      <span>{formatPrice(checkout.subtotalAmount || checkout.totalAmount, checkout.currency)}</span>
+                    </div>
+                    <div className="flex justify-between text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <span>Delivery</span>
+                        <span className="rounded bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-accent">DTDC</span>
+                      </span>
+                      <span>
+                        {checkout.shippingFee != null && Number(checkout.shippingFee) > 0
+                          ? formatPrice(checkout.shippingFee, checkout.currency)
+                          : (checkout.shippingAddress ? "Free" : "Select address")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-baseline justify-between border-t pt-4">
                     <span className="label-xs">Total</span>
                     <span className="display text-xl">{formatPrice(checkout.totalAmount, checkout.currency)}</span>
                   </div>
@@ -305,6 +336,26 @@ function GuestCheckout() {
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
   const [looking, setLooking] = useState(false);
+  const [shippingInfo, setShippingInfo] = useState(null);
+  const [shippingLoading, setShippingLoading] = useState(false);
+
+  async function fetchGuestShipping(pin, city, state) {
+    if (!pin || pin.trim().length < 5 || guestCart.items.length === 0) return;
+    setShippingLoading(true);
+    try {
+      const res = await ordersApi.calculateShipping({
+        postalCode: pin.trim(),
+        city: city || "",
+        state: state || "",
+        items: guestCart.items.map((i) => ({ variantId: i.productVariantId, quantity: i.quantity })),
+      });
+      setShippingInfo(res);
+    } catch (err) {
+      console.warn("Failed to calculate shipping", err);
+    } finally {
+      setShippingLoading(false);
+    }
+  }
 
   const isIndia = address.countryCode === "IN";
   const isUsd = currency === "USD";
@@ -322,15 +373,20 @@ function GuestCheckout() {
   async function handlePostalBlur() {
     if (!address.postalCode || !address.countryCode) return;
     setLooking(true);
+    let resolvedCity = address.city;
+    let resolvedState = address.state;
     try {
       const data = await addressesApi.lookupPostalCode(address.postalCode, address.countryCode);
       if (data?.found) {
-        setAddress((a) => ({ ...a, city: data.city || a.city, state: data.state || a.state, country: data.country || a.country }));
+        resolvedCity = data.city || resolvedCity;
+        resolvedState = data.state || resolvedState;
+        setAddress((a) => ({ ...a, city: resolvedCity, state: resolvedState, country: data.country || a.country }));
       }
     } catch {
       // silent — optional convenience lookup
     } finally {
       setLooking(false);
+      fetchGuestShipping(address.postalCode, resolvedCity, resolvedState);
     }
   }
 
@@ -358,7 +414,10 @@ function GuestCheckout() {
 
   function handleContinue() {
     if (step === 0 && !validateContactStep()) return;
-    if (step === 1 && !validateAddressStep()) return;
+    if (step === 1) {
+      if (!validateAddressStep()) return;
+      fetchGuestShipping(address.postalCode, address.city, address.state);
+    }
     setStep((s) => s + 1);
   }
 
@@ -514,6 +573,18 @@ function GuestCheckout() {
                   </p>
                 </div>
                 <div className="hairline-card p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="label-xs">Shipping method</p>
+                    <span className="rounded bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">DTDC 7D Surface</span>
+                  </div>
+                  <p className="mt-2 text-sm text-foreground">
+                    {shippingInfo?.serviceType || "DTDC Ground Express"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Zone: {shippingInfo?.zone || "Standard"} · Est. Delivery: {shippingInfo?.estimatedDelivery || "2-4 business days"}
+                  </p>
+                </div>
+                <div className="hairline-card p-5">
                   <p className="label-xs">Payment</p>
                   {isUsd ? (
                     <UsdPaymentBlockedNotice />
@@ -565,9 +636,34 @@ function GuestCheckout() {
                   </div>
                 ))}
               </dl>
-              <div className="mt-6 flex items-baseline justify-between border-t pt-5">
+              <div className="mt-6 space-y-2 border-t pt-4 text-sm">
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(totalPrice, currency)}</span>
+                </div>
+                <div className="flex justify-between text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <span>Delivery</span>
+                    <span className="rounded bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-accent">DTDC</span>
+                  </span>
+                  <span>
+                    {shippingLoading ? (
+                      "Calculating..."
+                    ) : shippingInfo?.totalShippingFee != null ? (
+                      formatPrice(shippingInfo.totalShippingFee, currency)
+                    ) : address.postalCode ? (
+                      "Calculated at review"
+                    ) : (
+                      "Enter PIN code"
+                    )}
+                  </span>
+                </div>
+              </div>
+              <div className="mt-4 flex items-baseline justify-between border-t pt-4">
                 <span className="label-xs">Total</span>
-                <span className="display text-xl">{formatPrice(totalPrice, currency)}</span>
+                <span className="display text-xl">
+                  {formatPrice(totalPrice + (shippingInfo?.totalShippingFee ? Number(shippingInfo.totalShippingFee) : 0), currency)}
+                </span>
               </div>
             </div>
           </Reveal>

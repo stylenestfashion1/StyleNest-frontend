@@ -134,9 +134,20 @@ export default function AdminOrderDetail() {
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex justify-between border-t pt-4 text-sm">
-            <span className="label-xs">Total</span>
-            <span className="display text-lg">{formatPrice(order.totalAmount, order.currency)}</span>
+          <div className="mt-4 space-y-2 border-t pt-4 text-sm">
+            {order.shippingFee != null && Number(order.shippingFee) > 0 && (
+              <div className="flex justify-between text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span>Delivery</span>
+                  <span className="rounded bg-accent/10 px-1.5 py-0.5 text-[10px] font-medium text-accent">DTDC</span>
+                </span>
+                <span>{formatPrice(order.shippingFee, order.currency)}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="label-xs">Total</span>
+              <span className="display text-lg">{formatPrice(order.totalAmount, order.currency)}</span>
+            </div>
           </div>
           {order.shippingAddress && (
             <div className="mt-4 space-y-1 text-sm text-muted-foreground">

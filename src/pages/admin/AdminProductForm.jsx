@@ -41,6 +41,10 @@ const EMPTY = {
   usdRegularPrice: "",
   usdDiscountPrice: "",
   usdOnSale: false,
+  shippingWeightGrams: "",
+  packageLengthCm: "",
+  packageWidthCm: "",
+  packageHeightCm: "",
 };
 
 export default function AdminProductForm() {
@@ -128,6 +132,10 @@ export default function AdminProductForm() {
         usdRegularPrice: usdEntry?.regularPrice ?? "",
         usdDiscountPrice: usdEntry?.discountPrice ?? "",
         usdOnSale: usdEntry?.discountPrice != null,
+        shippingWeightGrams: p.shippingWeightGrams ?? "",
+        packageLengthCm: p.packageLengthCm ?? "",
+        packageWidthCm: p.packageWidthCm ?? "",
+        packageHeightCm: p.packageHeightCm ?? "",
       };
       setForm(next);
       setLoadedForm(next);
@@ -167,6 +175,10 @@ export default function AdminProductForm() {
         slug: form.slug.trim() !== "" ? form.slug.trim() : null,
         hsnCode: form.hsnCode !== "" ? form.hsnCode : null,
         jeansCode: form.jeansCode.trim() !== "" ? form.jeansCode.trim() : null,
+        shippingWeightGrams: form.shippingWeightGrams !== "" ? Number(form.shippingWeightGrams) : null,
+        packageLengthCm: form.packageLengthCm !== "" ? Number(form.packageLengthCm) : null,
+        packageWidthCm: form.packageWidthCm !== "" ? Number(form.packageWidthCm) : null,
+        packageHeightCm: form.packageHeightCm !== "" ? Number(form.packageHeightCm) : null,
       };
       if (internationalPricingEnabled) {
         payload.internationalPrice = {
@@ -214,6 +226,22 @@ export default function AdminProductForm() {
             Number(form.usdDiscountPrice) >= Number(form.usdRegularPrice)
           ) {
             notify("International sale price must be lower than the international regular price.", "error");
+            return;
+          }
+          if (form.shippingWeightGrams !== "" && (Number(form.shippingWeightGrams) <= 0 || Number(form.shippingWeightGrams) > 100000)) {
+            notify("Shipping weight must be between 0.01 and 100,000 grams.", "error");
+            return;
+          }
+          if (form.packageLengthCm !== "" && (Number(form.packageLengthCm) <= 0 || Number(form.packageLengthCm) > 500)) {
+            notify("Package length must be between 0.1 and 500 cm.", "error");
+            return;
+          }
+          if (form.packageWidthCm !== "" && (Number(form.packageWidthCm) <= 0 || Number(form.packageWidthCm) > 500)) {
+            notify("Package width must be between 0.1 and 500 cm.", "error");
+            return;
+          }
+          if (form.packageHeightCm !== "" && (Number(form.packageHeightCm) <= 0 || Number(form.packageHeightCm) > 500)) {
+            notify("Package height must be between 0.1 and 500 cm.", "error");
             return;
           }
           save.mutate();
@@ -341,6 +369,43 @@ export default function AdminProductForm() {
           )}
         </div>
 
+        <div className="sm:col-span-2 border-t pt-6">
+          <h3 className="text-sm font-medium">Shipping / Package Details</h3>
+          <p className="label-xs mt-1 text-muted-foreground">
+            Used for automatic DTDC shipment booking.
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
+            <Field
+              label="Shipping Weight (grams)"
+              type="number"
+              value={form.shippingWeightGrams}
+              onChange={(v) => setForm((f) => ({ ...f, shippingWeightGrams: v }))}
+              placeholder="e.g. 350"
+            />
+            <Field
+              label="Package Length (cm)"
+              type="number"
+              value={form.packageLengthCm}
+              onChange={(v) => setForm((f) => ({ ...f, packageLengthCm: v }))}
+              placeholder="e.g. 30"
+            />
+            <Field
+              label="Package Width (cm)"
+              type="number"
+              value={form.packageWidthCm}
+              onChange={(v) => setForm((f) => ({ ...f, packageWidthCm: v }))}
+              placeholder="e.g. 20"
+            />
+            <Field
+              label="Package Height (cm)"
+              type="number"
+              value={form.packageHeightCm}
+              onChange={(v) => setForm((f) => ({ ...f, packageHeightCm: v }))}
+              placeholder="e.g. 5"
+            />
+          </div>
+        </div>
+
         <Field label="Fabric" value={form.fabric} onChange={(v) => setForm((f) => ({ ...f, fabric: v }))} />
         <Field label="HSN/SAC Code" value={form.hsnCode} onChange={(v) => setForm((f) => ({ ...f, hsnCode: v }))} />
         <div className="block">
@@ -373,8 +438,7 @@ export default function AdminProductForm() {
           </label>
         </div>
         <p className="label-xs text-muted-foreground sm:col-span-2">
-          {form.trending ? "✓ Trending" : "Not Trending"} — shows in the gender-matched Trending section once the
-          backend stores this flag (see project notes; not yet persisted by the current API).
+          {form.trending ? "✓ Trending" : "Not Trending"} — Shows in the gender-matched Trending section.
         </p>
 
         <div className="flex items-center gap-4 sm:col-span-2">
