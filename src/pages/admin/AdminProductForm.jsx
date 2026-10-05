@@ -127,7 +127,12 @@ export default function AdminProductForm() {
         featured: p.featured ?? false,
         trending: p.trending ?? false,
         active: p.active ?? true,
-        categoryId: categories?.find((c) => c.name === p.categoryName)?.id ?? "",
+        categoryId:
+          p.categoryId ??
+          categories?.find((c) => c.slug === p.categorySlug)?.id ??
+          categories?.find((c) => c.name === p.categoryName && (!p.gender || c.gender === p.gender))?.id ??
+          categories?.find((c) => c.name === p.categoryName)?.id ??
+          "",
         internationalPricingEnabled: usdEntry != null,
         usdRegularPrice: usdEntry?.regularPrice ?? "",
         usdDiscountPrice: usdEntry?.discountPrice ?? "",

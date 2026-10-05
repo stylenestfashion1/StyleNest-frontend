@@ -14,7 +14,12 @@ import BackButton from "../../components/BackButton";
  * -fetched product-list row plus the resolved categoryId.
  */
 function toUpdatePayload(product, categories, overrides) {
-  const categoryId = categories?.find((c) => c.name === product.categoryName)?.id ?? "";
+  const categoryId =
+    product.categoryId ??
+    categories?.find((c) => c.slug === product.categorySlug)?.id ??
+    categories?.find((c) => c.name === product.categoryName && (!product.gender || c.gender === product.gender))?.id ??
+    categories?.find((c) => c.name === product.categoryName)?.id ??
+    "";
   return {
     name: product.name ?? "",
     shortDescription: product.shortDescription ?? "",
