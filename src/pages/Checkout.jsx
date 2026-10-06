@@ -55,7 +55,12 @@ function RegisteredCheckout() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [placing, setPlacing] = useState(false);
 
-  const checkoutQuery = useQuery({ queryKey: ["checkout"], queryFn: ordersApi.getCheckout });
+  const checkoutQuery = useQuery({
+    queryKey: ["checkout"],
+    queryFn: ordersApi.getCheckout,
+    staleTime: 0,
+    refetchOnMount: "always",
+  });
   const addressesQuery = useQuery({ queryKey: ["addresses"], queryFn: addressesApi.getAddresses });
 
   const setDefault = useMutation({
@@ -356,6 +361,12 @@ function GuestCheckout() {
       setShippingLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (address.postalCode && address.postalCode.trim().length >= 5 && guestCart.items.length > 0) {
+      fetchGuestShipping(address.postalCode, address.city, address.state);
+    }
+  }, [guestCart.items]);
 
   const isIndia = address.countryCode === "IN";
   const isUsd = currency === "USD";

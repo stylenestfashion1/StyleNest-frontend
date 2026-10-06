@@ -138,6 +138,7 @@ export default function ProductDetails() {
     mutationFn: () => cartApi.addToCart({ productVariantId: activeVariant.id, quantity, currency }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["checkout"] });
       window.dispatchEvent(new Event("stylenest:cart-bump"));
     },
     onError: (err) => notify(err.message, "error"),

@@ -35,6 +35,7 @@ export default function Wishlist() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wishlist"] });
       queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: ["checkout"] });
       window.dispatchEvent(new Event("stylenest:cart-bump"));
       notify("Moved to bag", "success");
     },

@@ -28,7 +28,10 @@ export default function Cart() {
 
   const updateItem = useMutation({
     mutationFn: ({ cartItemId, quantity }) => cartApi.updateCartItem(cartItemId, { quantity }),
-    onSuccess: (data) => queryClient.setQueryData(["cart"], data),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["cart"], data);
+      queryClient.invalidateQueries({ queryKey: ["checkout"] });
+    },
     onError: (err) => notify(err.message, "error"),
   });
 
