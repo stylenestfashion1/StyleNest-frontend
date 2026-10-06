@@ -688,6 +688,11 @@ function GuestOrderConfirmation({ order, contact }) {
             <Row label="Payment method" value={order.paymentMethod} />
             <Row label="Payment status" value={order.paymentStatus} />
             <Row label="Order status" value={order.orderStatus} />
+            <Row label="Delivery partner" value="DTDC Express" />
+          </div>
+
+          <div className="mt-4 rounded-md border border-border/60 bg-muted/30 p-3.5 text-left text-xs text-muted-foreground">
+            📦 Your order will be dispatched via <strong>DTDC Express</strong>. You will receive live tracking details & AWB number via email once handed over to the courier.
           </div>
 
           <ul className="mt-6 border-t text-left">

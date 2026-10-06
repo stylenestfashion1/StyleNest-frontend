@@ -118,7 +118,48 @@ export default function TrackOrder() {
                   </div>
                 ))}
               </div>
-              {order.shipmentStatus && <p className="label-xs mt-4 text-muted-foreground">Shipment: {order.shipmentStatus}</p>}
+              {(order.shipmentStatus || order.trackingNumber) ? (
+                <div className="mt-6 border-t pt-4 space-y-2.5 text-left">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="label-xs text-muted-foreground">Shipment Status</span>
+                    <span className="font-medium text-accent">{order.shipmentStatus || "Processing"}</span>
+                  </div>
+                  {order.courierName && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="label-xs text-muted-foreground">Courier Partner</span>
+                      <span className="font-medium">{order.courierName}</span>
+                    </div>
+                  )}
+                  {order.trackingNumber && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="label-xs text-muted-foreground">AWB / Tracking No.</span>
+                      <span className="font-mono text-sm tracking-wider font-semibold">{order.trackingNumber}</span>
+                    </div>
+                  )}
+                  {order.trackingNumber && (
+                    <div className="pt-2">
+                      <a
+                        href={order.courierName?.toUpperCase() === "DTDC" ? `https://track.dtdc.com/ct/tracking-search?trkType=cnno&strcnno=${encodeURIComponent(order.trackingNumber)}` : "https://www.dtdc.in/"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-outline w-full block text-center py-2.5 text-xs font-semibold"
+                      >
+                        Track Live on DTDC Portal ↗
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-6 border-t pt-4 text-left">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="label-xs text-muted-foreground">Delivery Partner</span>
+                    <span className="font-medium">DTDC Express</span>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Your order is being processed and will be handed over to DTDC shortly.
+                  </p>
+                </div>
+              )}
 
               {order.invoiceAvailable && (
                 <div className="mt-6 flex flex-wrap items-center gap-5 border-t pt-6">

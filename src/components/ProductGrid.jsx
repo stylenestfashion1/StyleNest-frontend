@@ -5,7 +5,7 @@ import { Reveal } from "./Reveal";
 export default function ProductGrid({ products, loading, skeletonCount = 6 }) {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 items-stretch">
         {Array.from({ length: skeletonCount }).map((_, i) => (
           <ProductCardSkeleton key={i} />
         ))}
@@ -18,13 +18,13 @@ export default function ProductGrid({ products, loading, skeletonCount = 6 }) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 items-stretch">
       {/* Delay capped low (was up to 420ms via i%8*60) -- a long stagger
           widens the window where a card sits in its pre-reveal state
           waiting on an IntersectionObserver callback that can lag on a
           fast/reversed scroll, which is what read as shake/jitter. */}
       {products.map((product, i) => (
-        <Reveal key={product.id} delay={(i % 4) * 40}>
+        <Reveal key={product.id} delay={(i % 4) * 40} className="h-full flex flex-col">
           <ProductCard product={product} />
         </Reveal>
       ))}
