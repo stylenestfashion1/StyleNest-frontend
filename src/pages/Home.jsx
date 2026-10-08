@@ -93,13 +93,13 @@ export default function Home() {
 
   const menProductsQuery = useQuery({
     queryKey: ["home-products", "MEN"],
-    queryFn: () => productsApi.filterProducts({ gender: "MEN", active: true, sizePerPage: 30 }),
+    queryFn: () => productsApi.filterProducts({ gender: "MEN", active: true, sizePerPage: 100 }),
     staleTime: 5 * 60 * 1000,
   });
 
   const womenProductsQuery = useQuery({
     queryKey: ["home-products", "WOMEN"],
-    queryFn: () => productsApi.filterProducts({ gender: "WOMEN", active: true, sizePerPage: 30 }),
+    queryFn: () => productsApi.filterProducts({ gender: "WOMEN", active: true, sizePerPage: 200 }),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -206,37 +206,7 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* ===================== MEN SECTION ===================== */}
-      {/* Scroll-down Category Discovery: MEN */}
-      <HomeCategoryDiscovery
-        gender="MEN"
-        title="SHOP MEN"
-        subtitle="Essential tailoring, casual staples, and everyday layers."
-        categories={categoriesQuery.data}
-        isLoading={categoriesQuery.isLoading}
-      />
-
-      {/* Featured 6 Products: MEN (Across Different Categories) */}
-      <section className="border-b border-border/40 pb-16 md:pb-24" aria-label="Featured menswear">
-        <div className="mx-auto max-w-[1440px] px-5 md:px-10">
-          <Reveal>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
-              <div>
-                <p className="label-xs text-accent uppercase tracking-[0.2em]">CURATED FOR HIM</p>
-                <h3 className="display text-2xl font-medium tracking-tight md:text-3xl text-foreground mt-1">
-                  Featured in Menswear
-                </h3>
-              </div>
-              <Link to="/men" className="label-xs link-underline inline-flex items-center gap-1.5 text-foreground hover:text-accent">
-                View all Men's products <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-          </Reveal>
-          <ProductGrid products={menFeatured} loading={menProductsQuery.isLoading} skeletonCount={8} />
-        </div>
-      </section>
-
-      {/* ===================== WOMEN SECTION ===================== */}
+      {/* ===================== WOMEN SECTION (FIRST PRIORITY) ===================== */}
       {/* Scroll-down Category Discovery: WOMEN */}
       <HomeCategoryDiscovery
         gender="WOMEN"
@@ -246,8 +216,8 @@ export default function Home() {
         isLoading={categoriesQuery.isLoading}
       />
 
-      {/* Featured 6 Products: WOMEN (Across Different Categories) */}
-      <section className="pb-16 md:pb-24" aria-label="Featured womenswear">
+      {/* Featured 8 Products: WOMEN (Across Different Categories) */}
+      <section className="border-b border-border/40 pb-16 md:pb-24" aria-label="Featured womenswear">
         <div className="mx-auto max-w-[1440px] px-5 md:px-10">
           <Reveal>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
@@ -263,6 +233,36 @@ export default function Home() {
             </div>
           </Reveal>
           <ProductGrid products={womenFeatured} loading={womenProductsQuery.isLoading} skeletonCount={8} />
+        </div>
+      </section>
+
+      {/* ===================== MEN SECTION ===================== */}
+      {/* Scroll-down Category Discovery: MEN */}
+      <HomeCategoryDiscovery
+        gender="MEN"
+        title="SHOP MEN"
+        subtitle="Essential tailoring, casual staples, and everyday layers."
+        categories={categoriesQuery.data}
+        isLoading={categoriesQuery.isLoading}
+      />
+
+      {/* Featured 8 Products: MEN (Across Different Categories) */}
+      <section className="pb-16 md:pb-24" aria-label="Featured menswear">
+        <div className="mx-auto max-w-[1440px] px-5 md:px-10">
+          <Reveal>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
+              <div>
+                <p className="label-xs text-accent uppercase tracking-[0.2em]">CURATED FOR HIM</p>
+                <h3 className="display text-2xl font-medium tracking-tight md:text-3xl text-foreground mt-1">
+                  Featured in Menswear
+                </h3>
+              </div>
+              <Link to="/men" className="label-xs link-underline inline-flex items-center gap-1.5 text-foreground hover:text-accent">
+                View all Men's products <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </Reveal>
+          <ProductGrid products={menFeatured} loading={menProductsQuery.isLoading} skeletonCount={8} />
         </div>
       </section>
     </>

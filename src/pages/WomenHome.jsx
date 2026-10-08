@@ -1,9 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useGender } from "../context/GenderContext";
 import { useGenderStorefront } from "../hooks/useGenderStorefront";
 import { useScrollExpandImages } from "../context/ScrollExpandImagesContext";
+import * as productsApi from "../api/products";
 import ProductGrid from "../components/ProductGrid";
 import CategoryDepthCarousel from "../components/CategoryDepthCarousel";
 import ScrollExpand from "../components/ScrollExpand";
@@ -22,6 +24,68 @@ const SCROLL_EXPAND_CONFIG = {
   overlayScrim: 0.45,
 };
 
+/**
+ * Curates 4 distinct signature products across 4 key women categories:
+ * 1 Kurti, 1 Cordset, 1 Top, and 1 Jeans.
+ */
+function selectCuratedWomenFour(products) {
+  if (!products || products.length === 0) return [];
+
+  const targetCategories = ["Kurti", "Cordset", "Tops", "Jeans"];
+  const preferredIds = {
+    Kurti: 270,   // White Paisley Print Kurti
+    Cordset: 290, // Off White Wave Print Co-ord Set
+    Tops: 56,     // Floral Appliqué Collared Shirt
+    Jeans: 31,    // Medium Wash Wide-Leg Jeans with Bow Embroidery
+  };
+
+  const selected = [];
+  const pickedIds = new Set();
+  const pickedCats = new Set();
+
+  for (const cat of targetCategories) {
+    const prefId = preferredIds[cat];
+    const match =
+      products.find((p) => p.id === prefId) ||
+      products.find(
+        (p) =>
+          p.categoryName?.toLowerCase() === cat.toLowerCase() &&
+          !pickedIds.has(p.id)
+      );
+    if (match) {
+      selected.push(match);
+      pickedIds.add(match.id);
+      pickedCats.add(match.categoryName?.toLowerCase());
+    }
+  }
+
+  // Safety fill with any remaining distinct categories (Suit, Palazzo, etc.)
+  if (selected.length < 4) {
+    for (const p of products) {
+      if (selected.length >= 4) break;
+      const catKey = p.categoryName?.toLowerCase();
+      if (!pickedIds.has(p.id) && !pickedCats.has(catKey)) {
+        selected.push(p);
+        pickedIds.add(p.id);
+        pickedCats.add(catKey);
+      }
+    }
+  }
+
+  // Final fallback to reach 4 items if database has fewer distinct categories
+  if (selected.length < 4) {
+    for (const p of products) {
+      if (selected.length >= 4) break;
+      if (!pickedIds.has(p.id)) {
+        selected.push(p);
+        pickedIds.add(p.id);
+      }
+    }
+  }
+
+  return selected;
+}
+
 export default function WomenHome() {
   const { setGender } = useGender();
   const { categories, featured, trending } = useGenderStorefront("WOMEN");
@@ -32,6 +96,23 @@ export default function WomenHome() {
   const cats = categories.data ?? [];
   const trendingProducts = trending.data?.content ?? [];
   const curated = featured.data?.content ?? [];
+
+  // Fetch complete catalog pool for curated showcase with diverse categories
+  const catalogQuery = useQuery({
+    queryKey: ["women-curated-showcase-pool"],
+    queryFn: () =>
+      productsApi.filterProducts({
+        gender: "WOMEN",
+        active: true,
+        sizePerPage: 200,
+      }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const diverseTopFour = useMemo(() => {
+    const allProducts = catalogQuery.data?.content ?? [];
+    return selectCuratedWomenFour(allProducts);
+  }, [catalogQuery.data?.content]);
 
   return (
     <PageFade>
@@ -47,7 +128,44 @@ export default function WomenHome() {
           density={2}
           className="h-full w-full"
         />
+
+        {/* Animated Scroll Down Indicator */}
+        <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 text-white/85 animate-bounce">
+          <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.22em] text-white/90 drop-shadow-md">
+            Scroll down to explore
+          </span>
+          <ChevronDown className="h-4 w-4 text-white/85 drop-shadow-md" />
+        </div>
       </section>
+
+      {/* ============ QUICK SHOWCASE — 4 DIVERSE SIGNATURE PRODUCTS (1 KURTI, 1 CORDSET, 1 TOP, 1 JEANS) ============ */}
+      {(diverseTopFour.length > 0 || catalogQuery.isLoading) && (
+        <section
+          className="border-b border-border/40 bg-background py-12 md:py-16"
+          aria-label="Featured womenswear styles"
+        >
+          <div className="mx-auto max-w-[1440px] px-5 md:px-10">
+            <Reveal>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
+                <div>
+                  <p className="label-xs text-accent uppercase tracking-[0.2em]">SIGNATURE STYLES</p>
+                  <h3 className="display text-2xl font-medium tracking-tight md:text-3xl text-foreground mt-1">
+                    Trending in Womenswear
+                  </h3>
+                </div>
+                <span className="label-xs text-muted-foreground hidden sm:block">
+                  Handpicked: Kurti · Co-ord · Top · Denim
+                </span>
+              </div>
+            </Reveal>
+            <ProductGrid
+              products={diverseTopFour}
+              loading={catalogQuery.isLoading && diverseTopFour.length === 0}
+              skeletonCount={4}
+            />
+          </div>
+        </section>
+      )}
 
       {/* ============ SCROLL-EXPAND #1 — campaign / identity ============ */}
       <ScrollExpand
