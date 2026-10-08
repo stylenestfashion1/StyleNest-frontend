@@ -49,30 +49,76 @@ function HeroPanel({ gender, className = "", children, ...props }) {
   );
 }
 
+const HOME_CURATED_WOMEN_IDS = [
+  270, // White Paisley Print Kurti (Kurti)
+  290, // Off White Wave Print Co-ord Set (Co-ord Set)
+  31,  // Medium Wash Wide-Leg Jeans with Bow Embroidery (Jeans)
+  272, // Black Boho Medallion Print Flared Skirt (Palazzo / Skirt)
+  56,  // Floral Appliqué Collared Shirt (Tops / Designer Shirt)
+  100, // Paisley Chevron Suit Set (Suit Set)
+  279, // Magenta Geometric Patchwork Sleeveless Dress (Sleeveless Dress)
+  20,  // Navy Denim Shirt with White Crochet Trim (Denim Top)
+];
+
+const HOME_CURATED_MEN_IDS = [
+  260, // Men's Piped Track Pants (Lower)
+  259, // Men's Brown Graphic T-Shirt & Shorts Co-ord Set (Co-ord Shorts)
+  226, // Men's Polo Graphic T-Shirt & Trackpants Co-Ord Set (Co-ord Trackpants)
+  220, // Men's Chicago V Graphic Sweatshirt (Sweatshirt)
+  206, // Men's 03 Lightning Mesh Jersey T-Shirt (Mesh Jersey)
+  255, // Men's Acid Blue Washed Graphic Polo T-Shirt (Acid Polo)
+  256, // Men's Ombre Dip-Dye Graphic T-Shirt (Ombre Crewneck Tee)
+  237, // Men's White Colorblock Striped Polo T-Shirt (Striped Polo)
+];
+
 /**
- * Round-robin picker across categories so the 6 featured products
- * represent different categories (e.g. Shirts, Kurtas, T-shirts, Lower).
+ * Curate 8 diverse, signature pieces for Women on the Home page
+ * across Kurti, Co-ord, Jeans, Palazzo/Skirt, Designer Tops, Suit, Dress.
  */
-function selectDiverseProducts(products, maxCount = 6) {
+function selectHomeCuratedWomenEight(products) {
   if (!products || products.length === 0) return [];
-  const byCategory = new Map();
-  for (const p of products) {
-    const cat = p.categoryName || p.categoryId || "default";
-    if (!byCategory.has(cat)) byCategory.set(cat, []);
-    byCategory.get(cat).push(p);
+  const map = new Map(products.map((p) => [p.id, p]));
+  const picked = [];
+  for (const id of HOME_CURATED_WOMEN_IDS) {
+    const item = map.get(id);
+    if (item) picked.push(item);
   }
-  const result = [];
-  const categoryArrays = Array.from(byCategory.values());
-  let idx = 0;
-  while (result.length < maxCount && categoryArrays.some((arr) => idx < arr.length)) {
-    for (const arr of categoryArrays) {
-      if (idx < arr.length && result.length < maxCount) {
-        result.push(arr[idx]);
+  if (picked.length < 8) {
+    const seenIds = new Set(picked.map((p) => p.id));
+    for (const p of products) {
+      if (!seenIds.has(p.id)) {
+        picked.push(p);
+        seenIds.add(p.id);
+        if (picked.length === 8) break;
       }
     }
-    idx++;
   }
-  return result;
+  return picked.slice(0, 8);
+}
+
+/**
+ * Curate 8 diverse, signature pieces for Men on the Home page
+ * across Lowers, Co-ord Shorts, Co-ord Trackpants, Sweatshirts, Mesh Jersey, Polos, Ombre Tees.
+ */
+function selectHomeCuratedMenEight(products) {
+  if (!products || products.length === 0) return [];
+  const map = new Map(products.map((p) => [p.id, p]));
+  const picked = [];
+  for (const id of HOME_CURATED_MEN_IDS) {
+    const item = map.get(id);
+    if (item) picked.push(item);
+  }
+  if (picked.length < 8) {
+    const seenIds = new Set(picked.map((p) => p.id));
+    for (const p of products) {
+      if (!seenIds.has(p.id)) {
+        picked.push(p);
+        seenIds.add(p.id);
+        if (picked.length === 8) break;
+      }
+    }
+  }
+  return picked.slice(0, 8);
 }
 
 export default function Home() {
@@ -103,8 +149,8 @@ export default function Home() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const menFeatured = selectDiverseProducts(menProductsQuery.data?.content ?? [], 8);
-  const womenFeatured = selectDiverseProducts(womenProductsQuery.data?.content ?? [], 8);
+  const menFeatured = selectHomeCuratedMenEight(menProductsQuery.data?.content ?? []);
+  const womenFeatured = selectHomeCuratedWomenEight(womenProductsQuery.data?.content ?? []);
 
   const choose = (g) => {
     setGender(g);
