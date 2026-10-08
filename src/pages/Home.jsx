@@ -103,8 +103,8 @@ export default function Home() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const menFeatured = selectDiverseProducts(menProductsQuery.data?.content ?? [], 6);
-  const womenFeatured = selectDiverseProducts(womenProductsQuery.data?.content ?? [], 6);
+  const menFeatured = selectDiverseProducts(menProductsQuery.data?.content ?? [], 8);
+  const womenFeatured = selectDiverseProducts(womenProductsQuery.data?.content ?? [], 8);
 
   const choose = (g) => {
     setGender(g);
@@ -232,7 +232,7 @@ export default function Home() {
               </Link>
             </div>
           </Reveal>
-          <ProductGrid products={menFeatured} loading={menProductsQuery.isLoading} skeletonCount={6} />
+          <ProductGrid products={menFeatured} loading={menProductsQuery.isLoading} skeletonCount={8} />
         </div>
       </section>
 
@@ -262,7 +262,7 @@ export default function Home() {
               </Link>
             </div>
           </Reveal>
-          <ProductGrid products={womenFeatured} loading={womenProductsQuery.isLoading} skeletonCount={6} />
+          <ProductGrid products={womenFeatured} loading={womenProductsQuery.isLoading} skeletonCount={8} />
         </div>
       </section>
     </>
