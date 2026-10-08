@@ -9,7 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 // URL, since the property ID isn't available to the frontend -- the admin
 // picks the StyleNest property after logging in.
 const ANALYTICS_URL = "https://analytics.google.com/analytics/web/";
-const SIMILARWEB_URL = "https://pro.similarweb.com/?sourcepage=home&action=lite-redirect";
+const SIMILARWEB_URL = "https://pro.similarweb.com/?#/digitalsuite/websiteanalysis/traffic-engagement/*/999/3m/?webSource=Total&key=stylenestfashion.com";
 
 const LINKS = [
   { to: "/admin", label: "Dashboard", end: true },
