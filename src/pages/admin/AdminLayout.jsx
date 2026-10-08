@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet, Link } from "react-router-dom";
-import { Menu, X, BarChart3 } from "lucide-react";
+import { Menu, X, BarChart3, Globe } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 // GA4 is already installed on the storefront (see index.html) -- this just
@@ -9,6 +9,7 @@ import { useAuth } from "../../context/AuthContext";
 // URL, since the property ID isn't available to the frontend -- the admin
 // picks the StyleNest property after logging in.
 const ANALYTICS_URL = "https://analytics.google.com/analytics/web/";
+const SIMILARWEB_URL = "https://pro.similarweb.com/?sourcepage=home&action=lite-redirect";
 
 const LINKS = [
   { to: "/admin", label: "Dashboard", end: true },
@@ -105,6 +106,17 @@ export default function AdminLayout() {
           >
             <BarChart3 className="h-3.5 w-3.5" />
             Show Website Analytics
+          </a>
+
+          <a
+            href={SIMILARWEB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={closeNav}
+            className="label-xs link-underline flex items-center gap-1.5"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            Similarweb Traffic
           </a>
 
           <div className="mt-2 border-t pt-5">

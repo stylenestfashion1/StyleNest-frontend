@@ -6,7 +6,10 @@ import heroMen from "../assets/hero-men.jpg";
 import heroWomen from "../assets/hero-women.jpg";
 import { useGender } from "../context/GenderContext";
 import * as categoriesApi from "../api/categories";
+import * as productsApi from "../api/products";
 import HomeCategoryDiscovery from "../components/HomeCategoryDiscovery";
+import ProductGrid from "../components/ProductGrid";
+import { Reveal } from "../components/Reveal";
 
 const COPY = {
   men: { label: "Men", head: "WELL TAILORED", tag: "Structure, softened by wear." },
@@ -46,6 +49,32 @@ function HeroPanel({ gender, className = "", children, ...props }) {
   );
 }
 
+/**
+ * Round-robin picker across categories so the 6 featured products
+ * represent different categories (e.g. Shirts, Kurtas, T-shirts, Lower).
+ */
+function selectDiverseProducts(products, maxCount = 6) {
+  if (!products || products.length === 0) return [];
+  const byCategory = new Map();
+  for (const p of products) {
+    const cat = p.categoryName || p.categoryId || "default";
+    if (!byCategory.has(cat)) byCategory.set(cat, []);
+    byCategory.get(cat).push(p);
+  }
+  const result = [];
+  const categoryArrays = Array.from(byCategory.values());
+  let idx = 0;
+  while (result.length < maxCount && categoryArrays.some((arr) => idx < arr.length)) {
+    for (const arr of categoryArrays) {
+      if (idx < arr.length && result.length < maxCount) {
+        result.push(arr[idx]);
+      }
+    }
+    idx++;
+  }
+  return result;
+}
+
 export default function Home() {
   const { setGender } = useGender();
   const [active, setActive] = useState("women");
@@ -61,6 +90,21 @@ export default function Home() {
     queryFn: () => categoriesApi.getCategories(),
     staleTime: 5 * 60 * 1000,
   });
+
+  const menProductsQuery = useQuery({
+    queryKey: ["home-products", "MEN"],
+    queryFn: () => productsApi.filterProducts({ gender: "MEN", active: true, sizePerPage: 30 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const womenProductsQuery = useQuery({
+    queryKey: ["home-products", "WOMEN"],
+    queryFn: () => productsApi.filterProducts({ gender: "WOMEN", active: true, sizePerPage: 30 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const menFeatured = selectDiverseProducts(menProductsQuery.data?.content ?? [], 6);
+  const womenFeatured = selectDiverseProducts(womenProductsQuery.data?.content ?? [], 6);
 
   const choose = (g) => {
     setGender(g);
@@ -162,6 +206,7 @@ export default function Home() {
         </Link>
       </section>
 
+      {/* ===================== MEN SECTION ===================== */}
       {/* Scroll-down Category Discovery: MEN */}
       <HomeCategoryDiscovery
         gender="MEN"
@@ -171,6 +216,27 @@ export default function Home() {
         isLoading={categoriesQuery.isLoading}
       />
 
+      {/* Featured 6 Products: MEN (Across Different Categories) */}
+      <section className="border-b border-border/40 pb-16 md:pb-24" aria-label="Featured menswear">
+        <div className="mx-auto max-w-[1440px] px-5 md:px-10">
+          <Reveal>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
+              <div>
+                <p className="label-xs text-accent uppercase tracking-[0.2em]">CURATED FOR HIM</p>
+                <h3 className="display text-2xl font-medium tracking-tight md:text-3xl text-foreground mt-1">
+                  Featured in Menswear
+                </h3>
+              </div>
+              <Link to="/men" className="label-xs link-underline inline-flex items-center gap-1.5 text-foreground hover:text-accent">
+                View all Men's products <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </Reveal>
+          <ProductGrid products={menFeatured} loading={menProductsQuery.isLoading} skeletonCount={6} />
+        </div>
+      </section>
+
+      {/* ===================== WOMEN SECTION ===================== */}
       {/* Scroll-down Category Discovery: WOMEN */}
       <HomeCategoryDiscovery
         gender="WOMEN"
@@ -179,6 +245,26 @@ export default function Home() {
         categories={categoriesQuery.data}
         isLoading={categoriesQuery.isLoading}
       />
+
+      {/* Featured 6 Products: WOMEN (Across Different Categories) */}
+      <section className="pb-16 md:pb-24" aria-label="Featured womenswear">
+        <div className="mx-auto max-w-[1440px] px-5 md:px-10">
+          <Reveal>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
+              <div>
+                <p className="label-xs text-accent uppercase tracking-[0.2em]">CURATED FOR HER</p>
+                <h3 className="display text-2xl font-medium tracking-tight md:text-3xl text-foreground mt-1">
+                  Featured in Womenswear
+                </h3>
+              </div>
+              <Link to="/women" className="label-xs link-underline inline-flex items-center gap-1.5 text-foreground hover:text-accent">
+                View all Women's products <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </Reveal>
+          <ProductGrid products={womenFeatured} loading={womenProductsQuery.isLoading} skeletonCount={6} />
+        </div>
+      </section>
     </>
   );
 }
