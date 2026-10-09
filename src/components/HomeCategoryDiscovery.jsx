@@ -6,7 +6,7 @@ import { Reveal } from "./Reveal";
 // Prioritized list of common shopping category names per gender.
 // Matches against real active categories fetched from backend.
 const CURATED_MEN_CATEGORIES = ["Shirts", "T-shirts", "Jeans", "Cordset", "Lower"];
-const CURATED_WOMEN_CATEGORIES = ["Kurti", "Suit", "Tops", "Dresses", "Sarees", "Cordset", "Jeans", "Palazzo"];
+const CURATED_WOMEN_CATEGORIES = ["Kurti", "Suit", "Tops", "Gown", "One Piece", "Dresses", "Sarees", "Cordset", "Jeans", "Palazzo"];
 
 function normalizeName(name) {
   return (name ?? "").toLowerCase().replace(/[^a-z]/g, "").replace(/s$/, "");

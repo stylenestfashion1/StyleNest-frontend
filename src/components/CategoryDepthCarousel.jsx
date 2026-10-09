@@ -13,7 +13,7 @@ const MEN_CATEGORY_NAMES = ["T-shirts", "Cordset", "Lower"];
 // "Palazzo" category from this list — normalizeCategoryName strips
 // non-letters and a trailing 's', but "plazzo" vs "palazzo" never matched,
 // so the card never rendered even though the category was real and active.
-const WOMEN_CATEGORY_NAMES = ["Tops", "Kurti", "Suit", "Cordset", "Jeans", "Palazzo"];
+const WOMEN_CATEGORY_NAMES = ["Tops", "Kurti", "Suit", "Cordset", "Jeans", "Palazzo", "Gown", "One Piece"];
 
 // The category's own slug is already gender-prefixed by the backend (e.g.
 // "women-kurti" -- see CategoryServiceImpl.buildSlug), so the clean public

@@ -13,6 +13,7 @@ const KEYWORDS = [
   { test: /jacket|coat|outerwear/i, image: catJackets },
   { test: /shoe|footwear|boot/i, image: catShoes },
   { test: /dress|gown/i, image: catDresses },
+  { test: /one.?piece/i, image: catDresses },
   { test: /top|blouse|shirt/i, image: catTops },
   { test: /kurti/i, image: catKurtis },
   { test: /saree/i, image: catSarees },
