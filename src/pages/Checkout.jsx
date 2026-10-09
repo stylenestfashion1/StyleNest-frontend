@@ -476,7 +476,7 @@ function GuestCheckout() {
         // confirmed -- clearing it any earlier would leave a dismissed/
         // failed retry with no items to resubmit.
         guestCart.clear();
-        navigate(`/track-order?orderNumber=${encodeURIComponent(initiation.orderNumber)}&payment=success`);
+        navigate(`/track-order?orderNumber=${encodeURIComponent(initiation.orderNumber)}&payment=success`, { replace: true });
       } else if (result.outcome === "pending") {
         notify("Payment was not completed. You can try again.");
       } else if (result.outcome === "redirected") {

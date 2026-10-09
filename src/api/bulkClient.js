@@ -1,3 +1,4 @@
+import { sanitizeErrorMessage } from "./client";
 import axios from "axios";
 
 // Deliberately separate from the main api/client.js instance. Bulk-order
@@ -36,11 +37,7 @@ bulkClient.interceptors.response.use(
     return body;
   },
   (error) => {
-    const message =
-      error.response?.data?.message ||
-      error.response?.data?.error ||
-      error.message ||
-      "Something went wrong. Please try again.";
+    const message = sanitizeErrorMessage(error);
     return Promise.reject(new Error(message));
   }
 );

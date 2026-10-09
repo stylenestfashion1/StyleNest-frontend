@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as userApi from "../api/user";
 import * as ordersApi from "../api/orders";
@@ -16,6 +16,12 @@ const TABS = ["profile", "orders", "addresses"];
 
 export default function Account() {
   const { logout, isAdmin } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
   const { notify } = useToast();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -77,7 +83,7 @@ export default function Account() {
                 Admin console
               </Link>
             )}
-            <button className="label-xs link-underline text-left" onClick={logout}>
+            <button className="label-xs link-underline text-left" onClick={handleLogout}>
               Sign out
             </button>
           </nav>

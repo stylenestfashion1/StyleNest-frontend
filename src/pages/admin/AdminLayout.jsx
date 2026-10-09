@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, Link } from "react-router-dom";
+import { NavLink, Outlet, Link, useNavigate } from "react-router-dom";
 import { Menu, X, BarChart3, Globe } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -49,6 +49,12 @@ const RENTAL_LINKS = [
 
 export default function AdminLayout() {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/admin/login", { replace: true });
+  };
   // Below `lg` the nav used to render as one long wrapping block ABOVE
   // every page's content (every link, both sub-groups, all at once) --
   // an admin had to scroll past all of it just to reach the actual
@@ -152,7 +158,7 @@ export default function AdminLayout() {
             </div>
           </div>
 
-          <button onClick={logout} className="label-xs link-underline text-left text-muted-foreground">
+          <button onClick={() => { logout(); navigate("/admin/login", { replace: true }); }} className="label-xs link-underline text-left text-muted-foreground">
             Logout
           </button>
         </nav>

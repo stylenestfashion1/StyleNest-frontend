@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageFade, Reveal } from "../../components/Reveal";
 import { validateBulkAccess } from "../../api/bulk";
-import { setBulkToken } from "../../api/bulkClient";
+import { setBulkToken, getBulkToken } from "../../api/bulkClient";
 
 /**
  * The private entry point to the wholesale catalog -- a customer only
@@ -20,6 +20,13 @@ export default function BulkAccessGate() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // If already holds an active bulk token, redirect to catalog
+  useEffect(() => {
+    if (getBulkToken()) {
+      navigate("/bulk-orders/catalog", { replace: true });
+    }
+  }, [navigate]);
+
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -34,7 +41,7 @@ export default function BulkAccessGate() {
     try {
       await validateBulkAccess(code.trim().toUpperCase());
       setBulkToken(code.trim().toUpperCase());
-      navigate("/bulk-orders/catalog");
+      navigate("/bulk-orders/catalog", { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

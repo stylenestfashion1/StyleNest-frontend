@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import * as authApi from "../api/auth";
+import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { PageFade } from "../components/Reveal";
 import PasswordInput from "../components/PasswordInput";
@@ -17,6 +18,17 @@ export default function ForgotPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/account", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   async function handleSendOtp(e) {
     e.preventDefault();

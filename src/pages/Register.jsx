@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -8,12 +8,23 @@ import PasswordInput from "../components/PasswordInput";
 const PASSWORD_HINT = "At least 8 characters, with uppercase, lowercase, a number and a symbol.";
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const { notify } = useToast();
   const navigate = useNavigate();
   const [form, setForm] = useState({ fullName: "", email: "", password: "", phone: "" });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Navigation Guard: If already authenticated, redirect to /account immediately
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/account", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -24,7 +35,12 @@ export default function Register() {
       notify("Account created — welcome to StyleNest Fashion", "success");
       navigate("/account", { replace: true });
     } catch (err) {
-      setError(err.message);
+      const msg = err?.message || "";
+      setError(
+        /duplicate|already exists|email exists/i.test(msg)
+          ? "An account with this email already exists. Please sign in."
+          : msg || "Unable to create account. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }

@@ -1,15 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { PageFade } from "../../components/Reveal";
 import PasswordInput from "../../components/PasswordInput";
 
 export default function AdminLogin() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // History Guard on mount: If admin is already authenticated, redirect straight to /admin with replace: true
+  useEffect(() => {
+    if (isAuthenticated && isAdmin) {
+      navigate("/admin", { replace: true });
+    }
+  }, [isAuthenticated, isAdmin, navigate]);
+
+  if (isAuthenticated && isAdmin) {
+    return null;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -23,7 +34,12 @@ export default function AdminLogin() {
       }
       navigate("/admin", { replace: true });
     } catch (err) {
-      setError(err.message);
+      const msg = err?.message || "";
+      setError(
+        /invalid|credential|bad credential|password|user not found|unauthorized/i.test(msg)
+          ? "Invalid email or password. Please verify your credentials."
+          : msg || "Unable to sign in at this time. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }

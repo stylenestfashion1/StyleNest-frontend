@@ -261,7 +261,7 @@ export function Header() {
                     onClick={() => {
                       setProfileOpen(false);
                       logout();
-                      navigate("/");
+                      navigate("/login", { replace: true });
                     }}
                     className="label-xs flex w-full items-center gap-3 px-4 py-2.5 text-left text-destructive transition-colors hover:bg-muted"
                   >

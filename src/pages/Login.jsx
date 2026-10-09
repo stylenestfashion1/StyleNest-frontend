@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -6,7 +6,7 @@ import { PageFade } from "../components/Reveal";
 import PasswordInput from "../components/PasswordInput";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, isAdmin } = useAuth();
   const { notify } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -14,7 +14,19 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const from = location.state?.from?.pathname || "/account";
+  const rawFrom = location.state?.from?.pathname;
+  const from = rawFrom && rawFrom !== "/login" ? rawFrom : "/account";
+
+  // History Guard on mount: If user is already authenticated, redirect to target dashboard with replace: true
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(isAdmin ? "/admin" : from, { replace: true });
+    }
+  }, [isAuthenticated, isAdmin, navigate, from]);
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -25,7 +37,12 @@ export default function Login() {
       notify(`Welcome back, ${res.fullName?.split(" ")[0] || "there"}`, "success");
       navigate(res.role === "ADMIN" ? "/admin" : from, { replace: true });
     } catch (err) {
-      setError(err.message);
+      const msg = err?.message || "";
+      setError(
+        /invalid|credential|bad credential|password|user not found|unauthorized/i.test(msg)
+          ? "Invalid email or password. Please verify your credentials."
+          : msg || "Unable to sign in at this time. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }

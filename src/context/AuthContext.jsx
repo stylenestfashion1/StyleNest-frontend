@@ -29,6 +29,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem("stylenest_user");
+    sessionStorage.removeItem("stylenest_bulk_token");
     setToken(null);
     setUser(null);
   }, []);

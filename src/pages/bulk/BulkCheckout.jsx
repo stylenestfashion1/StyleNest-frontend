@@ -71,7 +71,7 @@ export default function BulkCheckout() {
       notify(err.message, "error");
       if (sessionInvalid) {
         clearBulkToken();
-        navigate("/bulk-orders");
+        navigate("/bulk-orders", { replace: true });
       }
     } finally {
       setPlacing(false);
