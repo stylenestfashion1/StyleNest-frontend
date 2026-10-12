@@ -117,7 +117,7 @@ export default function WomenHome() {
   return (
     <PageFade>
       {/* ============ SHOP WOMENSWEAR — particle-text intro ============ */}
-      <section className="relative h-[70vh] min-h-[460px] w-full bg-[#161512] md:h-[85vh]">
+      <section className="relative h-[calc(100svh-64px)] min-h-[520px] w-full bg-[#161512] md:h-[85vh] flex flex-col justify-between">
         <ParticleText
           text="SHOP WOMENSWEAR"
           color="#f3f2ef"
@@ -130,11 +130,11 @@ export default function WomenHome() {
         />
 
         {/* Animated Scroll Down Indicator */}
-        <div className="pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1.5 text-white/85 animate-bounce">
-          <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.22em] text-white/90 drop-shadow-md">
+        <div className="pointer-events-none absolute bottom-8 sm:bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-white/80">
+          <span className="text-[10px] sm:text-[11px] font-medium uppercase tracking-[0.25em] text-white/70">
             Scroll down to explore
           </span>
-          <ChevronDown className="h-4 w-4 text-white/85 drop-shadow-md" />
+          <ChevronDown className="h-4 w-4 animate-bounce text-white/70" />
         </div>
       </section>
 
