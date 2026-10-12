@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
-import DepthCarousel from "./DepthCarousel";
+import CardCarousel from "./ui/CardCarousel";
 import { categoryImageFallback } from "../utils/categoryImage";
 
 // The exact, curated storefront category lists — matched against real
@@ -103,22 +103,11 @@ export default function CategoryDepthCarousel({ categories, gender }) {
         <p className="display text-3xl italic text-white md:text-4xl">Explore Categories</p>
       </div>
 
-      <div className="relative mt-10" style={{ height: dims.stageHeight }}>
-        <DepthCarousel
+      <div className="relative mt-6">
+        <CardCarousel
           items={items}
-          cardWidth={dims.cardWidth}
-          cardHeight={dims.cardHeight}
-          radius={dims.radius}
-          depth={dims.depth}
-          spread={dims.spread}
-          tilt={dims.tilt}
-          perspective={dims.perspective}
-          visibleCards={dims.visibleCards}
-          tint="#05060a"
-          loop
-          showControls
-          showIndicators
-          onActivate={(_, item) => navigate(categoryPath(item.category, gender))}
+          autoplayDelay={2800}
+          onItemClick={(item) => navigate(categoryPath(item.category, gender))}
         />
       </div>
 
