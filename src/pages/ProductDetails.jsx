@@ -1,3 +1,4 @@
+import { trackViewContent, trackAddToCart } from "../utils/metaPixel";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -93,6 +94,12 @@ export default function ProductDetails() {
     if (product?.gender) setGender(product.gender.toLowerCase());
   }, [product, setGender]);
 
+  useEffect(() => {
+    if (product) {
+      trackViewContent(product, currency);
+    }
+  }, [product?.id, currency]);
+
   const colors = useMemo(() => [...new Set(variants.map((v) => v.color))], [variants]);
   const activeColor = selectedColor ?? colors[0];
   // A colorHex is set per-variant (admin picks the exact shade from the
@@ -166,6 +173,15 @@ export default function ProductDetails() {
       notify(`This product is not available in ${currency} yet`, "error");
       return;
     }
+
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      category: product.categoryName || product.category?.name,
+      price: activePrice.discountPrice ?? activePrice.regularPrice,
+      quantity,
+      currency,
+    });
     if (!isAuthenticated) {
       guestCart.addItem(
         {

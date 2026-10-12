@@ -1,3 +1,4 @@
+import { trackPageView } from "./utils/metaPixel";
 import { useLayoutEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -85,6 +86,7 @@ function ScrollToTop() {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
     window.scrollTo(0, 0);
+    trackPageView();
   }, [pathname]);
   return null;
 }

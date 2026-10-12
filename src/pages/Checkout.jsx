@@ -1,3 +1,4 @@
+import { trackInitiateCheckout, trackPurchase } from "../utils/metaPixel";
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -74,6 +75,17 @@ function RegisteredCheckout() {
   const checkout = checkoutQuery.data;
   const isUsd = checkout?.currency === "USD";
 
+  useEffect(() => {
+    if (checkout?.items?.length) {
+      trackInitiateCheckout({
+        total: checkout.totalPrice,
+        numItems: checkout.items.length,
+        contentIds: checkout.items.map((i) => i.productId),
+        currency: checkout.currency || "INR",
+      });
+    }
+  }, [checkout?.items?.length]);
+
   async function handlePlaceOrder() {
     if (placing || isUsd) return;
     setPlacing(true);
@@ -81,6 +93,13 @@ function RegisteredCheckout() {
       if (paymentMethod === "COD") {
         const order = await ordersApi.placeOrder({ paymentMethod });
         queryClient.invalidateQueries({ queryKey: ["cart"] });
+        trackPurchase({
+          orderNumber: order.orderNumber,
+          total: order.totalAmount,
+          currency: order.currency || "INR",
+          numItems: order.items?.length || 1,
+          contentIds: order.items?.map((i) => i.productId) || [],
+        });
         notify("Order placed", "success");
         navigate(`/orders/${order.id}`, { replace: true });
         return;
@@ -92,6 +111,13 @@ function RegisteredCheckout() {
       const result = await payWithCashfree(initiation);
 
       if (result.outcome === "success") {
+        trackPurchase({
+          orderNumber: initiation.orderNumber,
+          total: initiation.amount,
+          currency: initiation.currency || "INR",
+          numItems: checkout?.items?.length || 1,
+          contentIds: checkout?.items?.map((i) => i.productId) || [],
+        });
         notify("Payment successful", "success");
         navigate(`/orders/${initiation.orderId}`, { replace: true });
       } else if (result.outcome === "pending") {
@@ -461,6 +487,13 @@ function GuestCheckout() {
     try {
       if (paymentMethod === "COD") {
         const order = await ordersApi.createGuestOrder({ ...buildGuestOrderBase(), paymentMethod: "COD" });
+        trackPurchase({
+          orderNumber: order.orderNumber,
+          total: order.totalAmount,
+          currency: order.currency || "INR",
+          numItems: guestCart.items?.length || 1,
+          contentIds: guestCart.items?.map((i) => i.productId) || [],
+        });
         guestCart.clear();
         setPlacedOrder(order);
         notify("Order placed", "success");
@@ -472,6 +505,13 @@ function GuestCheckout() {
       const result = await payWithCashfree(initiation);
 
       if (result.outcome === "success") {
+        trackPurchase({
+          orderNumber: initiation.orderNumber,
+          total: initiation.amount,
+          currency: initiation.currency || "INR",
+          numItems: guestCart.items?.length || 1,
+          contentIds: guestCart.items?.map((i) => i.productId) || [],
+        });
         // Only clear the guest's local cart once payment is genuinely
         // confirmed -- clearing it any earlier would leave a dismissed/
         // failed retry with no items to resubmit.
