@@ -81,7 +81,7 @@ export default function AdminBulkCategories() {
           value={form.imageUrl}
           onChange={(v) => setForm((f) => ({ ...f, imageUrl: v }))}
           aspect={4 / 5}
-          guidance="Promotional image for this bulk category."
+          guidance="Recommended: 1200 × 1500 px (4:5 portrait). Minimum: 800 × 1000 px. Keep the main subject centered and safely inside the frame — this image fills a portrait category card in the homepage carousel, so avoid busy edges."
         />
 
         <label className="block sm:col-span-2">
