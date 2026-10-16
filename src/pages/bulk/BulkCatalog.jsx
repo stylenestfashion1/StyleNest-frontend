@@ -80,7 +80,7 @@ export default function BulkCatalog() {
             Bulk Order Catalog
           </h1>
           <p className="text-xs text-muted-foreground mt-1.5 max-w-xl leading-relaxed">
-            Direct factory wholesale pricing. Products are pre-packed in uniform bulk lots with complete multi-angle views and invoicing specifications.
+            Direct factory wholesale pricing. Choose any custom order quantity meeting minimum wholesale thresholds with complete multi-angle views.
           </p>
         </div>
 
@@ -239,8 +239,8 @@ export default function BulkCatalog() {
           <LoadingState label="Loading wholesale catalog..." />
         ) : !products || products.length === 0 ? (
           <EmptyState
-            title="No wholesale lots available"
-            description="No bulk lots found for this selection. Try choosing another category above."
+            title="No wholesale products available"
+            description="No bulk products found for this selection. Try choosing another category above."
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -272,7 +272,7 @@ export default function BulkCatalog() {
                     {/* Fixed Lot Badge */}
                     <div className="absolute top-3 left-3">
                       <span className="inline-flex items-center gap-1 rounded bg-black/85 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-sm">
-                        Lot: {product.minOrderQuantity} Pcs
+                        Min: {product.minOrderQuantity} Pcs
                       </span>
                     </div>
 
@@ -310,7 +310,7 @@ export default function BulkCatalog() {
 
                       <div className="mt-2.5 flex items-center justify-between text-xs text-muted-foreground">
                         <span className="font-medium text-foreground/80">
-                          Pack: {product.minOrderQuantity} pieces
+                          Min: {product.minOrderQuantity} pieces
                         </span>
                         <span className="text-accent font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                           View Details <ArrowRight className="h-3 w-3" />
