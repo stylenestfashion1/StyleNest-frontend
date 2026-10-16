@@ -12,7 +12,7 @@ const EMPTY = {
   description: "",
   imageUrl: "",
   price: "",
-  minOrderQuantity: "",
+  minOrderQuantity: "25",
   availableStock: "",
   categoryId: "",
   hsnCode: "",
@@ -27,7 +27,10 @@ export default function AdminBulkProductForm() {
   const { notify } = useToast();
   const [form, setForm] = useState(EMPTY);
 
-  const { data: categories } = useQuery({ queryKey: ["admin", "bulk-categories"], queryFn: adminApi.getAdminBulkCategories });
+  const { data: categories } = useQuery({
+    queryKey: ["admin", "bulk-categories"],
+    queryFn: adminApi.getAdminBulkCategories,
+  });
 
   const productQuery = useQuery({
     queryKey: ["admin", "bulk-product", id],
@@ -43,7 +46,7 @@ export default function AdminBulkProductForm() {
         description: p.description ?? "",
         imageUrl: p.imageUrl ?? "",
         price: p.price ?? "",
-        minOrderQuantity: p.minOrderQuantity ?? "",
+        minOrderQuantity: p.minOrderQuantity ?? "25",
         availableStock: p.availableStock ?? "",
         categoryId: p.categoryId ?? "",
         hsnCode: p.hsnCode ?? "",
@@ -77,7 +80,10 @@ export default function AdminBulkProductForm() {
   return (
     <div>
       <BackButton fallback="/admin/bulk/products" className="mb-3" />
-      <h2 className="text-xl">{isNew ? "New Bulk Product" : "Edit Bulk Product"}</h2>
+      <h2 className="text-xl font-bold">{isNew ? "New Bulk Product" : "Edit Bulk Product"}</h2>
+      <p className="label-xs mt-2 text-muted-foreground">
+        Products created here appear only in the wholesale portal with a fixed bulk pack lot size.
+      </p>
 
       <form
         onSubmit={(e) => {
@@ -86,10 +92,10 @@ export default function AdminBulkProductForm() {
         }}
         className="hairline-card mt-8 grid grid-cols-1 gap-6 p-6 sm:grid-cols-2"
       >
-        <Field label="Name" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} required />
+        <Field label="Product Name" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} required />
 
         <label className="block">
-          <span className="label-xs text-muted-foreground">Category</span>
+          <span className="label-xs text-muted-foreground">Wholesale Category</span>
           <select
             value={form.categoryId}
             onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))}
@@ -99,11 +105,14 @@ export default function AdminBulkProductForm() {
             <option value="" disabled>
               Select category
             </option>
-            {categories?.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
+            {categories?.map((c) => {
+              const seg = c.gender ?? (c.slug?.startsWith("men-") ? "MEN" : "WOMEN");
+              return (
+                <option key={c.id} value={c.id}>
+                  [{seg}] {c.name}
+                </option>
+              );
+            })}
           </select>
         </label>
 
@@ -117,34 +126,50 @@ export default function AdminBulkProductForm() {
 
         <label className="block sm:col-span-2">
           <span className="label-xs text-muted-foreground">Description</span>
-          <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} rows={3} className="field mt-2" />
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            rows={3}
+            className="field mt-2"
+          />
         </label>
 
         <Field
-          label="Price per piece (₹)"
+          label="Wholesale Price per piece (₹)"
           type="number"
           value={form.price}
           onChange={(v) => setForm((f) => ({ ...f, price: v }))}
           required
         />
+
         <Field
-          label="Minimum order quantity"
+          label="Fixed Bulk Pack / Lot Quantity (>10 pcs, e.g. 10, 20, 25, 50)"
           type="number"
           value={form.minOrderQuantity}
           onChange={(v) => setForm((f) => ({ ...f, minOrderQuantity: v }))}
           required
         />
+
         <Field
-          label="Available stock (optional -- leave blank if not tracked)"
+          label="Available wholesale stock (optional -- leave blank if not tracked)"
           type="number"
           value={form.availableStock}
           onChange={(v) => setForm((f) => ({ ...f, availableStock: v }))}
         />
-        <Field label="HSN/SAC Code" value={form.hsnCode} onChange={(v) => setForm((f) => ({ ...f, hsnCode: v }))} />
+
+        <Field
+          label="HSN / SAC Code"
+          value={form.hsnCode}
+          onChange={(v) => setForm((f) => ({ ...f, hsnCode: v }))}
+        />
 
         <label className="flex items-center gap-2 self-end text-sm">
-          <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
-          Active (visible in the wholesale catalog)
+          <input
+            type="checkbox"
+            checked={form.active}
+            onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+          />
+          Active in wholesale catalog
         </label>
 
         <div className="flex gap-3 sm:col-span-2">
@@ -161,7 +186,13 @@ function Field({ label, value, onChange, required, type = "text" }) {
   return (
     <label className="block">
       <span className="label-xs text-muted-foreground">{label}</span>
-      <input type={type} value={value} required={required} onChange={(e) => onChange(e.target.value)} className="field mt-2" />
+      <input
+        type={type}
+        value={value}
+        required={required}
+        onChange={(e) => onChange(e.target.value)}
+        className="field mt-2"
+      />
     </label>
   );
 }
