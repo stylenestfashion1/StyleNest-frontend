@@ -65,6 +65,8 @@ import AdminRentalCatalogDetail from "./pages/admin/AdminRentalCatalogDetail";
 import AdminRentalBookings from "./pages/admin/AdminRentalBookings";
 import AdminRentalBookingDetail from "./pages/admin/AdminRentalBookingDetail";
 import AdminRentalSettings from "./pages/admin/AdminRentalSettings";
+import QuickPay from "./pages/QuickPay";
+import QuickPayReceipt from "./pages/QuickPayReceipt";
 
 /**
  * React Router never resets scroll position on client-side navigation (that
@@ -93,12 +95,13 @@ function ScrollToTop() {
 }
 
 function App() {
+  const isPaySubdomain = typeof window !== "undefined" && window.location.hostname.startsWith("pay.");
   return (
     <>
       <ScrollToTop />
       <Routes>
         <Route element={<Layout />}>
-          <Route index element={<Home />} />
+          <Route index element={isPaySubdomain ? <QuickPay /> : <Home />} />
           <Route path="men" element={<Men />} />
           <Route path="women" element={<Women />} />
           {/* Clean category browse -- /women/kurti, /men/cordset -- see
@@ -123,6 +126,8 @@ function App() {
               or external link to /privacy-policy still lands on the right
               content now that it lives under /legal/:slug. */}
           <Route path="privacy-policy" element={<Navigate to="/legal/privacy-policy" replace />} />
+          <Route path="pay" element={<QuickPay />} />
+          <Route path="pay/receipt" element={<QuickPayReceipt />} />
           <Route path="track-order" element={<TrackOrder />} />
 
           {/* Hidden in-store QR discount flow -- reachable ONLY via the
