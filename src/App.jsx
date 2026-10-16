@@ -44,6 +44,7 @@ import BulkCatalog from "./pages/bulk/BulkCatalog";
 import BulkProductDetail from "./pages/bulk/BulkProductDetail";
 import BulkCart from "./pages/bulk/BulkCart";
 import BulkCheckout from "./pages/bulk/BulkCheckout";
+import BulkOrderConfirmation from "./pages/bulk/BulkOrderConfirmation";
 import AdminBulkTokens from "./pages/admin/AdminBulkTokens";
 import AdminBulkCategories from "./pages/admin/AdminBulkCategories";
 import AdminBulkProducts from "./pages/admin/AdminBulkProducts";
@@ -166,6 +167,10 @@ function App() {
                 <BulkCheckout />
               </BulkAccessGuard>
             }
+          />
+          <Route
+            path="bulk-orders/order-confirmation"
+            element={<BulkOrderConfirmation />}
           />
           {/* Cart and Checkout are intentionally NOT behind ProtectedRoute —
               guest checkout (no account) must be able to reach both; each

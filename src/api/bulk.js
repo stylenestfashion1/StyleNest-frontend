@@ -8,3 +8,6 @@ export const getBulkProducts = (categoryId) =>
 export const getBulkProduct = (id) => bulkClient.get(`/bulk/customer/products/${id}`);
 
 export const placeBulkOrder = (data) => bulkClient.post("/bulk/customer/orders", data);
+
+export const initiatePayGlocalPayment = (bulkOrderNumber) =>
+  bulkClient.post("/bulk/customer/payments/initiate", { bulkOrderNumber });
