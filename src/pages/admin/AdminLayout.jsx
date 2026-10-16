@@ -25,6 +25,7 @@ const LINKS = [
 // the backend) and must never read as just another retail nav item.
 const BULK_LINKS = [
   { to: "/admin/bulk/orders", label: "Orders", end: false },
+  { to: "/admin/bulk/quick-payments", label: "Quick Payments", end: false },
   { to: "/admin/bulk/products", label: "Products", end: false },
   { to: "/admin/bulk/categories", label: "Categories", end: false },
   { to: "/admin/bulk/access-tokens", label: "Access Tokens", end: false },

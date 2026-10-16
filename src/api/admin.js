@@ -102,6 +102,8 @@ export const getAdminBulkOrderInvoice = (id) => client.get(`/admin/bulk/orders/$
 export const getAdminBulkOrderInvoicePdfBlob = (id) => client.get(`/admin/bulk/orders/${id}/invoice/pdf`, { responseType: "blob" });
 export const resendAdminBulkOrderInvoiceEmail = (id) => client.post(`/admin/bulk/orders/${id}/invoice/resend-email`);
 
+export const getAdminQuickPayments = () => client.get("/admin/bulk/quick-payments");
+
 // REWARDS (in-store QR discount) -- fully separate admin sub-system, kept
 // alongside the rest of the admin API surface for consistency. Hidden from
 // normal customer navigation entirely; only reachable via the physical

@@ -7,3 +7,7 @@ export async function initiateQuickPayment(data) {
 export async function getQuickPaymentStatus(paymentNumber) {
   return client.get(`/quick-pay/${paymentNumber}`);
 }
+
+export async function getAdminQuickPayments() {
+  return client.get("/admin/bulk/quick-payments");
+}
