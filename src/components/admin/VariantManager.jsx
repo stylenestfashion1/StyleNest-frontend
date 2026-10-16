@@ -4,6 +4,7 @@ import * as adminApi from "../../api/admin";
 import { useToast } from "../../context/ToastContext";
 import { getSwatchColor, resolveKnownColorHex } from "../../utils/swatchColor";
 import { getSizeLabel, sizesForCategory } from "../../utils/sizeLabel";
+import { defaultShippingForCategory } from "../../utils/categoryShipping";
 import ImageUploadManager from "./ImageUploadManager";
 
 // Just suggestions for the color autocomplete (datalist) -- admins can
@@ -35,15 +36,18 @@ function groupByColor(variants) {
 export default function VariantManager({ productId, categoryName, variants, onChanged }) {
   const { notify } = useToast();
   const sizes = sizesForCategory(categoryName);
-  const [form, setForm] = useState({
-    color: "",
-    colorHex: "",
-    size: sizes[0].value,
-    stock: 0,
-    shippingWeightGrams: "",
-    packageLengthCm: "",
-    packageWidthCm: "",
-    packageHeightCm: "",
+  const [form, setForm] = useState(() => {
+    const defaults = defaultShippingForCategory(categoryName);
+    return {
+      color: "",
+      colorHex: "",
+      size: sizes[0]?.value ?? "XS",
+      stock: 0,
+      shippingWeightGrams: defaults.shippingWeightGrams,
+      packageLengthCm: defaults.packageLengthCm,
+      packageWidthCm: defaults.packageWidthCm,
+      packageHeightCm: defaults.packageHeightCm,
+    };
   });
   const [expandedImages, setExpandedImages] = useState(null);
   const [editing, setEditing] = useState(null);
@@ -62,9 +66,15 @@ export default function VariantManager({ productId, categoryName, variants, onCh
   // for this category changes and the current value isn't one of them,
   // instead of trusting a value fixed once at mount.
   useEffect(() => {
-    if (!sizes.some((s) => s.value === form.size)) {
-      setForm((f) => ({ ...f, size: sizes[0]?.value ?? f.size }));
-    }
+    const defaults = defaultShippingForCategory(categoryName);
+    setForm((f) => ({
+      ...f,
+      size: sizes.some((s) => s.value === f.size) ? f.size : (sizes[0]?.value ?? f.size),
+      shippingWeightGrams: f.shippingWeightGrams === "" || f.shippingWeightGrams == null ? defaults.shippingWeightGrams : f.shippingWeightGrams,
+      packageLengthCm: f.packageLengthCm === "" || f.packageLengthCm == null ? defaults.packageLengthCm : f.packageLengthCm,
+      packageWidthCm: f.packageWidthCm === "" || f.packageWidthCm == null ? defaults.packageWidthCm : f.packageWidthCm,
+      packageHeightCm: f.packageHeightCm === "" || f.packageHeightCm == null ? defaults.packageHeightCm : f.packageHeightCm,
+    }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryName]);
 
@@ -82,6 +92,15 @@ export default function VariantManager({ productId, categoryName, variants, onCh
       }),
     onSuccess: () => {
       onChanged();
+      const defaults = defaultShippingForCategory(categoryName);
+      setForm((f) => ({
+        ...f,
+        stock: 0,
+        shippingWeightGrams: defaults.shippingWeightGrams,
+        packageLengthCm: defaults.packageLengthCm,
+        packageWidthCm: defaults.packageWidthCm,
+        packageHeightCm: defaults.packageHeightCm,
+      }));
       notify("Variant added", "success");
     },
     onError: (err) => notify(err.message, "error"),
@@ -480,12 +499,21 @@ function AddSizeForm({ productId, categoryName, group, onSaved, onCancel }) {
   const allSizes = sizesForCategory(categoryName);
   const usedSizes = new Set(group.variants.map((v) => v.size));
   const availableSizes = allSizes.filter((s) => !usedSizes.has(s.value));
+  const sibling = group.variants.find((v) => v.shippingWeightGrams != null);
+  const defaults = sibling
+    ? {
+        shippingWeightGrams: sibling.shippingWeightGrams,
+        packageLengthCm: sibling.packageLengthCm,
+        packageWidthCm: sibling.packageWidthCm,
+        packageHeightCm: sibling.packageHeightCm,
+      }
+    : defaultShippingForCategory(categoryName);
   const [size, setSize] = useState(availableSizes[0]?.value ?? "");
   const [stock, setStock] = useState(0);
-  const [shippingWeightGrams, setShippingWeightGrams] = useState("");
-  const [packageLengthCm, setPackageLengthCm] = useState("");
-  const [packageWidthCm, setPackageWidthCm] = useState("");
-  const [packageHeightCm, setPackageHeightCm] = useState("");
+  const [shippingWeightGrams, setShippingWeightGrams] = useState(defaults.shippingWeightGrams ?? "");
+  const [packageLengthCm, setPackageLengthCm] = useState(defaults.packageLengthCm ?? "");
+  const [packageWidthCm, setPackageWidthCm] = useState(defaults.packageWidthCm ?? "");
+  const [packageHeightCm, setPackageHeightCm] = useState(defaults.packageHeightCm ?? "");
 
   // Same defensive resync as the top-level Add form above, in case
   // categoryName resolves after this form's first render.

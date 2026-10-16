@@ -9,6 +9,7 @@ import LoadingState from "../../components/LoadingState";
 import ErrorState from "../../components/ErrorState";
 import BackButton from "../../components/BackButton";
 import VariantManager from "../../components/admin/VariantManager";
+import { defaultShippingForCategory } from "../../utils/categoryShipping";
 
 const EMPTY = {
   name: "",
@@ -268,7 +269,28 @@ export default function AdminProductForm() {
         </div>
         <label className="block">
           <span className="label-xs text-muted-foreground">Category</span>
-          <select required value={form.categoryId} onChange={(e) => setForm((f) => ({ ...f, categoryId: e.target.value }))} className="field mt-2">
+          <select
+            required
+            value={form.categoryId}
+            onChange={(e) => {
+              const catId = e.target.value;
+              const selCat = categories?.find((c) => String(c.id) === String(catId));
+              const defaults = selCat ? defaultShippingForCategory(selCat.name) : null;
+              setForm((f) => ({
+                ...f,
+                categoryId: catId,
+                ...(defaults && (f.shippingWeightGrams === "" || f.shippingWeightGrams == null)
+                  ? {
+                      shippingWeightGrams: defaults.shippingWeightGrams,
+                      packageLengthCm: defaults.packageLengthCm,
+                      packageWidthCm: defaults.packageWidthCm,
+                      packageHeightCm: defaults.packageHeightCm,
+                    }
+                  : {}),
+              }));
+            }}
+            className="field mt-2"
+          >
             <option value="">Select category</option>
             {categories?.map((c) => (
               <option key={c.id} value={c.id}>
