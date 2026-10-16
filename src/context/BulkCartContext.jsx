@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { getBulkProducts } from "../api/bulk";
 
 const BulkCartContext = createContext(null);
 const STORAGE_KEY = "stylenest_bulk_cart";
@@ -14,13 +15,9 @@ function readStoredItems() {
 }
 
 /**
- * Client-only cart for the wholesale flow -- there is no server-side bulk
- * cart table by design (see BulkOrderServiceImpl on the backend): quantities
- * and prices here are only a preview, always re-validated authoritatively
- * against BulkProduct (min order qty, available stock, current price) at
- * the moment the order is actually placed. sessionStorage, not
- * localStorage, since this cart is meaningless once the bulk access token
- * (also sessionStorage-only) expires or the tab closes.
+ * Client-only cart for the wholesale flow -- quantities and prices here are
+ * synced with the catalog so whenever admin updates a wholesale price, the cart
+ * reflects the fresh price immediately.
  */
 export function BulkCartProvider({ children }) {
   const [items, setItems] = useState(readStoredItems);
@@ -29,16 +26,74 @@ export function BulkCartProvider({ children }) {
     try {
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch {
-      // storage unavailable -- bulk cart just won't persist across reloads
+      // storage unavailable
     }
   }, [items]);
+
+  // Synchronize cart items with live catalog prices and stock on mount
+  useEffect(() => {
+    if (items.length === 0) return;
+    let cancelled = false;
+
+    getBulkProducts()
+      .then((res) => {
+        if (cancelled) return;
+        const catalogProducts = res?.data || res || [];
+        if (!Array.isArray(catalogProducts) || catalogProducts.length === 0) return;
+
+        setItems((current) => {
+          let hasDiff = false;
+          const updated = current.map((item) => {
+            const fresh = catalogProducts.find((p) => p.id === item.bulkProductId);
+            if (!fresh) return item;
+
+            const freshPrice = Number(fresh.price);
+            if (
+              item.price !== freshPrice ||
+              item.availableStock !== fresh.availableStock ||
+              item.name !== fresh.name ||
+              item.imageUrl !== fresh.imageUrl
+            ) {
+              hasDiff = true;
+              return {
+                ...item,
+                price: freshPrice,
+                name: fresh.name,
+                imageUrl: fresh.imageUrl,
+                minOrderQuantity: fresh.minOrderQuantity,
+                availableStock: fresh.availableStock,
+              };
+            }
+            return item;
+          });
+          return hasDiff ? updated : current;
+        });
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const addItem = useCallback((product, quantity) => {
     setItems((prev) => {
       const qty = Math.max(product.minOrderQuantity ?? 1, quantity ?? product.minOrderQuantity ?? 1);
       const existing = prev.find((i) => i.bulkProductId === product.id);
       if (existing) {
-        return prev.map((i) => (i.bulkProductId === product.id ? { ...i, quantity: qty } : i));
+        return prev.map((i) =>
+          i.bulkProductId === product.id
+            ? {
+                ...i,
+                quantity: qty,
+                price: Number(product.price),
+                name: product.name,
+                imageUrl: product.imageUrl,
+                minOrderQuantity: product.minOrderQuantity,
+                availableStock: product.availableStock,
+              }
+            : i
+        );
       }
       return [
         ...prev,
@@ -46,7 +101,7 @@ export function BulkCartProvider({ children }) {
           bulkProductId: product.id,
           name: product.name,
           imageUrl: product.imageUrl,
-          price: product.price,
+          price: Number(product.price),
           minOrderQuantity: product.minOrderQuantity,
           availableStock: product.availableStock,
           quantity: qty,
@@ -73,7 +128,7 @@ export function BulkCartProvider({ children }) {
 
   const totals = useMemo(() => {
     const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
-    const totalPrice = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const totalPrice = items.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
     return { totalItems, totalPrice };
   }, [items]);
 
