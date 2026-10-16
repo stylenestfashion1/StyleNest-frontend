@@ -14,7 +14,7 @@ const EMPTY = {
   imageUrl: "",
   imageUrls: [],
   price: "",
-  minOrderQuantity: "25",
+  minOrderQuantity: "10",
   availableStock: "",
   categoryId: "",
   hsnCode: "",
@@ -51,7 +51,7 @@ export default function AdminBulkProductForm() {
         imageUrl: p.imageUrl ?? (initialImages[0] ?? ""),
         imageUrls: initialImages,
         price: p.price ?? "",
-        minOrderQuantity: p.minOrderQuantity ?? "25",
+        minOrderQuantity: p.minOrderQuantity ?? "10",
         availableStock: p.availableStock ?? "",
         categoryId: p.categoryId ?? "",
         hsnCode: p.hsnCode ?? "",
@@ -237,7 +237,7 @@ export default function AdminBulkProductForm() {
         />
 
         <Field
-          label="Fixed Bulk Pack / Lot Quantity (>10 pcs, e.g. 10, 20, 25, 50)"
+          label="Minimum Order Quantity (MOQ >= 10 pcs, e.g. 10)"
           type="number"
           value={form.minOrderQuantity}
           onChange={(v) => setForm((f) => ({ ...f, minOrderQuantity: v }))}

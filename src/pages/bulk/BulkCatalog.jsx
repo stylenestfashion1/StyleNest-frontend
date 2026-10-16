@@ -245,7 +245,7 @@ export default function BulkCatalog() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => {
-              const packPrice = product.price * product.minOrderQuantity;
+              // custom quantity pricing
               const photoCount = product.imageUrls?.length || (product.imageUrl ? 1 : 0);
 
               return (
@@ -300,20 +300,24 @@ export default function BulkCatalog() {
 
                     <div className="mt-4 pt-3 border-t border-border/60">
                       <div className="flex items-baseline justify-between">
-                        <span className="text-xs text-muted-foreground">
-                          {formatPrice(product.price)} / pc
-                        </span>
-                        <span className="text-base font-bold text-foreground">
-                          {formatPrice(packPrice)}
+                        <div>
+                          <span className="text-[11px] text-muted-foreground block font-medium">Wholesale Rate</span>
+                          <span className="text-lg font-bold text-foreground font-serif">
+                            {formatPrice(product.price)}
+                            <span className="text-xs font-normal text-muted-foreground ml-1">/ pc</span>
+                          </span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 border border-accent/20 px-2.5 py-0.5 text-[11px] font-bold text-accent">
+                          Min: {product.minOrderQuantity} pcs
                         </span>
                       </div>
 
-                      <div className="mt-2.5 flex items-center justify-between text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground/80">
-                          Min: {product.minOrderQuantity} pieces
+                      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-dashed border-border/50">
+                        <span className="text-[11px] text-muted-foreground">
+                          Custom qty allowed
                         </span>
                         <span className="text-accent font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                          View Details <ArrowRight className="h-3 w-3" />
+                          Order Now <ArrowRight className="h-3 w-3" />
                         </span>
                       </div>
                     </div>
