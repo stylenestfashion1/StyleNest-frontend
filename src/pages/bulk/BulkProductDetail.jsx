@@ -1,6 +1,7 @@
+import { useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Lock, ShieldCheck, CheckCircle2, ArrowRight } from "lucide-react";
+import { ShoppingBag, Lock, ShieldCheck, ArrowRight, Eye } from "lucide-react";
 import LoadingState from "../../components/LoadingState";
 import ErrorState from "../../components/ErrorState";
 import BackButton from "../../components/BackButton";
@@ -14,6 +15,7 @@ export default function BulkProductDetail() {
   const navigate = useNavigate();
   const bulkCart = useBulkCart();
   const { notify } = useToast();
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const {
     data: product,
@@ -26,11 +28,20 @@ export default function BulkProductDetail() {
     queryFn: () => getBulkProduct(id),
   });
 
+  // Extract all gallery photos for this wholesale item
+  const galleryImages = useMemo(() => {
+    if (!product) return [];
+    if (product.imageUrls && product.imageUrls.length > 0) {
+      return product.imageUrls;
+    }
+    return product.imageUrl ? [product.imageUrl] : [];
+  }, [product]);
+
   if (isLoading) return <LoadingState label="Loading wholesale product..." />;
   if (isError) return <ErrorState message={error.message} onRetry={refetch} />;
   if (!product) return null;
 
-  // Fixed lot quantity configured by admin - non-editable for buyers
+  const currentImage = galleryImages[activeImageIndex] || product.imageUrl;
   const fixedLotQty = product.minOrderQuantity ?? 25;
   const totalPackPrice = product.price * fixedLotQty;
 
@@ -45,53 +56,95 @@ export default function BulkProductDetail() {
   }
 
   return (
-    <div className="mx-auto max-w-[1240px] px-5 py-10 md:px-10">
+    <div className="mx-auto max-w-[1340px] px-5 py-10 md:px-10">
       <BackButton fallback="/bulk-orders/catalog" className="mb-6" />
 
-      <div className="grid gap-10 lg:grid-cols-2 items-start">
-        {/* Left: Product Image */}
-        <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
-          <div className="aspect-[4/5] bg-muted relative">
-            {product.imageUrl ? (
+      <div className="grid gap-12 lg:grid-cols-12 items-start">
+        {/* Left Column: Full Product Photos Gallery (Multi-view: Front, Side, Back, etc.) */}
+        <div className="lg:col-span-7 flex flex-col gap-4">
+          {/* Main Hero Photo (object-contain with aspect-[3/4] so NO CLIPPING / KATI NAHI HO) */}
+          <div className="w-full aspect-[3/4] max-h-[660px] rounded-2xl border border-border/80 bg-[#faf9f6] relative overflow-hidden flex items-center justify-center shadow-sm">
+            {currentImage ? (
               <img
-                src={product.imageUrl}
-                alt={product.name}
-                className="h-full w-full object-cover"
+                src={currentImage}
+                alt={`${product.name} - View ${activeImageIndex + 1}`}
+                className="h-full w-full object-contain p-2"
               />
             ) : (
               <div className="h-full w-full flex items-center justify-center text-sm text-muted-foreground">
-                No image preview available
+                No image available
               </div>
             )}
+
+            {/* Wholesale Lot Overlay Badge */}
             <div className="absolute top-4 left-4">
-              <span className="inline-flex items-center gap-1.5 rounded-md bg-black/85 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                <Lock className="h-3 w-3" />
-                Wholesale Lot: {fixedLotQty} Pcs
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-black/85 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-sm">
+                <Lock className="h-3.5 w-3.5 text-accent" />
+                Wholesale Pack: {fixedLotQty} Pcs
               </span>
             </div>
+
+            {/* Photo Counter */}
+            {galleryImages.length > 1 && (
+              <div className="absolute bottom-4 right-4 rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                View {activeImageIndex + 1} of {galleryImages.length}
+              </div>
+            )}
           </div>
+
+          {/* Gallery Thumbnails List (All Available Angle Views) */}
+          {galleryImages.length > 1 && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Available Angle Views ({galleryImages.length} Photos):
+                </span>
+              </div>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+                {galleryImages.map((img, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`h-24 w-20 shrink-0 overflow-hidden rounded-xl border-2 bg-[#faf9f6] transition-all p-1 ${
+                      activeImageIndex === idx
+                        ? "border-primary shadow-md ring-2 ring-primary/20 scale-105"
+                        : "border-border/60 opacity-70 hover:opacity-100 hover:border-foreground/40"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`Angle ${idx + 1}`}
+                      className="h-full w-full object-contain"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Right: Product Details & Fixed Lot Specification */}
-        <div className="flex flex-col">
+        {/* Right Column: Wholesale Specifications & Fixed Lot Purchasing */}
+        <div className="lg:col-span-5 flex flex-col">
           {/* Category & Title */}
-          <div>
-            <p className="label-xs font-bold uppercase tracking-wider text-accent">
+          <div className="border-b pb-5">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
               {product.categoryGender ?? "WHOLESALE"} · {product.categoryName}
-            </p>
-            <h1 className="mt-2 text-2xl md:text-3xl font-extrabold text-foreground">
+            </span>
+            <h1 className="mt-2 text-2xl md:text-3xl font-extrabold text-foreground font-serif leading-tight">
               {product.name}
             </h1>
             {product.hsnCode && (
-              <p className="mt-1 text-xs font-mono text-muted-foreground">
+              <p className="mt-2 inline-block rounded bg-muted px-2.5 py-0.5 text-xs font-mono text-muted-foreground">
                 HSN Code: {product.hsnCode}
               </p>
             )}
           </div>
 
-          {/* Pricing Info */}
-          <div className="mt-5 flex items-baseline gap-3">
-            <span className="text-2xl font-bold text-foreground">
+          {/* Wholesale Pricing */}
+          <div className="mt-6 flex items-baseline gap-3">
+            <span className="text-3xl font-bold text-foreground font-serif">
               {formatPrice(product.price)}
             </span>
             <span className="text-sm font-medium text-muted-foreground">
@@ -99,76 +152,82 @@ export default function BulkProductDetail() {
             </span>
           </div>
 
+          {/* Description */}
           {product.description && (
-            <div className="mt-4 text-sm text-muted-foreground leading-relaxed border-t pt-4">
+            <div className="mt-4 text-sm text-muted-foreground leading-relaxed">
               {product.description}
             </div>
           )}
 
-          {/* PROMINENT FIXED BULK LOT BADGE / CARD */}
-          <div className="mt-6 rounded-xl border-2 border-primary/25 bg-primary/5 p-6 shadow-sm">
+          {/* BADE ME QUANTITY - PROMINENT FIXED BULK LOT CARD */}
+          <div className="mt-8 rounded-2xl border-2 border-primary/25 bg-primary/5 p-6 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                Wholesale Pack Lot Size
+              <span className="text-xs font-bold uppercase tracking-[0.18em] text-foreground">
+                Wholesale Lot Specification
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-                <Lock className="h-3 w-3" />
-                Fixed Lot (Non-Editable)
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900 shadow-xs">
+                <Lock className="h-3.5 w-3.5 text-amber-700" />
+                Fixed Lot · Non-Editable
               </span>
             </div>
 
-            {/* BADE ME QUANTITY (Prominent Size) */}
-            <div className="mt-3 flex items-baseline gap-3">
-              <span className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
+            {/* BADE ME QUANTITY DISPLAY */}
+            <div className="mt-4 flex items-baseline gap-3">
+              <span className="text-5xl md:text-6xl font-black tracking-tight text-foreground">
                 {fixedLotQty}
               </span>
-              <span className="text-xl font-bold text-muted-foreground">
-                Pieces per Bulk Pack
-              </span>
+              <div className="flex flex-col">
+                <span className="text-xl md:text-2xl font-bold text-foreground">
+                  Pieces
+                </span>
+                <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">
+                  Complete Bulk Lot
+                </span>
+              </div>
             </div>
 
             {/* Calculation Breakdown */}
-            <div className="mt-5 pt-4 border-t border-primary/15 flex items-baseline justify-between">
+            <div className="mt-6 pt-5 border-t border-primary/20 flex items-baseline justify-between">
               <div>
                 <p className="text-xs text-muted-foreground font-medium">
                   Pack Calculation: {fixedLotQty} pcs × {formatPrice(product.price)}
                 </p>
-                <p className="text-sm font-semibold text-foreground mt-0.5">
+                <p className="text-sm font-bold text-foreground mt-0.5">
                   Total Bulk Pack Price:
                 </p>
               </div>
-              <span className="text-2xl md:text-3xl font-black text-primary">
+              <span className="text-2xl md:text-3xl font-black text-primary font-serif">
                 {formatPrice(totalPackPrice)}
               </span>
             </div>
 
-            {/* Policy Clarification */}
-            <div className="mt-4 flex items-start gap-2 rounded-lg bg-background/80 p-3 text-xs text-muted-foreground border">
+            {/* Notice / Policy */}
+            <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-background/90 p-3.5 text-xs text-muted-foreground border border-border/80 shadow-xs">
               <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-              <span>
-                <strong>Wholesale Rule:</strong> This product is pre-packed in a fixed lot of <strong>{fixedLotQty} pieces</strong>. Individual loose pieces or custom quantities are not permitted for this listing.
+              <span className="leading-relaxed">
+                <strong>Wholesale Policy:</strong> This product is pre-packaged in a fixed manufacturing lot of <strong>{fixedLotQty} pieces</strong>. Loose quantities or single-piece orders cannot be accepted.
               </span>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
+          <div className="mt-8 flex flex-col gap-3">
             <button
               onClick={handleAddToCart}
-              className="btn-outline flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2"
+              className="btn-outline w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 rounded-xl shadow-sm hover:shadow"
             >
               <ShoppingBag className="h-4 w-4" />
-              Add Pack ({fixedLotQty} Pcs) to Cart
+              Add Bulk Lot ({fixedLotQty} Pcs) to Cart
             </button>
             <button
               onClick={handleBuyNow}
-              className="btn-solid flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2"
+              className="btn-solid w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 rounded-xl shadow-md"
             >
-              Buy Pack Now ({formatPrice(totalPackPrice)})
+              Buy Bulk Lot Now ({formatPrice(totalPackPrice)})
             </button>
           </div>
 
-          {/* Bulk Cart Link */}
+          {/* Navigation link */}
           <div className="mt-6 flex items-center justify-between border-t pt-4">
             <Link
               to="/bulk-orders/catalog"

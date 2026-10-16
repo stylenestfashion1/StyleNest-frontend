@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ShoppingBag, Check, Layers, ArrowRight, X } from "lucide-react";
+import { ShoppingBag, Check, ArrowRight, X, ChevronRight, Images } from "lucide-react";
 import LoadingState from "../../components/LoadingState";
 import ErrorState from "../../components/ErrorState";
 import EmptyState from "../../components/EmptyState";
@@ -67,66 +67,69 @@ export default function BulkCatalog() {
 
   return (
     <div className="mx-auto max-w-[1440px] px-5 py-10 md:px-10">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b pb-6">
+      {/* Editorial Wholesale Top Banner */}
+      <div className="flex flex-wrap items-end justify-between gap-6 border-b border-border/80 pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="label-xs tracking-widest text-accent font-semibold uppercase">
-              Wholesale Portal · B2B Access Verified
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <p className="label-xs font-semibold uppercase tracking-[0.2em] text-accent">
+              StyleNest Wholesale · B2B Client Portal
             </p>
           </div>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-3xl text-foreground">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight md:text-4xl text-foreground font-serif">
             Bulk Order Catalog
           </h1>
-          <p className="text-xs text-muted-foreground mt-1">
-            Orders are sold exclusively in complete fixed wholesale packs (10–25+ pcs per lot).
+          <p className="text-xs text-muted-foreground mt-1.5 max-w-xl leading-relaxed">
+            Direct factory wholesale pricing. Products are pre-packed in uniform bulk lots with complete multi-angle views and invoicing specifications.
           </p>
         </div>
+
         <Link
           to="/bulk-orders/cart"
-          className="btn-outline flex items-center gap-2 py-2.5 px-4 rounded-md shadow-sm hover:shadow"
+          className="btn-outline flex items-center gap-2.5 py-2.5 px-5 rounded-md hover:bg-foreground hover:text-background transition-all shadow-sm"
         >
           <ShoppingBag className="h-4 w-4" />
-          <span className="font-medium text-sm">Bulk Cart</span>
+          <span className="font-semibold text-xs tracking-wider uppercase">Bulk Cart</span>
           {bulkCart.totalItems > 0 && (
-            <span className="ml-1 rounded-full bg-primary text-primary-foreground px-2 py-0.5 text-xs font-bold">
+            <span className="ml-1 rounded-full bg-accent text-accent-foreground px-2 py-0.5 text-xs font-bold">
               {bulkCart.totalItems} pcs
             </span>
           )}
         </Link>
       </div>
 
-      {/* Categories Clean List Layout (Men Separate, Women Separate - No Card Animations) */}
+      {/* Premium Minimalist Categories Section (No Emojis, Subtle Luxury Hover Effects) */}
       {!categoriesLoading && categories.length > 0 && (
-        <div className="mt-8 rounded-xl border bg-card p-5 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b">
-            <div className="flex items-center gap-2">
-              <Layers className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Wholesale Categories (List View)
-              </h2>
+        <div className="mt-8 rounded-2xl border border-border/70 bg-card/60 p-6 shadow-sm backdrop-blur-sm">
+          <div className="flex items-center justify-between pb-4 border-b border-border/60">
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Browse Collections
+              </span>
+              <p className="text-xs text-foreground/70 mt-0.5">
+                Select a collection below to filter wholesale listings
+              </p>
             </div>
             {selectedCategoryId && (
               <button
                 onClick={() => setSelectedCategoryId(null)}
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground font-medium"
+                className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
               >
                 <X className="h-3 w-3" />
-                View All Categories
+                Clear Filter (View All)
               </button>
             )}
           </div>
 
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Men Categories List */}
-            <div className="rounded-lg border bg-muted/20 p-4">
-              <div className="flex items-center justify-between mb-3 pb-2 border-b">
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-600 flex items-center gap-1.5">
-                  👔 Men's Wholesale
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Men's Wholesale Collection */}
+            <div className="rounded-xl border border-border/50 bg-background/50 p-5 transition-shadow hover:shadow-md">
+              <div className="flex items-center justify-between pb-3 border-b border-border/40 mb-3">
+                <span className="text-xs font-bold uppercase tracking-[0.22em] text-foreground font-serif">
+                  Men's Wholesale
                 </span>
-                <span className="text-[11px] text-muted-foreground">
-                  {menCategories.length} categories
+                <span className="text-[11px] text-muted-foreground tracking-wider uppercase">
+                  {menCategories.length} Collections
                 </span>
               </div>
               <ul className="space-y-1.5">
@@ -138,25 +141,23 @@ export default function BulkCatalog() {
                         onClick={() =>
                           setSelectedCategoryId(isSelected ? null : c.id)
                         }
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm text-left transition-colors ${
+                        className={`group relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm text-left transition-all duration-200 ${
                           isSelected
-                            ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-                            : "hover:bg-muted text-foreground/80 hover:text-foreground"
+                            ? "bg-foreground text-background font-semibold shadow-sm border-l-4 border-accent pl-4"
+                            : "hover:bg-accent/10 hover:border-accent/40 text-foreground/80 hover:text-foreground hover:pl-5"
                         }`}
                       >
                         <span className="flex items-center gap-2">
-                          {isSelected && <Check className="h-3.5 w-3.5" />}
-                          {c.name}
+                          {isSelected && <Check className="h-3.5 w-3.5 text-accent shrink-0" />}
+                          <span className="tracking-wide">{c.name}</span>
                         </span>
-                        <span
-                          className={`text-xs ${
+                        <ChevronRight
+                          className={`h-3.5 w-3.5 transition-transform duration-200 ${
                             isSelected
-                              ? "text-primary-foreground/80"
-                              : "text-muted-foreground"
+                              ? "text-accent translate-x-0.5"
+                              : "text-muted-foreground/60 group-hover:translate-x-1 group-hover:text-foreground"
                           }`}
-                        >
-                          Select →
-                        </span>
+                        />
                       </button>
                     </li>
                   );
@@ -164,17 +165,17 @@ export default function BulkCatalog() {
               </ul>
             </div>
 
-            {/* Women Categories List */}
-            <div className="rounded-lg border bg-muted/20 p-4">
-              <div className="flex items-center justify-between mb-3 pb-2 border-b">
-                <span className="text-xs font-bold uppercase tracking-wider text-purple-600 flex items-center gap-1.5">
-                  👗 Women's Wholesale
+            {/* Women's Wholesale Collection */}
+            <div className="rounded-xl border border-border/50 bg-background/50 p-5 transition-shadow hover:shadow-md">
+              <div className="flex items-center justify-between pb-3 border-b border-border/40 mb-3">
+                <span className="text-xs font-bold uppercase tracking-[0.22em] text-foreground font-serif">
+                  Women's Wholesale
                 </span>
-                <span className="text-[11px] text-muted-foreground">
-                  {womenCategories.length} categories
+                <span className="text-[11px] text-muted-foreground tracking-wider uppercase">
+                  {womenCategories.length} Collections
                 </span>
               </div>
-              <ul className="space-y-1.5 grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-1">
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                 {womenCategories.map((c) => {
                   const isSelected = selectedCategoryId === c.id;
                   return (
@@ -183,25 +184,23 @@ export default function BulkCatalog() {
                         onClick={() =>
                           setSelectedCategoryId(isSelected ? null : c.id)
                         }
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm text-left transition-colors ${
+                        className={`group relative w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm text-left transition-all duration-200 ${
                           isSelected
-                            ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-                            : "hover:bg-muted text-foreground/80 hover:text-foreground"
+                            ? "bg-foreground text-background font-semibold shadow-sm border-l-4 border-accent pl-4"
+                            : "hover:bg-accent/10 hover:border-accent/40 text-foreground/80 hover:text-foreground hover:pl-4"
                         }`}
                       >
                         <span className="flex items-center gap-2 truncate">
-                          {isSelected && <Check className="h-3.5 w-3.5 shrink-0" />}
-                          <span className="truncate">{c.name}</span>
+                          {isSelected && <Check className="h-3.5 w-3.5 text-accent shrink-0" />}
+                          <span className="truncate tracking-wide">{c.name}</span>
                         </span>
-                        <span
-                          className={`text-xs shrink-0 ${
+                        <ChevronRight
+                          className={`h-3.5 w-3.5 shrink-0 transition-transform duration-200 ${
                             isSelected
-                              ? "text-primary-foreground/80"
-                              : "text-muted-foreground"
+                              ? "text-accent translate-x-0.5"
+                              : "text-muted-foreground/60 group-hover:translate-x-0.5 group-hover:text-foreground"
                           }`}
-                        >
-                          →
-                        </span>
+                        />
                       </button>
                     </li>
                   );
@@ -212,54 +211,56 @@ export default function BulkCatalog() {
         </div>
       )}
 
-      {/* Selected Category Filter Indicator */}
-      <div className="mt-8 flex items-center justify-between">
+      {/* Filter Status Bar */}
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-b pb-4">
         <div>
-          <h2 className="text-lg font-bold text-foreground">
+          <h2 className="text-xl font-bold text-foreground font-serif">
             {activeCategory
-              ? `${activeCategory.gender ?? (activeCategory.slug?.startsWith("men-") ? "Men" : "Women")} · ${activeCategory.name}`
-              : "All Wholesale Products"}
+              ? `${activeCategory.gender ?? (activeCategory.slug?.startsWith("men-") ? "Men's" : "Women's")} · ${activeCategory.name}`
+              : "All Wholesale Listings"}
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Showing {products.length} bulk wholesale pack{products.length === 1 ? "" : "s"} available
+            Showing {products.length} bulk wholesale pack{products.length === 1 ? "" : "s"}
           </p>
         </div>
         {selectedCategoryId && (
           <button
             onClick={() => setSelectedCategoryId(null)}
-            className="label-xs rounded-full border px-3 py-1 hover:bg-muted text-muted-foreground"
+            className="text-xs font-medium text-accent hover:underline flex items-center gap-1"
           >
-            Clear category filter ✕
+            Show all categories <ArrowRight className="h-3 w-3" />
           </button>
         )}
       </div>
 
-      {/* Wholesale Products Grid (No Flashy Bouncy Animation - Clean Professional B2B Cards) */}
+      {/* Wholesale Product Cards - Full Natural Image View (No Cropping / Kati Kati Nahi) */}
       <div className="mt-6">
         {productsLoading ? (
           <LoadingState label="Loading wholesale catalog..." />
         ) : !products || products.length === 0 ? (
           <EmptyState
-            title="No wholesale products found"
-            description="No bulk lots available in this category currently. Please select another category or check back soon."
+            title="No wholesale lots available"
+            description="No bulk lots found for this selection. Try choosing another category above."
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {products.map((product) => {
               const packPrice = product.price * product.minOrderQuantity;
+              const photoCount = product.imageUrls?.length || (product.imageUrl ? 1 : 0);
+
               return (
                 <Link
                   key={product.id}
                   to={`/bulk-orders/products/${product.id}`}
-                  className="group flex flex-col rounded-lg border bg-card overflow-hidden hover:border-foreground/40 transition-colors shadow-sm"
+                  className="group flex flex-col rounded-xl border border-border/80 bg-card overflow-hidden hover:border-foreground/50 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  {/* Image Container */}
-                  <div className="aspect-[4/5] overflow-hidden bg-muted relative">
+                  {/* Image Viewport - Styled with object-top and aspect-[3/4] to prevent clipping */}
+                  <div className="aspect-[3/4] w-full overflow-hidden bg-[#faf9f6] relative flex items-center justify-center">
                     {product.imageUrl ? (
                       <img
                         src={product.imageUrl}
                         alt={product.name}
-                        className="h-full w-full object-cover"
+                        className="h-full w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]"
                         loading="lazy"
                       />
                     ) : (
@@ -267,26 +268,37 @@ export default function BulkCatalog() {
                         No image preview
                       </div>
                     )}
-                    {/* Fixed Lot Tag Overlay */}
-                    <div className="absolute top-2.5 left-2.5">
-                      <span className="inline-flex items-center gap-1 rounded bg-black/80 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
-                        🔒 Lot: {product.minOrderQuantity} Pcs
+
+                    {/* Fixed Lot Badge */}
+                    <div className="absolute top-3 left-3">
+                      <span className="inline-flex items-center gap-1 rounded bg-black/85 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-sm">
+                        Lot: {product.minOrderQuantity} Pcs
                       </span>
                     </div>
+
+                    {/* Multi-angle Photos Badge */}
+                    {photoCount > 1 && (
+                      <div className="absolute bottom-2.5 right-2.5">
+                        <span className="inline-flex items-center gap-1 rounded bg-black/70 px-2 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm">
+                          <Images className="h-3 w-3" />
+                          {photoCount} Photos
+                        </span>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Content */}
+                  {/* Product Details */}
                   <div className="p-4 flex flex-col flex-1 justify-between">
                     <div>
-                      <p className="text-[11px] uppercase tracking-wider font-semibold text-accent truncate">
+                      <p className="text-[11px] uppercase tracking-[0.15em] font-semibold text-accent truncate">
                         {product.categoryGender ?? "WHOLESALE"} · {product.categoryName}
                       </p>
-                      <h3 className="mt-1 text-sm font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors">
+                      <h3 className="mt-1 text-sm font-semibold text-foreground line-clamp-2 leading-snug group-hover:text-primary transition-colors">
                         {product.name}
                       </h3>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t">
+                    <div className="mt-4 pt-3 border-t border-border/60">
                       <div className="flex items-baseline justify-between">
                         <span className="text-xs text-muted-foreground">
                           {formatPrice(product.price)} / pc
@@ -295,10 +307,13 @@ export default function BulkCatalog() {
                           {formatPrice(packPrice)}
                         </span>
                       </div>
-                      <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Pack: {product.minOrderQuantity} pieces</span>
-                        <span className="text-primary font-medium flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                          View Lot <ArrowRight className="h-3 w-3" />
+
+                      <div className="mt-2.5 flex items-center justify-between text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground/80">
+                          Pack: {product.minOrderQuantity} pieces
+                        </span>
+                        <span className="text-accent font-semibold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                          View Details <ArrowRight className="h-3 w-3" />
                         </span>
                       </div>
                     </div>
