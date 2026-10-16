@@ -70,10 +70,10 @@ export default function VariantManager({ productId, categoryName, variants, onCh
     setForm((f) => ({
       ...f,
       size: sizes.some((s) => s.value === f.size) ? f.size : (sizes[0]?.value ?? f.size),
-      shippingWeightGrams: f.shippingWeightGrams === "" || f.shippingWeightGrams == null ? defaults.shippingWeightGrams : f.shippingWeightGrams,
-      packageLengthCm: f.packageLengthCm === "" || f.packageLengthCm == null ? defaults.packageLengthCm : f.packageLengthCm,
-      packageWidthCm: f.packageWidthCm === "" || f.packageWidthCm == null ? defaults.packageWidthCm : f.packageWidthCm,
-      packageHeightCm: f.packageHeightCm === "" || f.packageHeightCm == null ? defaults.packageHeightCm : f.packageHeightCm,
+      shippingWeightGrams: defaults.shippingWeightGrams,
+      packageLengthCm: defaults.packageLengthCm,
+      packageWidthCm: defaults.packageWidthCm,
+      packageHeightCm: defaults.packageHeightCm,
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryName]);

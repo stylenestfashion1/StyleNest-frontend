@@ -279,7 +279,7 @@ export default function AdminProductForm() {
               setForm((f) => ({
                 ...f,
                 categoryId: catId,
-                ...(defaults && (f.shippingWeightGrams === "" || f.shippingWeightGrams == null)
+                ...(defaults
                   ? {
                       shippingWeightGrams: defaults.shippingWeightGrams,
                       packageLengthCm: defaults.packageLengthCm,
