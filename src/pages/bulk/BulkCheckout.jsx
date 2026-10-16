@@ -4,6 +4,7 @@ import { CreditCard, Banknote, ShieldCheck, Lock, ExternalLink } from "lucide-re
 import { Reveal, PageFade } from "../../components/Reveal";
 import BackButton from "../../components/BackButton";
 import { placeBulkOrder, initiatePayGlocalPayment } from "../../api/bulk";
+import { lookupPostalCode } from "../../api/addresses";
 import { useBulkCart } from "../../context/BulkCartContext";
 import { useToast } from "../../context/ToastContext";
 import { clearBulkToken } from "../../api/bulkClient";
@@ -31,10 +32,40 @@ export default function BulkCheckout() {
   const [errors, setErrors] = useState({});
   const [placing, setPlacing] = useState(false);
   const [placedOrder, setPlacedOrder] = useState(null);
+  const [lookingPostal, setLookingPostal] = useState(false);
+
+  async function handlePostalLookup(pin) {
+    const cleanPin = (pin || contact.postalCode || "").trim();
+    if (cleanPin.length !== 6 || !/^\d{6}$/.test(cleanPin)) return;
+    setLookingPostal(true);
+    try {
+      const res = await lookupPostalCode(cleanPin, "IN");
+      const data = res?.data || res;
+      if (data?.found) {
+        setContact((c) => ({
+          ...c,
+          city: data.city || c.city,
+          state: data.state || c.state,
+          country: data.country || c.country || "India",
+        }));
+        setErrors((e) => ({ ...e, city: undefined, state: undefined }));
+      }
+    } catch (err) {
+      console.error("Postal lookup error:", err);
+    } finally {
+      setLookingPostal(false);
+    }
+  }
 
   function setField(field, value) {
     setContact((c) => ({ ...c, [field]: value }));
     setErrors((e) => ({ ...e, [field]: undefined }));
+    if (field === "postalCode") {
+      const clean = value.trim();
+      if (clean.length === 6 && /^\d{6}$/.test(clean)) {
+        handlePostalLookup(clean);
+      }
+    }
   }
 
   function validate() {
@@ -76,7 +107,7 @@ export default function BulkCheckout() {
       if (paymentMethod === "ONLINE") {
         notify("Initiating PayGlocal secure payment...", "info");
         const payRes = await initiatePayGlocalPayment(order.bulkOrderNumber);
-        const redirectUrl = payRes.data?.redirectUrl;
+        const redirectUrl = payRes?.redirectUrl || payRes?.data?.redirectUrl;
 
         if (redirectUrl) {
           bulkCart.clear();
@@ -170,7 +201,22 @@ export default function BulkCheckout() {
               <Field label="Address line 1" value={contact.addressLine1} onChange={(v) => setField("addressLine1", v)} error={errors.addressLine1} required />
               <Field label="Address line 2 / Landmark (optional)" value={contact.addressLine2} onChange={(v) => setField("addressLine2", v)} />
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                <Field label="PIN/postal code" value={contact.postalCode} onChange={(v) => setField("postalCode", v)} error={errors.postalCode} required />
+                <div>
+                  <Field
+                    label="PIN code"
+                    value={contact.postalCode}
+                    onChange={(v) => setField("postalCode", v)}
+                    onBlur={() => handlePostalLookup(contact.postalCode)}
+                    placeholder="e.g. 302001"
+                    error={errors.postalCode}
+                    required
+                  />
+                  {lookingPostal && (
+                    <span className="mt-1 block text-xs text-primary font-medium animate-pulse">
+                      Detecting city & state...
+                    </span>
+                  )}
+                </div>
                 <Field label="City" value={contact.city} onChange={(v) => setField("city", v)} error={errors.city} required />
                 <Field label="State" value={contact.state} onChange={(v) => setField("state", v)} error={errors.state} required />
               </div>
@@ -291,7 +337,7 @@ export default function BulkCheckout() {
   );
 }
 
-function Field({ label, value, onChange, error, required, type = "text" }) {
+function Field({ label, value, onChange, onBlur, placeholder, error, required, type = "text" }) {
   return (
     <label className="block">
       <span className="label-xs text-muted-foreground">
@@ -302,6 +348,8 @@ function Field({ label, value, onChange, error, required, type = "text" }) {
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        placeholder={placeholder}
         className={`field mt-2 ${error ? "border-destructive" : ""}`}
         aria-invalid={Boolean(error)}
       />
