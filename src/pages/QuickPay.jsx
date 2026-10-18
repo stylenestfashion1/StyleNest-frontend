@@ -391,7 +391,7 @@ export default function QuickPay() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* 1. Payment Details */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                     <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
                         1
@@ -400,7 +400,7 @@ export default function QuickPay() {
                     </h2>
 
                     {/* Currency Selector */}
-                    <div className="inline-flex p-1 rounded-xl bg-muted border border-border/80">
+                    <div className="inline-flex self-start sm:self-auto p-1 rounded-xl bg-muted border border-border/80">
                       <button
                         type="button"
                         onClick={() => handleCurrencyChange("INR")}
