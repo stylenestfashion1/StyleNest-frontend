@@ -66,6 +66,7 @@ import AdminRentalCatalogDetail from "./pages/admin/AdminRentalCatalogDetail";
 import AdminRentalBookings from "./pages/admin/AdminRentalBookings";
 import AdminRentalBookingDetail from "./pages/admin/AdminRentalBookingDetail";
 import AdminRentalSettings from "./pages/admin/AdminRentalSettings";
+import QuickPayLayout from "./components/QuickPayLayout";
 import QuickPay from "./pages/QuickPay";
 import QuickPayReceipt from "./pages/QuickPayReceipt";
 
@@ -101,8 +102,16 @@ function App() {
     <>
       <ScrollToTop />
       <Routes>
+        {/* QUICK PAY & B2B SETTLEMENT PORTAL -- 100% isolated layout */}
+        <Route element={<QuickPayLayout />}>
+          <Route path="pay" element={<QuickPay />} />
+          <Route path="pay/receipt" element={<QuickPayReceipt />} />
+          <Route path="receipt" element={<QuickPayReceipt />} />
+          {isPaySubdomain && <Route index element={<QuickPay />} />}
+        </Route>
+
         <Route element={<Layout />}>
-          <Route index element={isPaySubdomain ? <QuickPay /> : <Home />} />
+          <Route index element={<Home />} />
           <Route path="men" element={<Men />} />
           <Route path="women" element={<Women />} />
           {/* Clean category browse -- /women/kurti, /men/cordset -- see

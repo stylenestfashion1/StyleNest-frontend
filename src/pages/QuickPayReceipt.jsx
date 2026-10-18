@@ -11,6 +11,7 @@ import {
   Mail,
   RotateCcw,
   ExternalLink,
+  MessageCircle,
 } from "lucide-react";
 
 export default function QuickPayReceipt() {
@@ -44,9 +45,11 @@ export default function QuickPayReceipt() {
   const currencySymbol =
     payment?.currency === "USD" ? "$" : "₹";
 
+  const refNumber = paymentNumber || payment?.paymentNumber || "";
+
   return (
     <PageFade>
-      <div className="min-h-screen bg-gradient-to-b from-background via-muted/20 to-background py-16 px-4 sm:px-6 lg:px-8">
+      <div className="py-12 sm:py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto">
           {isSuccess ? (
             <div className="bg-card rounded-3xl border border-border/80 shadow-lg overflow-hidden">
@@ -88,7 +91,7 @@ export default function QuickPayReceipt() {
                   <div className="py-3 flex justify-between">
                     <span className="text-muted-foreground">Payment Reference</span>
                     <span className="font-mono font-bold text-foreground">
-                      {paymentNumber || payment?.paymentNumber || "N/A"}
+                      {refNumber || "N/A"}
                     </span>
                   </div>
 
@@ -108,7 +111,7 @@ export default function QuickPayReceipt() {
 
                   {payment?.customerPhone && (
                     <div className="py-3 flex justify-between">
-                      <span className="text-muted-foreground">Customer Phone</span>
+                      <span className="text-muted-foreground">Customer Contact</span>
                       <span className="font-medium text-foreground">{payment.customerPhone}</span>
                     </div>
                   )}
@@ -123,8 +126,8 @@ export default function QuickPayReceipt() {
                   )}
 
                   <div className="py-3 flex justify-between">
-                    <span className="text-muted-foreground">Payment Method</span>
-                    <span className="font-medium text-foreground">PayGlocal International</span>
+                    <span className="text-muted-foreground">Payment Gateway</span>
+                    <span className="font-medium text-foreground">PayGlocal Verified</span>
                   </div>
                 </div>
 
@@ -137,7 +140,7 @@ export default function QuickPayReceipt() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
+                {/* Action Buttons: Strictly within Quick Pay Portal */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     onClick={() => window.print()}
@@ -148,12 +151,27 @@ export default function QuickPayReceipt() {
                   </button>
 
                   <Link
-                    to="/"
+                    to="/pay"
                     className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow hover:bg-primary/95 transition flex items-center justify-center gap-2"
                   >
-                    Back to StyleNest Home
+                    Pay Another Invoice
                     <ArrowRight className="h-4 w-4" />
                   </Link>
+                </div>
+
+                {/* WhatsApp Share / Confirm */}
+                <div className="pt-2 text-center">
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      `Hello StyleNest Fashion, I have completed the payment for reference ${refNumber}. Please check and confirm.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 text-xs font-medium text-emerald-600 hover:text-emerald-700 transition"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Send Confirmation on WhatsApp
+                  </a>
                 </div>
               </div>
             </div>
@@ -173,12 +191,13 @@ export default function QuickPayReceipt() {
                 The payment session was cancelled or could not be completed by your bank. Your card was not charged. If any money was deducted, it will be refunded by your bank within 3 to 5 business days.
               </p>
 
-              {paymentNumber && (
+              {refNumber && (
                 <div className="mt-6 inline-block px-4 py-2 rounded-xl bg-muted text-xs font-mono text-muted-foreground">
-                  Reference: {paymentNumber}
+                  Reference: {refNumber}
                 </div>
               )}
 
+              {/* Action Buttons: Strictly within Quick Pay Portal */}
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
                 <Link
                   to="/pay"
@@ -189,7 +208,9 @@ export default function QuickPayReceipt() {
                 </Link>
 
                 <a
-                  href="https://wa.me/919999999999?text=Hello%20StyleNest,%20I%20need%20help%20with%20payment%20reference%20"
+                  href={`https://wa.me/?text=${encodeURIComponent(
+                    `Hello StyleNest Fashion, my quick payment was incomplete or cancelled. Payment reference: ${refNumber}`
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 py-3 px-6 rounded-xl border border-input bg-background hover:bg-muted font-semibold text-sm text-foreground transition flex items-center justify-center gap-2"
