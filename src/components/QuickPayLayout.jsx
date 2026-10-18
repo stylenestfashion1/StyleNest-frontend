@@ -6,7 +6,7 @@ import { ShieldCheck, Lock, HelpCircle } from "lucide-react";
  * 
  * Guarantees:
  * 1. Zero retail storefront distractions (no Men, Women, Cart, Wishlist, or retail nav).
- * 2. High-trust B2B enterprise header with SSL & PCI-DSS indicators.
+ * 2. High-trust B2B enterprise header with SSL & security indicators.
  * 3. Dedicated wholesale helpdesk and compliance footer.
  */
 export default function QuickPayLayout() {
@@ -36,14 +36,14 @@ export default function QuickPayLayout() {
 
           {/* Right: Security & Helpdesk */}
           <div className="flex items-center gap-2.5 sm:gap-4">
-            <div className="hidden md:flex items-center gap-2 text-xs font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-xl border border-border/60">
+            <div className="hidden md:flex items-center gap-2 text-xs font-medium text-muted-foreground bg-muted/60 px-3 py-1.5 rounded-xl border border-border/60 whitespace-nowrap select-none">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="font-semibold text-foreground">256-Bit SSL</span>
+              <span className="font-semibold text-foreground">100% Secure Checkout</span>
               <span className="text-muted-foreground/60">|</span>
-              <span>PCI-DSS Verified</span>
+              <span>256-Bit SSL</span>
             </div>
 
             <a

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { PageFade } from "../components/Reveal";
 import { getQuickPaymentStatus } from "../api/quickPay";
 import {
@@ -16,12 +16,14 @@ import {
 
 export default function QuickPayReceipt() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const paymentNumber = searchParams.get("paymentNumber");
   const urlStatus = searchParams.get("status");
 
   const [payment, setPayment] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 1. Fetch live payment status from backend
   useEffect(() => {
     if (paymentNumber) {
       getQuickPaymentStatus(paymentNumber)
@@ -38,6 +40,25 @@ export default function QuickPayReceipt() {
       setLoading(false);
     }
   }, [paymentNumber]);
+
+  // 2. Intercept Browser Back Button (popstate trap)
+  // Prevents user from clicking Back in Chrome and bouncing back to PayGlocal gateway's dead session
+  useEffect(() => {
+    // Push an extra dummy state to history so the first Back press triggers popstate on THIS page
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = (e) => {
+      // Prevent going back to the external gateway or stale payment screen
+      e.preventDefault();
+      // Replace history entry and gracefully land on clean /pay page
+      navigate("/pay", { replace: true });
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [navigate]);
 
   const isSuccess =
     urlStatus === "success" || (payment && payment.paymentStatus === "PAID");
@@ -152,6 +173,7 @@ export default function QuickPayReceipt() {
 
                   <Link
                     to="/pay"
+                    replace={true}
                     className="flex-1 py-3 px-4 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow hover:bg-primary/95 transition flex items-center justify-center gap-2"
                   >
                     Pay Another Invoice
@@ -201,6 +223,7 @@ export default function QuickPayReceipt() {
               <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
                 <Link
                   to="/pay"
+                  replace={true}
                   className="flex-1 py-3 px-6 rounded-xl bg-primary text-primary-foreground font-semibold text-sm shadow hover:bg-primary/95 transition flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="h-4 w-4" />
