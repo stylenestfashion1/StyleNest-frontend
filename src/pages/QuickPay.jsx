@@ -14,13 +14,11 @@ import {
   AlertCircle,
   Loader2,
   Check,
-  Building,
 } from "lucide-react";
 
 export const COUNTRY_OPTIONS = [
-  { code: "IN", name: "India", dialCode: "+91", flag: "🇮🇳", placeholder: "98765 43210", postalLabel: "PIN Code (6 digits)" },
   { code: "US", name: "United States", dialCode: "+1", flag: "🇺🇸", placeholder: "(555) 019-2834", postalLabel: "ZIP Code (5 digits)" },
-  { code: "GB", name: "United Kingdom", dialCode: "+44", flag: "🇬🇧", placeholder: "7911 123456", postalLabel: "Postal Code (e.g. SW1A 1AA)" },
+  { code: "GB", name: "United Kingdom", dialCode: "+44", flag: "🇬🇧", placeholder: "7911 123456", postalLabel: "Postal Code (e.g. SW1A, EC1A 1BB)" },
   { code: "CA", name: "Canada", dialCode: "+1", flag: "🇨🇦", placeholder: "(416) 555-0199", postalLabel: "Postal Code (e.g. M5V 3L9)" },
   { code: "AE", name: "United Arab Emirates", dialCode: "+971", flag: "🇦🇪", placeholder: "50 123 4567", postalLabel: "PO Box / Area Code" },
   { code: "AU", name: "Australia", dialCode: "+61", flag: "🇦🇺", placeholder: "412 345 678", postalLabel: "Postal Code (4 digits)" },
@@ -48,22 +46,26 @@ export const COUNTRY_OPTIONS = [
   { code: "BD", name: "Bangladesh", dialCode: "+880", flag: "🇧🇩", placeholder: "1712-345678", postalLabel: "Postal Code (4 digits)" },
   { code: "LK", name: "Sri Lanka", dialCode: "+94", flag: "🇱🇰", placeholder: "71 234 5678", postalLabel: "Postal Code (5 digits)" },
   { code: "NP", name: "Nepal", dialCode: "+977", flag: "🇳🇵", placeholder: "984-1234567", postalLabel: "Postal Code (5 digits)" },
+  { code: "IN", name: "India", dialCode: "+91", flag: "🇮🇳", placeholder: "98765 43210", postalLabel: "PIN Code (6 digits)" },
   { code: "OTHER", name: "Other Country", dialCode: "+1", flag: "🌐", placeholder: "Contact number", postalLabel: "Postal / ZIP Code" }
 ];
 
 export default function QuickPay() {
   const [searchParams] = useSearchParams();
 
+  // Fixed International Currency: USD only
+  const currency = "USD";
+  const currencySymbol = "$";
+
   // Form State
-  const [currency, setCurrency] = useState("INR");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [customerName, setCustomerName] = useState("");
   const [customerEmail, setCustomerEmail] = useState("");
 
-  // Country & Dial Code
-  const [selectedCountryCode, setSelectedCountryCode] = useState("IN");
-  const [dialCode, setDialCode] = useState("+91");
+  // Country & Dial Code (defaults to US)
+  const [selectedCountryCode, setSelectedCountryCode] = useState("US");
+  const [dialCode, setDialCode] = useState("+1");
   const [customerPhone, setCustomerPhone] = useState("");
 
   // Address
@@ -105,7 +107,6 @@ export default function QuickPay() {
     if (!rawPhone) return { dial: null, num: "" };
     const cleaned = rawPhone.trim();
     if (cleaned.startsWith("+")) {
-      // Find matching dial code from our options (sorted longest first to match +971 before +9)
       const sortedCodes = [...COUNTRY_OPTIONS].sort(
         (a, b) => b.dialCode.length - a.dialCode.length
       );
@@ -125,7 +126,6 @@ export default function QuickPay() {
   // Parse URL parameters on initial load
   useEffect(() => {
     const pAmount = searchParams.get("amount");
-    const pCurrency = searchParams.get("currency") || searchParams.get("curr");
     const pNote = searchParams.get("note") || searchParams.get("desc") || searchParams.get("remarks");
     const pName = searchParams.get("name") || searchParams.get("customer");
     const pEmail = searchParams.get("email");
@@ -150,20 +150,6 @@ export default function QuickPay() {
         setSelectedCountryCode(detectedCountry.code);
         setDialCode(detectedCountry.dialCode);
         hasPre = true;
-      }
-    }
-
-    if (pCurrency) {
-      const c = pCurrency.toUpperCase();
-      if (c === "USD" || c === "INR") {
-        setCurrency(c);
-        if (c === "USD" && !detectedCountry) {
-          setSelectedCountryCode("US");
-          setDialCode("+1");
-        } else if (c === "INR" && !detectedCountry) {
-          setSelectedCountryCode("IN");
-          setDialCode("+91");
-        }
       }
     }
 
@@ -195,20 +181,6 @@ export default function QuickPay() {
     }
   }, [searchParams]);
 
-  // Currency Switcher
-  const handleCurrencyChange = (newCurr) => {
-    setCurrency(newCurr);
-    if (newCurr === "USD" && selectedCountryCode === "IN") {
-      setSelectedCountryCode("US");
-      setDialCode("+1");
-      setPostalAutofilled(false);
-    } else if (newCurr === "INR" && selectedCountryCode !== "IN") {
-      setSelectedCountryCode("IN");
-      setDialCode("+91");
-      setPostalAutofilled(false);
-    }
-  };
-
   // Country Selection Change
   const handleCountryChange = (newCode) => {
     setSelectedCountryCode(newCode);
@@ -219,15 +191,7 @@ export default function QuickPay() {
       setDialCode(match.dialCode);
     }
 
-    // Auto-align currency suggestion
-    if (newCode === "IN" && currency !== "INR") {
-      setCurrency("INR");
-    } else if (newCode !== "IN" && currency === "INR") {
-      setCurrency("USD");
-    }
-
-    // Trigger postal re-lookup if code exists
-    if (postalCode.trim().length >= 3) {
+    if (postalCode.trim().length >= 2) {
       triggerPostalLookup(postalCode.trim(), newCode);
     }
   };
@@ -239,19 +203,18 @@ export default function QuickPay() {
     }
 
     const clean = code.trim();
-    if (!clean || clean.length < 3) {
+    if (!clean || clean.length < 2) {
       setPostalAutofilled(false);
       return;
     }
 
-    // Don't lookup if user selected OTHER
     if (countryCode === "OTHER") {
       return;
     }
 
-    // Fast check: India needs 6 digits, US needs 5 digits to trigger
-    if (countryCode === "IN" && clean.length !== 6) return;
+    // Fast check: US needs 5 digits to trigger
     if (countryCode === "US" && clean.length !== 5) return;
+    if (countryCode === "IN" && clean.length !== 6) return;
 
     lookupTimeoutRef.current = setTimeout(async () => {
       setPostalLookupLoading(true);
@@ -259,7 +222,7 @@ export default function QuickPay() {
         let res = await lookupPostalCode(clean, countryCode);
 
         // Fallback for Canada FSA (zippopotam expects 3 chars like M5V)
-        if ((!res || !res.found) && countryCode === "CA" && clean.length > 3) {
+        if ((!res || !res.found) && countryCode === "CA" && clean.length >= 3) {
           const fsa = clean.replace(/\s+/g, "").slice(0, 3);
           res = await lookupPostalCode(fsa, "CA");
         }
@@ -292,7 +255,7 @@ export default function QuickPay() {
 
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount < 1) {
-      setError("Please enter a valid payment amount (minimum 1.00).");
+      setError("Please enter a valid payment amount (minimum $1.00 USD).");
       return;
     }
 
@@ -320,16 +283,16 @@ export default function QuickPay() {
     try {
       const payload = {
         amount: parsedAmount,
-        currency,
-        note: note.trim() || "StyleNest Direct Payment",
+        currency: "USD",
+        note: note.trim() || "StyleNest International Wholesale Settlement",
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim(),
         customerPhone: fullPhoneNumber,
-        addressLine1: addressLine1.trim() || "Direct Settlement Address",
+        addressLine1: addressLine1.trim() || "International Shipping Address",
         addressLine2: addressLine2.trim() || "",
-        city: city.trim() || (currency === "USD" ? "New York" : "Mumbai"),
-        state: state.trim() || (currency === "USD" ? "NY" : "Maharashtra"),
-        postalCode: postalCode.trim() || (currency === "USD" ? "10001" : "400001"),
+        city: city.trim() || (selectedCountryCode === "GB" ? "London" : "New York"),
+        state: state.trim() || (selectedCountryCode === "GB" ? "England" : "NY"),
+        postalCode: postalCode.trim() || (selectedCountryCode === "GB" ? "SW1A 1AA" : "10001"),
         country: countryName,
       };
 
@@ -347,8 +310,6 @@ export default function QuickPay() {
     }
   };
 
-  const currencySymbol = currency === "USD" ? "$" : "₹";
-
   return (
     <PageFade>
       <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
@@ -357,19 +318,19 @@ export default function QuickPay() {
           <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-4">
               <ShieldCheck className="h-4 w-4" />
-              Verified Direct Payment Portal
+              Verified International B2B Settlement Portal
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight font-serif">
-              StyleNest Quick Pay
+              StyleNest Quick Pay (USD)
             </h1>
             <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-              Direct checkout for wholesale orders, custom batches, and negotiated settlements. Instant, seamless & secure.
+              Direct checkout for international wholesale orders, custom export batches, and global settlements. Instant, seamless & secure.
             </p>
 
             {isPrefilled && (
               <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
                 <Sparkles className="h-4 w-4 shrink-0" />
-                Custom payment invoice details pre-filled by StyleNest sales desk
+                Custom export invoice details pre-filled by StyleNest sales desk
               </div>
             )}
           </div>
@@ -389,46 +350,24 @@ export default function QuickPay() {
             {/* Form Section */}
             <div className="lg:col-span-7 bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* 1. Payment Details */}
+                {/* 1. Payment Details (Fixed USD) */}
                 <div>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center justify-between mb-4">
                     <h2 className="text-base font-bold text-foreground flex items-center gap-2">
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
                         1
                       </span>
-                      Payment Amount & Currency
+                      Payment Amount (USD)
                     </h2>
 
-                    {/* Currency Selector */}
-                    <div className="inline-flex self-start sm:self-auto p-1 rounded-xl bg-muted border border-border/80">
-                      <button
-                        type="button"
-                        onClick={() => handleCurrencyChange("INR")}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          currency === "INR"
-                            ? "bg-card text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        ₹ INR (India)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleCurrencyChange("USD")}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                          currency === "USD"
-                            ? "bg-card text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
-                        $ USD (Global)
-                      </button>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-wide">
+                      $ USD (Global Settlement)
                     </div>
                   </div>
 
                   <div className="relative">
                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-muted-foreground font-semibold text-xl">
-                      {currencySymbol}
+                      $
                     </div>
                     <input
                       type="number"
@@ -442,18 +381,18 @@ export default function QuickPay() {
                     />
                   </div>
                   <p className="mt-1.5 text-xs text-muted-foreground">
-                    Enter the exact agreed settlement amount in {currency}.
+                    Enter the agreed settlement amount in USD ($).
                   </p>
                 </div>
 
                 {/* Purpose / Remarks */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
-                    Order Remarks / Invoice Note (Optional)
+                    Order Remarks / Export Invoice Note (Optional)
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., 20 Pcs Kurti Wholesale, Sample Order, Export Batch #12"
+                    placeholder="e.g., 50 Pcs Wholesale Kurti / Dress Batch #12, Sample Order"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
@@ -505,7 +444,6 @@ export default function QuickPay() {
                           Phone / WhatsApp Number *
                         </label>
                         <div className="flex rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition overflow-hidden">
-                          {/* Calling code selector */}
                           <select
                             value={dialCode}
                             onChange={(e) => setDialCode(e.target.value)}
@@ -519,7 +457,6 @@ export default function QuickPay() {
                             ))}
                           </select>
 
-                          {/* Phone input */}
                           <input
                             type="tel"
                             required
@@ -547,7 +484,7 @@ export default function QuickPay() {
                     {/* Country Selector Dropdown */}
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                        Country / Territory *
+                        Destination Country / Territory *
                       </label>
                       <div className="relative">
                         <select
@@ -602,10 +539,10 @@ export default function QuickPay() {
                           <input
                             type="text"
                             placeholder={
-                              selectedCountryCode === "IN"
-                                ? "6-digit PIN"
-                                : selectedCountryCode === "US"
+                              selectedCountryCode === "US"
                                 ? "5-digit ZIP"
+                                : selectedCountryCode === "GB"
+                                ? "e.g. SW1A, EC1A"
                                 : "Postal code"
                             }
                             value={postalCode}
@@ -669,7 +606,7 @@ export default function QuickPay() {
                     ) : (
                       <>
                         <Lock className="h-5 w-5" />
-                        Pay Securely {amount ? `${currencySymbol}${parseFloat(amount || 0).toLocaleString()}` : ""}
+                        Pay Securely {amount ? `$${parseFloat(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "USD"}
                         <ArrowRight className="h-5 w-5" />
                       </>
                     )}
@@ -688,13 +625,13 @@ export default function QuickPay() {
               {/* Settlement Card */}
               <div className="bg-card rounded-2xl border border-border shadow-sm p-6 sticky top-24">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
-                  Invoice & Settlement Summary
+                  Export Invoice & Settlement Summary
                 </h3>
 
                 <div className="space-y-3 pb-4 border-b border-border">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Settlement Currency</span>
-                    <span className="font-semibold text-foreground">{currency}</span>
+                    <span className="font-semibold text-foreground">USD ($)</span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Destination</span>
@@ -706,7 +643,7 @@ export default function QuickPay() {
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-muted-foreground">Remarks</span>
                     <span className="font-medium text-foreground truncate max-w-[180px]">
-                      {note || "Direct Order Settlement"}
+                      {note || "International Wholesale Settlement"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-sm">
@@ -720,7 +657,7 @@ export default function QuickPay() {
                     <span className="text-base font-bold text-foreground">Total Payable</span>
                     <div className="text-right">
                       <span className="text-3xl font-extrabold text-foreground font-serif">
-                        {currencySymbol}
+                        $
                         {amount && !isNaN(amount)
                           ? parseFloat(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                           : "0.00"}
@@ -741,14 +678,14 @@ export default function QuickPay() {
                     </div>
                     <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border/60">
                       <Globe2 className="h-4 w-4 text-primary" />
-                      <span>Amex & RuPay</span>
+                      <span>Amex & Diners</span>
                     </div>
                   </div>
 
                   <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Official payment receipt automatically dispatched to your email</span>
+                      <span>Official export payment receipt automatically dispatched to your email</span>
                     </div>
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -756,7 +693,7 @@ export default function QuickPay() {
                     </div>
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Immediate batch reconciliation with StyleNest dispatch desk</span>
+                      <span>Immediate batch reconciliation with StyleNest export desk</span>
                     </div>
                   </div>
 
