@@ -89,6 +89,11 @@ const CATEGORY_CHIPS = [
     to: "/women/gown",
     image: "https://api.stylenestfashion.com/uploads/products/676d8628-6e36-434a-b8f0-afb370f2dbef.jpg",
     position: "50% 0%",
+  },
+  {
+    name: "All Styles",
+    to: "/products",
+    isArrow: true,
   }
 ];
 
@@ -247,16 +252,29 @@ export default function Home() {
                 to={chip.to}
                 className="flex flex-col items-center gap-2 group shrink-0 focus:outline-none py-1"
               >
-                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border border-border/80 shadow-xs transition-all duration-300 ease-out group-hover:border-foreground/80 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg">
-                  <img
-                    src={chip.image}
-                    alt={chip.name}
-                    loading="lazy"
-                    style={{ objectPosition: chip.position || "50% 0%" }}
-                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
-                  />
+                <div className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border shadow-xs transition-all duration-300 ease-out ${
+                  chip.isArrow
+                    ? "border-accent/60 bg-accent/10 group-hover:border-accent group-hover:bg-accent group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg"
+                    : "border-border/80 group-hover:border-foreground/80 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg"
+                }`}>
+                  {chip.isArrow ? (
+                    <div className="flex h-full w-full flex-col items-center justify-center text-accent group-hover:text-accent-foreground transition-colors">
+                      <ArrowRight className="h-6 w-6 sm:h-7 sm:w-7 transition-transform duration-300 group-hover:translate-x-1.5" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider mt-0.5">All</span>
+                    </div>
+                  ) : (
+                    <img
+                      src={chip.image}
+                      alt={chip.name}
+                      loading="lazy"
+                      style={{ objectPosition: chip.position || "50% 0%" }}
+                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                    />
+                  )}
                 </div>
-                <span className="text-xs sm:text-[13px] font-medium text-center max-w-[80px] sm:max-w-[96px] truncate leading-tight transition-colors text-foreground/85 group-hover:text-foreground">
+                <span className={`text-xs sm:text-[13px] font-medium text-center max-w-[80px] sm:max-w-[96px] truncate leading-tight transition-colors ${
+                  chip.isArrow ? "text-accent font-semibold group-hover:text-foreground" : "text-foreground/85 group-hover:text-foreground"
+                }`}>
                   {chip.name}
                 </span>
               </Link>
