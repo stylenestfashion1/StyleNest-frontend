@@ -26,62 +26,72 @@ const CATEGORY_CHIPS = [
   {
     name: "Kurtis",
     to: "/women/kurti",
-    image: "https://api.stylenestfashion.com/uploads/products/335f5806-fe57-4387-a85c-020313c668e8.jpg", // White Paisley Kurti
+    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/wAyZV8jS_9ADDPQX4P0_2026-10-14_2.jpg",
+    position: "50% 10%",
   },
   {
     name: "Suits",
     to: "/women/suit",
-    image: "https://api.stylenestfashion.com/uploads/products/aa9fe998-189a-48dc-8f97-d7d10f5652b7.jpg", // Paisley Chevron Suit
+    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/SJKsbhvE_LYOSGPPSDZ_2026-10-14_1.jpg",
+    position: "50% 10%",
   },
   {
     name: "Dresses",
     to: "/women/one-piece",
-    image: "https://api.stylenestfashion.com/uploads/products/1f5ac2d9-76b1-49b0-8176-fa16c8daa36e.jpg", // Black Ruffle Strap Maxi Dress
+    image: "https://api.stylenestfashion.com/uploads/products/1f5ac2d9-76b1-49b0-8176-fa16c8daa36e.jpg",
+    position: "50% 18%",
   },
   {
     name: "Co-ord Sets",
     to: "/women/cordset",
-    image: "https://api.stylenestfashion.com/uploads/products/d3ac4dda-bf7d-4863-86d8-2e4d6346cc1f.jpg", // Off White Wave Print Co-ord
+    image: "https://api.stylenestfashion.com/uploads/products/d3ac4dda-bf7d-4863-86d8-2e4d6346cc1f.jpg",
+    position: "50% 20%",
   },
   {
     name: "Tops & Shirts",
     to: "/women/tops",
-    image: "https://api.stylenestfashion.com/uploads/products/09d59a39-349c-45fa-a6f3-91c90f7d10c4.jpg", // Floral Appliqué Shirt
+    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/4CAcrYeY_YMXCJ3X4QV_2026-10-14_2.jpg",
+    position: "50% 10%",
   },
   {
     name: "Jeans",
     to: "/women/jeans",
-    image: "https://api.stylenestfashion.com/uploads/products/88a808cd-3d28-49e9-a684-e8c93526adfc.jpg", // White High-Waist Jeans
+    image: "https://api.stylenestfashion.com/uploads/products/88a808cd-3d28-49e9-a684-e8c93526adfc.jpg",
+    position: "50% 74%", // Perfectly shows the white wide-leg jeans!
   },
   {
     name: "Palazzo & Skirts",
     to: "/women/palazzo",
-    image: "https://api.stylenestfashion.com/uploads/products/f90e0d71-21f9-4d8f-92ed-accfcfea8072.jpg", // Boho Flared Skirt
+    image: "https://api.stylenestfashion.com/uploads/products/f90e0d71-21f9-4d8f-92ed-accfcfea8072.jpg",
+    position: "50% 72%", // Perfectly shows the flared boho skirt!
   },
   {
     name: "Men's Tees",
     to: "/men/t-shirts",
-    image: "https://api.stylenestfashion.com/uploads/products/b91c61aa-839c-4619-b802-0a2afb8d6bbf.jpg", // Men's Ombre Dip-Dye Tee
+    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/uS8q3TcH_1H1L6VE3FY_2026-10-14_2.jpg",
+    position: "50% 10%",
   },
   {
     name: "Men's Co-ords",
     to: "/men/cordset",
-    image: "https://api.stylenestfashion.com/uploads/products/776dd8f5-3b3e-403b-a8a4-97fe90fb3394.jpg", // Men's Brown Graphic Co-ord
+    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/9ZYSTgxv_37UYG1ZF6J_2026-10-14_2.jpg",
+    position: "50% 12%",
   },
   {
     name: "Men's Lowers",
     to: "/men/lower",
-    image: "https://api.stylenestfashion.com/uploads/products/041939f1-fc14-4026-a73b-01df06c854ea.jpg", // Men's Piped Track Pants
+    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/T77o7hEv_L6N04YKQUC_2026-10-14_2.jpg",
+    position: "50% 68%", // Perfectly shows the piped track pants!
   },
   {
     name: "Nightwear",
     to: "/women/gown",
-    image: "https://api.stylenestfashion.com/uploads/products/676d8628-6e36-434a-b8f0-afb370f2dbef.jpg", // Floral Print Nighty
+    image: "https://api.stylenestfashion.com/uploads/products/676d8628-6e36-434a-b8f0-afb370f2dbef.jpg",
+    position: "50% 18%",
   },
   {
     name: "Explore More",
     to: "/products",
-    image: "https://api.stylenestfashion.com/uploads/products/335f5806-fe57-4387-a85c-020313c668e8.jpg",
     isExplore: true,
   },
 ];
@@ -168,7 +178,7 @@ export default function Home() {
       <section className="border-b border-border/40 bg-card/70 backdrop-blur-sm py-4">
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 md:px-8">
           {/* Centered on wider screens, smoothly scrollable on mobile with balanced padding */}
-          <div className="flex items-center justify-start lg:justify-center gap-4 sm:gap-6 md:gap-7 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center justify-start 2xl:justify-center gap-4 sm:gap-6 md:gap-7 overflow-x-auto px-1 pb-1 scrollbar-none">
             {CATEGORY_CHIPS.map((chip) => (
               <Link
                 key={chip.name}
@@ -190,7 +200,8 @@ export default function Home() {
                       src={chip.image}
                       alt={chip.name}
                       loading="lazy"
-                      className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
+                      style={{ objectPosition: chip.position || "50% 20%" }}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   )}
                 </div>

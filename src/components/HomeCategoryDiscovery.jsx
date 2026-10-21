@@ -113,7 +113,7 @@ export default function HomeCategoryDiscovery({
             ? Array.from({ length: 3 }).map((_, i) => (
                 <div
                   key={i}
-                  className="skeleton aspect-[4/5] min-h-[340px] w-full"
+                  className="skeleton aspect-[3/4] md:aspect-[2/3] w-full"
                   aria-hidden="true"
                 />
               ))
@@ -126,14 +126,14 @@ export default function HomeCategoryDiscovery({
                     <Link
                       to={targetUrl}
                       aria-label={`Shop ${cat.name} for ${gender}`}
-                      className="group hairline-card relative block aspect-[4/5] min-h-[340px] w-full overflow-hidden bg-secondary transition-all duration-500 hover:border-accent/50 hover:shadow-xl"
+                      className="group hairline-card relative block aspect-[3/4] md:aspect-[2/3] w-full overflow-hidden bg-secondary transition-all duration-500 hover:border-accent/50 hover:shadow-xl"
                     >
                       {/* Category Photograph */}
                       <img
                         src={imgUrl}
                         alt={`${cat.name} collection`}
                         loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                        className="h-full w-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
                       />
 
                       {/* Editorial Scrim Overlay */}
