@@ -13,7 +13,6 @@ import * as productsApi from "../api/products";
 const NAV = [
   { label: "Men", to: "/men", gender: "men" },
   { label: "Women", to: "/women", gender: "women" },
-  { label: "Trending", to: "/trending" },
 ];
 
 // Kept separate from NAV (rather than appended to it) so it's easy to spot
@@ -192,11 +191,10 @@ export function Header() {
             rendered height via ResizeObserver into --header-height (see
             the effect above), so Layout's <main> spacing adjusts
             automatically rather than assuming a fixed single-line height. */}
-        <Link to="/" className="col-start-2 flex items-baseline justify-center gap-2 sm:gap-2.5 whitespace-nowrap leading-none">
-          <span className="display text-[1.05rem] italic tracking-[0.01em] sm:text-2xl xl:text-xl 2xl:text-[2rem]">
-            StyleNest
+        <Link to="/" className="col-start-2 flex items-center justify-center whitespace-nowrap leading-none group">
+          <span className="font-serif text-lg sm:text-2xl xl:text-2xl font-bold tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
+            STYLENEST FASHION
           </span>
-          <span className="label-xs text-accent font-semibold tracking-[0.25em] sm:tracking-[0.32em]">FASHION</span>
         </Link>
 
         <div className="col-start-3 flex min-w-0 items-center justify-end gap-3 xl:gap-4">
@@ -348,9 +346,8 @@ export function Header() {
         <div className="absolute inset-0 bg-foreground/40" onClick={() => setDrawerOpen(false)} />
         <div className="absolute left-0 top-0 flex h-full w-72 flex-col gap-8 bg-background p-8">
           <div className="flex items-center justify-between">
-            <span className="flex items-baseline gap-2 leading-none">
-              <span className="display text-xl italic">StyleNest</span>
-              <span className="label-xs text-accent font-semibold tracking-[0.25em]">FASHION</span>
+            <span className="flex items-center leading-none">
+              <span className="font-serif text-lg font-bold tracking-[0.2em] text-accent">STYLENEST FASHION</span>
             </span>
             <button onClick={() => setDrawerOpen(false)} aria-label="Close menu">
               <X className="h-5 w-5" />

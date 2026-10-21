@@ -7,11 +7,11 @@ export const REAL_CATEGORY_PRODUCT_IMAGES = {
     position: "50% 0%",
   },
   SUIT: {
-    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/SJKsbhvE_LYOSGPPSDZ_2026-10-14_1.jpg", // Purple Tree Print Suit Set
+    image: "https://api.stylenestfashion.com/uploads/products/aa9fe998-189a-48dc-8f97-d7d10f5652b7.jpg", // Distinct Paisley Chevron Suit Set with Dupatta
     position: "50% 0%",
   },
   WOMEN_CORDSET: {
-    image: "https://api.stylenestfashion.com/uploads/products/d3ac4dda-bf7d-4863-86d8-2e4d6346cc1f.jpg", // Off White Wave Print Co-ord Set
+    image: "https://api.stylenestfashion.com/uploads/products/f7dd923a-1f97-4374-81fe-2b104c9bad07.jpg", // Floral Vine Print Premium Designer Co-ord Set
     position: "50% 0%",
   },
   DRESS: {
@@ -49,8 +49,8 @@ export const REAL_CATEGORY_PRODUCT_IMAGES = {
     position: "50% 0%",
   },
   MEN_LOWER: {
-    image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/T77o7hEv_L6N04YKQUC_2026-10-14_2.jpg", // Black Piped Track Pants
-    position: "50% 60%",
+    image: "https://api.stylenestfashion.com/uploads/products/041939f1-fc14-4026-a73b-01df06c854ea.jpg", // Men's Piped Track Pants with full waistband & headroom
+    position: "50% 0%",
   },
 };
 
