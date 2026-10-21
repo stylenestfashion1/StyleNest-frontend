@@ -1,14 +1,15 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Truck,
   ShieldCheck,
   RotateCcw,
   MessageCircle,
   Sparkles,
-  LayoutGrid,
 } from "lucide-react";
 import { useGender } from "../context/GenderContext";
 import stylenestLogo from "../assets/stylenest-logo.jpeg";
@@ -88,12 +89,7 @@ const CATEGORY_CHIPS = [
     to: "/women/gown",
     image: "https://api.stylenestfashion.com/uploads/products/676d8628-6e36-434a-b8f0-afb370f2dbef.jpg",
     position: "50% 0%",
-  },
-  {
-    name: "Explore More",
-    to: "/products",
-    isExplore: true,
-  },
+  }
 ];
 
 const HOME_CURATED_WOMEN_IDS = [
@@ -141,6 +137,43 @@ function selectCurated(products, curatedIds, count = 8) {
 
 export default function Home() {
   const { setGender } = useGender();
+  const categoryScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    setCanScrollLeft(scrollLeft > 10);
+    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+  }, []);
+
+  useEffect(() => {
+    checkScroll();
+    const el = categoryScrollRef.current;
+    if (!el) return;
+
+    window.addEventListener("resize", checkScroll);
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    const timer = setTimeout(checkScroll, 500);
+
+    return () => {
+      window.removeEventListener("resize", checkScroll);
+      el.removeEventListener("scroll", checkScroll);
+      clearTimeout(timer);
+    };
+  }, [checkScroll]);
+
+  const scrollCategories = (direction) => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const scrollAmount = Math.max(280, el.clientWidth * 0.6);
+    el.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
 
   // Neutral gender accent on main home page
   useEffect(() => setGender(null), [setGender]);
@@ -175,13 +208,28 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* ===================== TOP CATEGORY CIRCULAR CHIPS (SD STYLE) ===================== */}
-      <section className="border-b border-border/40 bg-card/70 backdrop-blur-sm pt-4 pb-5 sm:pt-5 sm:pb-6">
-        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 md:px-8">
+      <section className="relative border-b border-border/40 bg-card/70 backdrop-blur-sm pt-4 pb-5 sm:pt-5 sm:pb-6 group/chips">
+        <div className="relative mx-auto max-w-[1440px] px-2 sm:px-6 md:px-8">
+          {/* Left Arrow Button */}
+          {canScrollLeft && (
+            <div className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none flex items-center pr-3">
+              <button
+                type="button"
+                onClick={() => scrollCategories("left")}
+                aria-label="Scroll categories left"
+                className="pointer-events-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background/95 border border-border shadow-lg text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            </div>
+          )}
+
           {/* Centered with safe center so margins are perfectly balanced on desktop, and scrolls safely on mobile.
               Ample py-3.5 padding ensures hover scale & lift never clips on overflow boundaries. */}
           <div
+            ref={categoryScrollRef}
             style={{ justifyContent: "safe center" }}
-            className="flex items-center gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-x-auto px-4 py-3 sm:py-3.5 scrollbar-none"
+            className="flex items-center gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-x-auto px-4 py-3 sm:py-3.5 scrollbar-none scroll-smooth touch-pan-x"
           >
             {CATEGORY_CHIPS.map((chip) => (
               <Link
@@ -189,34 +237,35 @@ export default function Home() {
                 to={chip.to}
                 className="flex flex-col items-center gap-2 group shrink-0 focus:outline-none py-1"
               >
-                <div className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border shadow-xs transition-all duration-300 ease-out ${
-                  chip.isExplore
-                    ? "border-accent bg-accent/10 group-hover:bg-accent/20 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-md"
-                    : "border-border/80 group-hover:border-foreground/80 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg"
-                }`}>
-                  {chip.isExplore ? (
-                    <div className="flex h-full w-full flex-col items-center justify-center bg-card text-accent">
-                      <LayoutGrid className="h-6 w-6 sm:h-7 sm:w-7 transition-transform duration-300 group-hover:rotate-12" />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider mt-0.5">All</span>
-                    </div>
-                  ) : (
-                    <img
-                      src={chip.image}
-                      alt={chip.name}
-                      loading="lazy"
-                      style={{ objectPosition: chip.position || "50% 0%" }}
-                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
-                    />
-                  )}
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border border-border/80 shadow-xs transition-all duration-300 ease-out group-hover:border-foreground/80 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg">
+                  <img
+                    src={chip.image}
+                    alt={chip.name}
+                    loading="lazy"
+                    style={{ objectPosition: chip.position || "50% 0%" }}
+                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                  />
                 </div>
-                <span className={`text-xs sm:text-[13px] font-medium text-center max-w-[80px] sm:max-w-[96px] truncate leading-tight transition-colors ${
-                  chip.isExplore ? "text-accent font-semibold group-hover:text-foreground" : "text-foreground/85 group-hover:text-foreground"
-                }`}>
+                <span className="text-xs sm:text-[13px] font-medium text-center max-w-[80px] sm:max-w-[96px] truncate leading-tight transition-colors text-foreground/85 group-hover:text-foreground">
                   {chip.name}
                 </span>
               </Link>
             ))}
           </div>
+
+          {/* Right Arrow Button */}
+          {canScrollRight && (
+            <div className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none flex items-center pl-3">
+              <button
+                type="button"
+                onClick={() => scrollCategories("right")}
+                aria-label="Scroll categories right"
+                className="pointer-events-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background/95 border border-border shadow-lg text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
