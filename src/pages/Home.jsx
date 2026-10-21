@@ -220,16 +220,16 @@ export default function Home() {
       {/* ===================== TOP CATEGORY CIRCULAR CHIPS (SD STYLE) ===================== */}
       <section className="relative border-b border-border/40 bg-card/70 backdrop-blur-sm pt-4 pb-5 sm:pt-5 sm:pb-6 group/chips">
         <div className="relative mx-auto max-w-[1440px] px-2 sm:px-6 md:px-8">
-          {/* Left Arrow Button */}
+          {/* Left Arrow Button with subtle gradient fade */}
           {canScrollLeft && (
-            <div className="absolute left-1 sm:left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none flex items-center pr-3">
+            <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pl-1 sm:pl-3 pr-6 bg-gradient-to-r from-card via-card/80 to-transparent pointer-events-none">
               <button
                 type="button"
                 onClick={() => scrollCategories("left")}
                 aria-label="Scroll categories left"
-                className="pointer-events-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background/95 border border-border shadow-lg text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
+                className="pointer-events-auto flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background border border-border/80 shadow-md text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
           )}
@@ -263,16 +263,16 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Right Arrow Button */}
+          {/* Right Arrow Button with subtle gradient fade */}
           {canScrollRight && (
-            <div className="absolute right-1 sm:right-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none flex items-center pl-3">
+            <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pr-1 sm:pr-3 pl-6 bg-gradient-to-l from-card via-card/80 to-transparent pointer-events-none">
               <button
                 type="button"
                 onClick={() => scrollCategories("right")}
                 aria-label="Scroll categories right"
-                className="pointer-events-auto flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background/95 border border-border shadow-lg text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
+                className="pointer-events-auto flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background border border-border/80 shadow-md text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
               >
-                <ChevronRight className="h-5 w-5" />
+                <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
           )}
