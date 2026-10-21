@@ -177,8 +177,11 @@ export default function Home() {
       {/* ===================== TOP CATEGORY CIRCULAR CHIPS (SD STYLE) ===================== */}
       <section className="border-b border-border/40 bg-card/70 backdrop-blur-sm py-4">
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 md:px-8">
-          {/* Centered on wider screens, smoothly scrollable on mobile with balanced padding */}
-          <div className="flex items-center justify-start 2xl:justify-center gap-4 sm:gap-6 md:gap-7 overflow-x-auto px-1 pb-1 scrollbar-none">
+          {/* Centered with safe center so margins are perfectly balanced on desktop, and scrolls safely on mobile */}
+          <div
+            style={{ justifyContent: "safe center" }}
+            className="flex items-center gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-x-auto px-2 pb-1 scrollbar-none"
+          >
             {CATEGORY_CHIPS.map((chip) => (
               <Link
                 key={chip.name}
@@ -205,7 +208,7 @@ export default function Home() {
                     />
                   )}
                 </div>
-                <span className={`text-xs sm:text-[13px] font-medium text-center max-w-[76px] sm:max-w-[88px] truncate leading-tight transition-colors ${
+                <span className={`text-xs sm:text-[13px] font-medium text-center max-w-[80px] sm:max-w-[96px] truncate leading-tight transition-colors ${
                   chip.isExplore ? "text-accent font-semibold group-hover:text-foreground" : "text-foreground/85 group-hover:text-foreground"
                 }`}>
                   {chip.name}
