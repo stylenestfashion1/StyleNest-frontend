@@ -191,13 +191,13 @@ export function Header() {
             rendered height via ResizeObserver into --header-height (see
             the effect above), so Layout's <main> spacing adjusts
             automatically rather than assuming a fixed single-line height. */}
-        <Link to="/" className="col-start-2 flex items-center justify-center whitespace-nowrap leading-none group">
-          <span className="font-serif text-lg sm:text-2xl xl:text-2xl font-bold tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
+        <Link to="/" className="col-start-2 flex items-center justify-center whitespace-nowrap leading-none group px-1">
+          <span className="font-serif text-[0.88rem] min-[380px]:text-[0.98rem] sm:text-2xl xl:text-2xl font-bold tracking-[0.12em] min-[380px]:tracking-[0.16em] sm:tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
             STYLENEST FASHION
           </span>
         </Link>
 
-        <div className="col-start-3 flex min-w-0 items-center justify-end gap-3 xl:gap-4">
+        <div className="col-start-3 flex min-w-0 items-center justify-end gap-2.5 sm:gap-3 xl:gap-4">
           <NavLink
             to={RENTALS_LINK.to}
             className={({ isActive }) =>
