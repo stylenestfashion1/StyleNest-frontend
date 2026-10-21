@@ -91,9 +91,10 @@ const CATEGORY_CHIPS = [
     position: "50% 0%",
   },
   {
-    name: "All Styles",
-    to: "/products",
-    isArrow: true,
+    name: "Women's Tees",
+    to: "/women/t-shirts",
+    image: "https://api.stylenestfashion.com/uploads/products/16240e1a-09e3-4e60-bd90-89e48ab53372.jpg",
+    position: "50% 0%",
   }
 ];
 
@@ -151,8 +152,8 @@ export default function Home() {
     if (!el) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
     if (scrollWidth > 0 && clientWidth > 0) {
-      setCanScrollLeft(scrollLeft > 10);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+      setCanScrollLeft(scrollLeft > 6);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 6);
     }
   }, []);
 
@@ -183,7 +184,7 @@ export default function Home() {
   const scrollCategories = (direction) => {
     const el = categoryScrollRef.current;
     if (!el) return;
-    const scrollAmount = Math.max(280, el.clientWidth * 0.6);
+    const scrollAmount = Math.max(300, el.clientWidth * 0.55);
     el.scrollBy({
       left: direction === "left" ? -scrollAmount : scrollAmount,
       behavior: "smooth",
@@ -224,15 +225,15 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* ===================== TOP CATEGORY CIRCULAR CHIPS (SD STYLE) ===================== */}
       <section className="relative border-b border-border/40 bg-card/70 backdrop-blur-sm pt-4 pb-5 sm:pt-5 sm:pb-6 group/chips">
-        <div className="relative mx-auto max-w-[1440px] px-2 sm:px-6 md:px-8">
+        <div className="relative mx-auto max-w-[1360px] px-2 sm:px-6 md:px-8">
           {/* Left Arrow Button with subtle gradient fade */}
           {canScrollLeft && (
-            <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pl-1 sm:pl-3 pr-6 bg-gradient-to-r from-card via-card/80 to-transparent pointer-events-none">
+            <div className="absolute left-0 top-0 bottom-0 z-20 flex items-center pl-1 sm:pl-3 pr-8 bg-gradient-to-r from-card via-card/90 to-transparent pointer-events-none">
               <button
                 type="button"
                 onClick={() => scrollCategories("left")}
                 aria-label="Scroll categories left"
-                className="pointer-events-auto flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background border border-border/80 shadow-md text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
+                className="pointer-events-auto flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-background/95 border-2 border-border shadow-lg text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
               >
                 <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
@@ -244,37 +245,24 @@ export default function Home() {
           <div
             ref={categoryScrollRef}
             style={{ justifyContent: "safe center" }}
-            className="flex items-center gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-x-auto px-4 py-3 sm:py-3.5 scrollbar-none scroll-smooth touch-pan-x"
+            className="flex items-center gap-5 sm:gap-6 md:gap-7 lg:gap-8 overflow-x-auto px-4 py-3 sm:py-3.5 scrollbar-none scroll-smooth touch-pan-x"
           >
             {CATEGORY_CHIPS.map((chip) => (
               <Link
                 key={chip.name}
                 to={chip.to}
-                className="flex flex-col items-center gap-2 group shrink-0 focus:outline-none py-1"
+                className="flex flex-col items-center gap-2 group shrink-0 min-w-[76px] sm:min-w-[92px] focus:outline-none py-1"
               >
-                <div className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border shadow-xs transition-all duration-300 ease-out ${
-                  chip.isArrow
-                    ? "border-accent/60 bg-accent/10 group-hover:border-accent group-hover:bg-accent group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg"
-                    : "border-border/80 group-hover:border-foreground/80 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg"
-                }`}>
-                  {chip.isArrow ? (
-                    <div className="flex h-full w-full flex-col items-center justify-center text-accent group-hover:text-accent-foreground transition-colors">
-                      <ArrowRight className="h-6 w-6 sm:h-7 sm:w-7 transition-transform duration-300 group-hover:translate-x-1.5" />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider mt-0.5">All</span>
-                    </div>
-                  ) : (
-                    <img
-                      src={chip.image}
-                      alt={chip.name}
-                      loading="lazy"
-                      style={{ objectPosition: chip.position || "50% 0%" }}
-                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
-                    />
-                  )}
+                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border border-border/80 shadow-xs transition-all duration-300 ease-out group-hover:border-foreground/80 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg">
+                  <img
+                    src={chip.image}
+                    alt={chip.name}
+                    loading="lazy"
+                    style={{ objectPosition: chip.position || "50% 0%" }}
+                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                  />
                 </div>
-                <span className={`text-xs sm:text-[13px] font-medium text-center max-w-[80px] sm:max-w-[96px] truncate leading-tight transition-colors ${
-                  chip.isArrow ? "text-accent font-semibold group-hover:text-foreground" : "text-foreground/85 group-hover:text-foreground"
-                }`}>
+                <span className="text-xs sm:text-[13px] font-medium text-center max-w-[80px] sm:max-w-[96px] truncate leading-tight text-foreground/85 group-hover:text-foreground transition-colors">
                   {chip.name}
                 </span>
               </Link>
@@ -283,12 +271,12 @@ export default function Home() {
 
           {/* Right Arrow Button with subtle gradient fade */}
           {canScrollRight && (
-            <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pr-1 sm:pr-3 pl-6 bg-gradient-to-l from-card via-card/80 to-transparent pointer-events-none">
+            <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center pr-1 sm:pr-3 pl-8 bg-gradient-to-l from-card via-card/90 to-transparent pointer-events-none">
               <button
                 type="button"
                 onClick={() => scrollCategories("right")}
                 aria-label="Scroll categories right"
-                className="pointer-events-auto flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-background border border-border/80 shadow-md text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
+                className="pointer-events-auto flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-background/95 border-2 border-border shadow-lg text-foreground transition-all duration-200 hover:scale-110 hover:bg-accent hover:text-accent-foreground hover:border-accent active:scale-95 focus:outline-none"
               >
                 <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
