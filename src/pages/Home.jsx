@@ -342,10 +342,10 @@ export default function Home() {
                 </h2>
               </div>
               <Link
-                to="/products"
+                to="/trending"
                 className="label-xs link-underline inline-flex items-center gap-1.5 text-foreground hover:text-accent"
               >
-                View all styles <ArrowRight className="h-3 w-3" />
+                View all trending styles <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
           </Reveal>

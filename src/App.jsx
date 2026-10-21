@@ -123,7 +123,7 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
-          <Route path="products" element={<ProductListing />} />
+          <Route path="products" element={<Navigate to="/trending" replace />} />
           <Route path="products/:id" element={<ProductDetails />} />
           <Route path="search" element={<ProductListing />} />
           <Route path="sale" element={<Sale />} />

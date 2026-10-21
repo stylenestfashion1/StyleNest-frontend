@@ -71,7 +71,7 @@ export const CardCarousel = ({
         effect={"coverflow"}
         grabCursor={true}
         centeredSlides={true}
-        loop={items.length > 2}
+        loop={items.length >= 5}
         slidesPerView={"auto"}
         coverflowEffect={{
           rotate: 0,
@@ -93,6 +93,7 @@ export const CardCarousel = ({
               <img
                 src={item.image || item.src}
                 alt={item.name || item.alt || "Category"}
+                style={{ objectPosition: item.position || "50% 0%" }}
                 className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                 loading="lazy"
               />

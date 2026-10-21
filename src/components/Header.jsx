@@ -9,7 +9,6 @@ import { useGuestCart } from "../context/GuestCartContext";
 import * as cartApi from "../api/cart";
 import * as wishlistApi from "../api/wishlist";
 import * as productsApi from "../api/products";
-import CurrencyToggle from "./CurrencyToggle";
 
 const NAV = [
   { label: "Men", to: "/men", gender: "men" },
@@ -193,11 +192,11 @@ export function Header() {
             rendered height via ResizeObserver into --header-height (see
             the effect above), so Layout's <main> spacing adjusts
             automatically rather than assuming a fixed single-line height. */}
-        <Link to="/" className="col-start-2 flex flex-col items-center whitespace-nowrap leading-none">
+        <Link to="/" className="col-start-2 flex items-baseline justify-center gap-2 sm:gap-2.5 whitespace-nowrap leading-none">
           <span className="display text-[1.05rem] italic tracking-[0.01em] sm:text-2xl xl:text-xl 2xl:text-[2rem]">
             StyleNest
           </span>
-          <span className="label-xs mt-1 text-accent tracking-[0.32em] sm:tracking-[0.4em]">FASHION</span>
+          <span className="label-xs text-accent font-semibold tracking-[0.25em] sm:tracking-[0.32em]">FASHION</span>
         </Link>
 
         <div className="col-start-3 flex min-w-0 items-center justify-end gap-3 xl:gap-4">
@@ -209,7 +208,6 @@ export function Header() {
           >
             {RENTALS_LINK.label}
           </NavLink>
-          <CurrencyToggle />
           <button
             aria-label="Search"
             onClick={() => setSearchOpen((s) => !s)}
@@ -350,9 +348,9 @@ export function Header() {
         <div className="absolute inset-0 bg-foreground/40" onClick={() => setDrawerOpen(false)} />
         <div className="absolute left-0 top-0 flex h-full w-72 flex-col gap-8 bg-background p-8">
           <div className="flex items-center justify-between">
-            <span className="flex flex-col leading-none">
+            <span className="flex items-baseline gap-2 leading-none">
               <span className="display text-xl italic">StyleNest</span>
-              <span className="label-xs mt-1 text-accent tracking-[0.3em]">FASHION</span>
+              <span className="label-xs text-accent font-semibold tracking-[0.25em]">FASHION</span>
             </span>
             <button onClick={() => setDrawerOpen(false)} aria-label="Close menu">
               <X className="h-5 w-5" />
@@ -373,8 +371,7 @@ export function Header() {
               </NavLink>
             ))}
           </nav>
-          <div className="mt-auto flex items-center justify-between">
-            <CurrencyToggle />
+          <div className="mt-auto flex items-center justify-end">
             <button onClick={toggleTheme} className="label-xs flex items-center gap-2 text-muted-foreground">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               {theme === "dark" ? "Light mode" : "Dark mode"}
