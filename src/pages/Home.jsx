@@ -1,316 +1,345 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
-import heroMen from "../assets/hero-men.jpg";
-import heroWomen from "../assets/hero-women.jpg";
+import {
+  Truck,
+  ShieldCheck,
+  RotateCcw,
+  MessageCircle,
+  X,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
 import { useGender } from "../context/GenderContext";
-import * as categoriesApi from "../api/categories";
 import * as productsApi from "../api/products";
-import HomeCategoryDiscovery from "../components/HomeCategoryDiscovery";
 import ProductGrid from "../components/ProductGrid";
 import { Reveal } from "../components/Reveal";
 
-const COPY = {
-  men: { label: "Men", head: "WELL TAILORED", tag: "Structure, softened by wear." },
-  women: { label: "Women", head: "AT EASE", tag: "Silk that moves before you do." },
-};
-
 /**
- * These photos were shot to spec (1152x1536, exactly 3:4) specifically to
- * match this panel's box shape and to match each other in framing: both
- * models are full-length, centered, comparable camera distance, and land at
- * a similar scale — head to shoe with a small even margin, not the
- * mismatched crops of the earlier placeholder photography. Because the
- * source ratio equals the panel's aspect-ratio, `cover` + centered position
- * needs no per-image zoom or offset compensation for the women's shot.
+ * Curated Category Chips matching Shopdeck (SD) style.
+ * Uses real, authentic product photography from the live StyleNest catalog
+ * rather than stock or AI-generated illustration placeholders.
  */
-const PANEL_ASPECT = "0.75";
-const PANEL_IMAGE = {
-  // Even the matched reshoot left his figure reading a touch smaller than
-  // hers — a small corrective zoom (tuned by comparing rendered crops, not
-  // just the source measurements) equalizes how tall each figure reads.
-  men: { src: heroMen, size: "auto 102%", position: "50% 70%" },
-  women: { src: heroWomen, size: "cover", position: "50% 50%" },
-};
-
-function HeroPanel({ gender, className = "", children, ...props }) {
-  const img = PANEL_IMAGE[gender];
-  return (
-    <button type="button" className={`group relative overflow-hidden ${className}`} style={{ aspectRatio: PANEL_ASPECT }} {...props}>
-      <div
-        className="absolute inset-0 bg-no-repeat transition-transform duration-[1400ms] ease-out group-hover:scale-105"
-        style={{ backgroundImage: `url(${img.src})`, backgroundSize: img.size, backgroundPosition: img.position }}
-        role="img"
-        aria-label={gender === "men" ? "Menswear lookbook" : "Womenswear lookbook"}
-      />
-      {children}
-    </button>
-  );
-}
-
-const HOME_CURATED_WOMEN_IDS = [
-  270, // White Paisley Print Kurti (Kurti)
-  290, // Off White Wave Print Co-ord Set (Co-ord Set)
-  31,  // Medium Wash Wide-Leg Jeans with Bow Embroidery (Jeans)
-  272, // Black Boho Medallion Print Flared Skirt (Palazzo / Skirt)
-  56,  // Floral Appliqué Collared Shirt (Tops / Designer Shirt)
-  100, // Paisley Chevron Suit Set (Suit Set)
-  279, // Magenta Geometric Patchwork Sleeveless Dress (Sleeveless Dress)
-  20,  // Navy Denim Shirt with White Crochet Trim (Denim Top)
+const CURATED_CATEGORY_CHIPS = [
+  {
+    id: "all",
+    name: "All Styles",
+    gender: null,
+    categoryId: null,
+    image: "https://api.stylenestfashion.com/uploads/products/335f5806-fe57-4387-a85c-020313c668e8.jpg",
+  },
+  {
+    id: "kurti",
+    name: "Kurtis",
+    gender: "WOMEN",
+    categoryId: 6,
+    image: "https://api.stylenestfashion.com/uploads/products/335f5806-fe57-4387-a85c-020313c668e8.jpg", // White Paisley Print Kurti
+  },
+  {
+    id: "suit",
+    name: "Suits",
+    gender: "WOMEN",
+    categoryId: 7,
+    image: "https://api.stylenestfashion.com/uploads/products/aa9fe998-189a-48dc-8f97-d7d10f5652b7.jpg", // Paisley Chevron Suit Set
+  },
+  {
+    id: "dresses",
+    name: "Dresses",
+    gender: "WOMEN",
+    categoryId: 12,
+    image: "https://api.stylenestfashion.com/uploads/products/1f5ac2d9-76b1-49b0-8176-fa16c8daa36e.jpg", // Black Ruffle Strap Tiered Maxi Dress
+  },
+  {
+    id: "coord-women",
+    name: "Co-ord Sets",
+    gender: "WOMEN",
+    categoryId: 8,
+    image: "https://api.stylenestfashion.com/uploads/products/d3ac4dda-bf7d-4863-86d8-2e4d6346cc1f.jpg", // Off White Wave Print Co-ord Set
+  },
+  {
+    id: "tops",
+    name: "Tops & Shirts",
+    gender: "WOMEN",
+    categoryId: 5,
+    image: "https://api.stylenestfashion.com/uploads/products/09d59a39-349c-45fa-a6f3-91c90f7d10c4.jpg", // Floral Appliqué Collared Shirt
+  },
+  {
+    id: "jeans",
+    name: "Jeans",
+    gender: "WOMEN",
+    categoryId: 9,
+    image: "https://api.stylenestfashion.com/uploads/products/88a808cd-3d28-49e9-a684-e8c93526adfc.jpg", // White High-Waist Wide-Leg Jeans
+  },
+  {
+    id: "palazzo",
+    name: "Palazzo & Skirts",
+    gender: "WOMEN",
+    categoryId: 10,
+    image: "https://api.stylenestfashion.com/uploads/products/f90e0d71-21f9-4d8f-92ed-accfcfea8072.jpg", // Black Boho Medallion Print Flared Skirt
+  },
+  {
+    id: "men-tshirts",
+    name: "Men's Tees",
+    gender: "MEN",
+    categoryId: 2,
+    image: "https://api.stylenestfashion.com/uploads/products/b91c61aa-839c-4619-b802-0a2afb8d6bbf.jpg", // Men's Ombre Dip-Dye Graphic T-Shirt
+  },
+  {
+    id: "men-coords",
+    name: "Men's Co-ords",
+    gender: "MEN",
+    categoryId: 3,
+    image: "https://api.stylenestfashion.com/uploads/products/776dd8f5-3b3e-403b-a8a4-97fe90fb3394.jpg", // Men's Brown Graphic Co-ord Set
+  },
+  {
+    id: "men-lower",
+    name: "Men's Lowers",
+    gender: "MEN",
+    categoryId: 4,
+    image: "https://api.stylenestfashion.com/uploads/products/041939f1-fc14-4026-a73b-01df06c854ea.jpg", // Men's Piped Track Pants
+  },
+  {
+    id: "nightwear",
+    name: "Nightwear",
+    gender: "WOMEN",
+    categoryId: 11,
+    image: "https://api.stylenestfashion.com/uploads/products/676d8628-6e36-434a-b8f0-afb370f2dbef.jpg", // Light Pink Floral Print Nighty
+  },
 ];
-
-const HOME_CURATED_MEN_IDS = [
-  260, // Men's Piped Track Pants (Lower)
-  259, // Men's Brown Graphic T-Shirt & Shorts Co-ord Set (Co-ord Shorts)
-  226, // Men's Polo Graphic T-Shirt & Trackpants Co-Ord Set (Co-ord Trackpants)
-  220, // Men's Chicago V Graphic Sweatshirt (Sweatshirt)
-  206, // Men's 03 Lightning Mesh Jersey T-Shirt (Mesh Jersey)
-  255, // Men's Acid Blue Washed Graphic Polo T-Shirt (Acid Polo)
-  256, // Men's Ombre Dip-Dye Graphic T-Shirt (Ombre Crewneck Tee)
-  237, // Men's White Colorblock Striped Polo T-Shirt (Striped Polo)
-];
-
-/**
- * Curate 8 diverse, signature pieces for Women on the Home page
- * across Kurti, Co-ord, Jeans, Palazzo/Skirt, Designer Tops, Suit, Dress.
- */
-function selectHomeCuratedWomenEight(products) {
-  if (!products || products.length === 0) return [];
-  const map = new Map(products.map((p) => [p.id, p]));
-  const picked = [];
-  for (const id of HOME_CURATED_WOMEN_IDS) {
-    const item = map.get(id);
-    if (item) picked.push(item);
-  }
-  if (picked.length < 8) {
-    const seenIds = new Set(picked.map((p) => p.id));
-    for (const p of products) {
-      if (!seenIds.has(p.id)) {
-        picked.push(p);
-        seenIds.add(p.id);
-        if (picked.length === 8) break;
-      }
-    }
-  }
-  return picked.slice(0, 8);
-}
-
-/**
- * Curate 8 diverse, signature pieces for Men on the Home page
- * across Lowers, Co-ord Shorts, Co-ord Trackpants, Sweatshirts, Mesh Jersey, Polos, Ombre Tees.
- */
-function selectHomeCuratedMenEight(products) {
-  if (!products || products.length === 0) return [];
-  const map = new Map(products.map((p) => [p.id, p]));
-  const picked = [];
-  for (const id of HOME_CURATED_MEN_IDS) {
-    const item = map.get(id);
-    if (item) picked.push(item);
-  }
-  if (picked.length < 8) {
-    const seenIds = new Set(picked.map((p) => p.id));
-    for (const p of products) {
-      if (!seenIds.has(p.id)) {
-        picked.push(p);
-        seenIds.add(p.id);
-        if (picked.length === 8) break;
-      }
-    }
-  }
-  return picked.slice(0, 8);
-}
 
 export default function Home() {
   const { setGender } = useGender();
-  const [active, setActive] = useState("women");
-  const navigate = useNavigate();
-  const copy = COPY[active];
+  const [selectedGender, setSelectedGender] = useState("ALL");
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [pageSize, setPageSize] = useState(24);
 
-  // Neutral accent on the gateway itself — gender-specific theming should
-  // only kick in once the visitor actually enters that section.
-  useEffect(() => setGender(null), [setGender]);
+  // Keep global gender in sync
+  useEffect(() => {
+    if (selectedGender === "WOMEN") setGender("women");
+    else if (selectedGender === "MEN") setGender("men");
+    else setGender(null);
+  }, [selectedGender, setGender]);
 
-  const categoriesQuery = useQuery({
-    queryKey: ["categories"],
-    queryFn: () => categoriesApi.getCategories(),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const menProductsQuery = useQuery({
-    queryKey: ["home-products", "MEN"],
-    queryFn: () => productsApi.filterProducts({ gender: "MEN", active: true, sizePerPage: 100 }),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const womenProductsQuery = useQuery({
-    queryKey: ["home-products", "WOMEN"],
-    queryFn: () => productsApi.filterProducts({ gender: "WOMEN", active: true, sizePerPage: 200 }),
-    staleTime: 5 * 60 * 1000,
-  });
-
-  const menFeatured = selectHomeCuratedMenEight(menProductsQuery.data?.content ?? []);
-  const womenFeatured = selectHomeCuratedWomenEight(womenProductsQuery.data?.content ?? []);
-
-  const choose = (g) => {
-    setGender(g);
-    navigate(g === "men" ? "/men" : "/women");
+  // Handle category chip tap
+  const handleCategorySelect = (chip) => {
+    if (chip.id === "all" || selectedCategory?.id === chip.id) {
+      setSelectedCategory(null);
+      return;
+    }
+    setSelectedCategory(chip);
+    if (chip.gender) {
+      setSelectedGender(chip.gender);
+    }
   };
 
+  // Build query params
+  const queryParams = {
+    active: true,
+    sizePerPage: pageSize,
+    page: 0,
+    sort: "createdAt,desc",
+  };
+  if (selectedGender === "WOMEN") queryParams.gender = "WOMEN";
+  if (selectedGender === "MEN") queryParams.gender = "MEN";
+  if (selectedCategory?.categoryId) {
+    queryParams.categoryId = selectedCategory.categoryId;
+  }
+
+  const productsQuery = useQuery({
+    queryKey: ["home-catalog-feed", selectedGender, selectedCategory?.id, pageSize],
+    queryFn: () => productsApi.filterProducts(queryParams),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const products = productsQuery.data?.content ?? [];
+  const totalElements = productsQuery.data?.totalElements ?? 0;
+  const hasMore = products.length < totalElements;
+
   return (
-    <>
-      {/* Mobile: stacked tappable panels, no hover-dependent interaction */}
-      <section className="md:hidden">
-        {["men", "women"].map((g) => (
-          <HeroPanel key={g} gender={g} className="block w-full" onClick={() => choose(g)} aria-label={`Explore ${g}`}>
-            <span className="absolute inset-0 bg-gradient-to-t from-foreground/70 via-foreground/10 to-transparent" />
-            <span className="absolute bottom-8 left-6 text-left text-primary-foreground">
-              <span className="label-xs text-primary-foreground/80">{COPY[g].label}</span>
-              <span className="display mt-2 block text-3xl">{COPY[g].head}</span>
-              <span className="label-xs mt-4 inline-flex items-center gap-2">
-                Enter {COPY[g].label} <ArrowRight className="h-3 w-3" />
-              </span>
+    <div className="min-h-screen bg-background pb-16">
+      {/* ===================== CATEGORY CIRCULAR CHIPS (SD STYLE) ===================== */}
+      <section className="border-b border-border/40 bg-card/60 backdrop-blur-sm py-4 md:py-6">
+        <div className="mx-auto max-w-[1440px] px-4 md:px-8">
+          <div className="flex items-center justify-between mb-3">
+            <span className="label-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-accent" /> Explore Categories
             </span>
-          </HeroPanel>
-        ))}
-      </section>
+            {selectedCategory && (
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className="label-xs text-accent hover:underline flex items-center gap-1"
+              >
+                Clear filter <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
 
-      {/* Desktop: hover-preview split screen */}
-      <section className="relative hidden w-full overflow-hidden md:block">
-        <div className="pointer-events-none absolute inset-0 z-20 opacity-[0.08]">
-          <div
-            className="drift-layer h-full w-full"
-            style={{
-              background:
-                "radial-gradient(60% 60% at 30% 30%, var(--color-accent) 0%, transparent 60%), radial-gradient(50% 50% at 75% 65%, var(--color-accent-2) 0%, transparent 65%)",
-            }}
-          />
-        </div>
+          {/* Horizontally scrollable chips */}
+          <div className="flex items-start gap-4 sm:gap-6 overflow-x-auto pb-2 scrollbar-none pt-1">
+            {CURATED_CATEGORY_CHIPS.map((chip) => {
+              const isSelected =
+                chip.id === "all" ? selectedCategory === null : selectedCategory?.id === chip.id;
 
-        <div className="grid grid-cols-2">
-          {["men", "women"].map((g) => (
-            <HeroPanel key={g} gender={g} onMouseEnter={() => setActive(g)} onClick={() => choose(g)} aria-label={`Explore ${g}`}>
-              <span className="absolute inset-0 bg-foreground transition-opacity duration-700" style={{ opacity: active === g ? 0.08 : 0.42 }} />
-              <span className="label-xs absolute bottom-10 left-1/2 -translate-x-1/2 text-primary-foreground">{g}</span>
-            </HeroPanel>
-          ))}
-        </div>
-
-        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center px-5">
-          <div className="grain pointer-events-auto w-full max-w-md border border-card/40 bg-card/72 px-8 py-12 text-center shadow-[0_30px_80px_rgba(0,0,0,0.18)] backdrop-blur-md">
-            <p key={`${copy.label}-l`} className="label-xs rise-in text-accent">
-              {copy.label}
-            </p>
-            <h1 key={`${copy.label}-h`} className="rise-in mt-5 text-[clamp(2.4rem,5vw,3.6rem)] leading-[1.05] tracking-[0.02em]" style={{ animationDelay: "80ms" }}>
-              {copy.head}
-            </h1>
-            <span className="hairline-grow mx-auto mt-6 block h-px w-16 bg-accent" />
-            <p key={`${copy.label}-t`} className="display rise-in mt-4 text-base italic text-muted-foreground" style={{ animationDelay: "160ms" }}>
-              {copy.tag}
-            </p>
-            <button className="btn-solid sheen mt-8" onClick={() => choose(active)}>
-              Enter {copy.label}
-            </button>
+              return (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => handleCategorySelect(chip)}
+                  className="flex flex-col items-center gap-2 group shrink-0 transition-transform active:scale-95 focus:outline-none"
+                  aria-pressed={isSelected}
+                >
+                  <div
+                    className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden transition-all duration-300 ${
+                      isSelected
+                        ? "ring-2 ring-foreground ring-offset-2 ring-offset-background shadow-md scale-105"
+                        : "border border-border/70 hover:border-foreground/60 opacity-90 group-hover:opacity-100"
+                    }`}
+                  >
+                    <img
+                      src={chip.image}
+                      alt={chip.name}
+                      loading="lazy"
+                      className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
+                    />
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-foreground/10" aria-hidden="true" />
+                    )}
+                  </div>
+                  <span
+                    className={`text-xs sm:text-[13px] text-center max-w-[76px] sm:max-w-[88px] truncate leading-tight transition-colors ${
+                      isSelected
+                        ? "font-semibold text-foreground"
+                        : "font-normal text-muted-foreground group-hover:text-foreground"
+                    }`}
+                  >
+                    {chip.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
-
-        <button
-          onMouseEnter={() => setActive("men")}
-          onClick={() => choose("men")}
-          className={`label-xs sheen absolute left-0 top-1/2 z-30 -translate-y-1/2 rounded-r-full border border-l-0 px-5 py-3 backdrop-blur transition-all duration-500 hover:pl-7 ${
-            active === "men" ? "bg-foreground text-primary-foreground" : "bg-card/80 text-foreground"
-          }`}
-        >
-          <ChevronLeft className="mr-1 inline h-3 w-3" />
-          Men
-        </button>
-        <button
-          onMouseEnter={() => setActive("women")}
-          onClick={() => choose("women")}
-          className={`label-xs sheen absolute right-0 top-1/2 z-30 -translate-y-1/2 rounded-l-full border border-r-0 px-5 py-3 backdrop-blur transition-all duration-500 hover:pr-7 ${
-            active === "women" ? "bg-foreground text-primary-foreground" : "bg-card/80 text-foreground"
-          }`}
-        >
-          Women
-          <ChevronRight className="ml-1 inline h-3 w-3" />
-        </button>
-
-        <div className="absolute bottom-8 left-6 z-30 flex gap-2 md:left-10">
-          {["bg-accent", "bg-accent-2", "bg-accent-3"].map((c, i) => (
-            <span key={c} className={`float-soft h-5 w-5 border border-card/50 ${c}`} style={{ animationDelay: `${i * 400}ms` }} />
-          ))}
-        </div>
-
-        <Link
-          to={active === "men" ? "/men" : "/women"}
-          onClick={() => setGender(active)}
-          className="label-xs sheen absolute bottom-8 right-6 z-30 flex h-24 w-24 items-center justify-center rounded-full bg-foreground text-center text-primary-foreground transition-transform duration-700 hover:scale-110 md:right-10"
-        >
-          View
-          <br />
-          All
-        </Link>
       </section>
 
-      {/* ===================== WOMEN SECTION (FIRST PRIORITY) ===================== */}
-      {/* Scroll-down Category Discovery: WOMEN */}
-      <HomeCategoryDiscovery
-        gender="WOMEN"
-        title="SHOP WOMEN"
-        subtitle="Flowing silhouettes, festive wear, and modern essentials."
-        categories={categoriesQuery.data}
-        isLoading={categoriesQuery.isLoading}
-      />
+      {/* ===================== FILTER TABS & PRODUCT COUNT ===================== */}
+      <section className="mx-auto max-w-[1440px] px-4 md:px-8 pt-6 pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/30 pb-4">
+          {/* Gender Filter Tabs */}
+          <div className="inline-flex rounded-full bg-secondary/80 p-1 border border-border/50">
+            {[
+              { id: "ALL", label: "All Products" },
+              { id: "WOMEN", label: "Women" },
+              { id: "MEN", label: "Men" },
+            ].map((tab) => {
+              const active = selectedGender === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setSelectedGender(tab.id);
+                    // Clear category if gender no longer matches
+                    if (selectedCategory && selectedCategory.gender && selectedCategory.gender !== tab.id && tab.id !== "ALL") {
+                      setSelectedCategory(null);
+                    }
+                  }}
+                  className={`rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all ${
+                    active
+                      ? "bg-foreground text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
 
-      {/* Featured 8 Products: WOMEN (Across Different Categories) */}
-      <section className="border-b border-border/40 pb-16 md:pb-24" aria-label="Featured womenswear">
-        <div className="mx-auto max-w-[1440px] px-5 md:px-10">
-          <Reveal>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
-              <div>
-                <p className="label-xs text-accent uppercase tracking-[0.2em]">CURATED FOR HER</p>
-                <h3 className="display text-2xl font-medium tracking-tight md:text-3xl text-foreground mt-1">
-                  Featured in Womenswear
-                </h3>
-              </div>
-              <Link to="/women" className="label-xs link-underline inline-flex items-center gap-1.5 text-foreground hover:text-accent">
-                View all Women's products <ArrowRight className="h-3 w-3" />
-              </Link>
+          {/* Active selection info */}
+          <div className="text-xs text-muted-foreground">
+            {productsQuery.isLoading ? (
+              <span>Loading styles...</span>
+            ) : (
+              <span>
+                {selectedCategory ? (
+                  <strong className="text-foreground">{selectedCategory.name}: </strong>
+                ) : null}
+                Showing <strong className="text-foreground">{products.length}</strong> of {totalElements} styles
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ===================== DIRECT 2-COLUMN PRODUCT GRID ===================== */}
+      <section className="mx-auto max-w-[1440px] px-4 md:px-8 py-4" aria-label="StyleNest Catalog">
+        <ProductGrid
+          products={products}
+          loading={productsQuery.isLoading}
+          skeletonCount={pageSize}
+        />
+
+        {/* Load More Button */}
+        {!productsQuery.isLoading && hasMore && (
+          <div className="mt-12 text-center">
+            <button
+              onClick={() => setPageSize((prev) => prev + 24)}
+              className="btn-solid inline-flex items-center gap-2 px-8 py-3 text-sm font-medium shadow-sm hover:shadow transition-all"
+            >
+              Load More Styles ({totalElements - products.length} remaining)
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* ===================== TRUST & REASSURANCE MARKERS ===================== */}
+      <section className="mx-auto max-w-[1440px] px-4 md:px-8 mt-16 pt-10 border-t border-border/40">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
+          <div className="p-4 rounded border border-border/40 bg-card flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center mb-2">
+              <Truck className="h-5 w-5 text-foreground" />
             </div>
-          </Reveal>
-          <ProductGrid products={womenFeatured} loading={womenProductsQuery.isLoading} skeletonCount={8} />
-        </div>
-      </section>
+            <h4 className="text-xs sm:text-sm font-semibold text-foreground">Free Delivery</h4>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">On all orders across India</p>
+          </div>
 
-      {/* ===================== MEN SECTION ===================== */}
-      {/* Scroll-down Category Discovery: MEN */}
-      <HomeCategoryDiscovery
-        gender="MEN"
-        title="SHOP MEN"
-        subtitle="Essential tailoring, casual staples, and everyday layers."
-        categories={categoriesQuery.data}
-        isLoading={categoriesQuery.isLoading}
-      />
-
-      {/* Featured 8 Products: MEN (Across Different Categories) */}
-      <section className="pb-16 md:pb-24" aria-label="Featured menswear">
-        <div className="mx-auto max-w-[1440px] px-5 md:px-10">
-          <Reveal>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-8 border-b border-border/30 pb-4">
-              <div>
-                <p className="label-xs text-accent uppercase tracking-[0.2em]">CURATED FOR HIM</p>
-                <h3 className="display text-2xl font-medium tracking-tight md:text-3xl text-foreground mt-1">
-                  Featured in Menswear
-                </h3>
-              </div>
-              <Link to="/men" className="label-xs link-underline inline-flex items-center gap-1.5 text-foreground hover:text-accent">
-                View all Men's products <ArrowRight className="h-3 w-3" />
-              </Link>
+          <div className="p-4 rounded border border-border/40 bg-card flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center mb-2">
+              <ShieldCheck className="h-5 w-5 text-foreground" />
             </div>
-          </Reveal>
-          <ProductGrid products={menFeatured} loading={menProductsQuery.isLoading} skeletonCount={8} />
+            <h4 className="text-xs sm:text-sm font-semibold text-foreground">Cash on Delivery</h4>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Pay safely at your doorstep</p>
+          </div>
+
+          <div className="p-4 rounded border border-border/40 bg-card flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center mb-2">
+              <RotateCcw className="h-5 w-5 text-foreground" />
+            </div>
+            <h4 className="text-xs sm:text-sm font-semibold text-foreground">7 Days Return</h4>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Hassle-free easy exchanges</p>
+          </div>
+
+          <div className="p-4 rounded border border-border/40 bg-card flex flex-col items-center">
+            <div className="h-10 w-10 rounded-full bg-secondary flex items-center justify-center mb-2">
+              <MessageCircle className="h-5 w-5 text-foreground" />
+            </div>
+            <h4 className="text-xs sm:text-sm font-semibold text-foreground">WhatsApp Support</h4>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Direct help: +91 6269933231</p>
+          </div>
         </div>
       </section>
-    </>
+
+      {/* ===================== FLOATING WHATSAPP BUTTON FOR MOBILE/OLDER USERS ===================== */}
+      <a
+        href="https://wa.me/916269933231?text=Hi%20StyleNest,%20I%20need%20help%20with%20an%20order"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        className="fixed bottom-6 right-5 z-40 flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-3 text-white shadow-lg transition-transform hover:scale-105 active:scale-95 focus:outline-none"
+      >
+        <MessageCircle className="h-5 w-5 fill-current" />
+        <span className="text-xs sm:text-sm font-semibold tracking-wide">WhatsApp Order</span>
+      </a>
+    </div>
   );
 }
