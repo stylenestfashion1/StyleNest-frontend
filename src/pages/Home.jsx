@@ -223,7 +223,7 @@ export default function Home() {
                 <Sparkles className="h-3 w-3" /> STYLE NEST FASHION
               </span>
 
-              <h1 className="display mt-2 text-3xl font-medium tracking-tight sm:text-4xl md:text-5xl text-foreground">
+              <h1 className="display mt-2 text-2xl sm:text-4xl md:text-5xl font-medium tracking-tight text-foreground px-2">
                 Fashion For Every Lifestyle
               </h1>
 
@@ -232,16 +232,16 @@ export default function Home() {
               </p>
 
               {/* Both Buttons with identical, pristine styling */}
-              <div className="mt-6 flex items-center justify-center gap-3 sm:gap-4">
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 px-2">
                 <Link
                   to="/women"
-                  className="btn-solid inline-flex items-center gap-1.5 px-6 py-2.5 text-xs sm:text-sm font-medium shadow-xs hover:shadow transition-all"
+                  className="btn-solid inline-flex items-center gap-1.5 px-5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-medium shadow-xs hover:shadow transition-all"
                 >
                   Shop Women <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <Link
                   to="/men"
-                  className="btn-solid inline-flex items-center gap-1.5 px-6 py-2.5 text-xs sm:text-sm font-medium shadow-xs hover:shadow transition-all"
+                  className="btn-solid inline-flex items-center gap-1.5 px-5 py-2 sm:px-6 sm:py-2.5 text-xs sm:text-sm font-medium shadow-xs hover:shadow transition-all"
                 >
                   Shop Men <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
