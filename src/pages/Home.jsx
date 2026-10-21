@@ -244,7 +244,6 @@ export default function Home() {
               Ample py-3.5 padding ensures hover scale & lift never clips on overflow boundaries. */}
           <div
             ref={categoryScrollRef}
-            style={{ justifyContent: "safe center" }}
             className="flex items-center gap-5 sm:gap-6 md:gap-7 lg:gap-8 overflow-x-auto px-4 py-3 sm:py-3.5 scrollbar-none scroll-smooth touch-pan-x"
           >
             {CATEGORY_CHIPS.map((chip) => (
