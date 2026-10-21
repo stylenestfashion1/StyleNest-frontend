@@ -139,7 +139,7 @@ export default function Home() {
   const { setGender } = useGender();
   const categoryScrollRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
   const checkScroll = useCallback(() => {
     const el = categoryScrollRef.current;
