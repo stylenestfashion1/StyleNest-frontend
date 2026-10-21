@@ -169,17 +169,6 @@ export function Header() {
           <NavLink to="/track-order" className={({ isActive }) => `label-xs link-underline whitespace-nowrap ${isActive ? "text-accent" : ""}`}>
             Track Order
           </NavLink>
-          {/* Support is intentionally not repeated here -- it's already
-              reachable from the footer on every page, and the header nav
-              was already at capacity before Bulk Orders was added (see
-              BULK_ORDERS_LINK below); keeping both would overflow this
-              column and visually overlap the centered logo again. */}
-          <NavLink
-            to={BULK_ORDERS_LINK.to}
-            className={({ isActive }) => `label-xs link-underline whitespace-nowrap ${isActive ? "text-accent" : ""}`}
-          >
-            {BULK_ORDERS_LINK.label}
-          </NavLink>
         </nav>
 
         {/* A proper two-part lockup rather than one flat uppercase line --
@@ -198,6 +187,14 @@ export function Header() {
         </Link>
 
         <div className="col-start-3 flex min-w-0 items-center justify-end gap-2.5 sm:gap-3 xl:gap-4">
+          <NavLink
+            to={BULK_ORDERS_LINK.to}
+            className={({ isActive }) =>
+              `label-xs link-underline hidden whitespace-nowrap xl:inline ${isActive ? "text-accent" : ""}`
+            }
+          >
+            {BULK_ORDERS_LINK.label}
+          </NavLink>
           <NavLink
             to={RENTALS_LINK.to}
             className={({ isActive }) =>
