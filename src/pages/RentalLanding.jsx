@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import * as rentalApi from "../api/rental";
 import LoadingState from "../components/LoadingState";
+import BackButton from "../components/BackButton";
 
 // The main-site "Rentals" nav link (see Header.jsx) has no share token of
 // its own -- unlike every other rental route, which is only ever reached
@@ -42,6 +43,7 @@ export default function RentalLanding() {
           ? "Could not load rentals. Please try again shortly."
           : "Please check back soon, or contact the shop directly."}
       </p>
+      <BackButton fallback="/" label="Back to Store" className="mt-4" />
     </div>
   );
 }

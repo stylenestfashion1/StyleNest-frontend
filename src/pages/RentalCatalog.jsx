@@ -5,6 +5,7 @@ import * as rentalApi from "../api/rental";
 import { formatPrice, titleCase } from "../utils/format";
 import { useRentalWishlist } from "../hooks/useRentalWishlist";
 import LoadingState from "../components/LoadingState";
+import BackButton from "../components/BackButton";
 
 // Hidden, temporary route -- reachable ONLY via the shop's WhatsApp share
 // link (/rental/<share-token>), never linked from site navigation. Not
@@ -42,6 +43,7 @@ export default function RentalCatalog() {
         <p className="max-w-sm text-sm text-muted-foreground">
           This rental catalog link is no longer active. Please contact the shop directly for the latest availability.
         </p>
+        <BackButton fallback="/" label="Back to Store" />
       </div>
     );
   }
@@ -50,9 +52,14 @@ export default function RentalCatalog() {
 
   return (
     <div className="min-h-screen bg-background pb-16">
-      <div className="mx-auto max-w-6xl px-5 pt-10">
-        <p className="label-xs text-accent">StyleNest Fashion</p>
-        <h1 className="mt-3 text-[clamp(1.6rem,5vw,2.4rem)] leading-tight">{catalog.name}</h1>
+      <div className="mx-auto max-w-6xl px-5 pt-6 sm:pt-10">
+        <div className="mb-6 flex items-center justify-between border-b pb-4">
+          <BackButton fallback="/" label="Back to Store" />
+          <Link to="/" className="label-xs font-serif tracking-[0.15em] text-accent transition-opacity hover:opacity-80">
+            STYLE NEST FASHION
+          </Link>
+        </div>
+        <h1 className="text-[clamp(1.6rem,5vw,2.4rem)] leading-tight">{catalog.name}</h1>
         <p className="mt-3 text-sm text-muted-foreground">
           Tap a lehenga to see all its photos, browse and favourite the ones you'd like to see, then visit us
           in-store to try them on and discuss rental details.

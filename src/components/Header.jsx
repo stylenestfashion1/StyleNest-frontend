@@ -193,7 +193,7 @@ export function Header() {
             automatically rather than assuming a fixed single-line height. */}
         <Link to="/" className="col-start-2 flex items-center justify-center whitespace-nowrap leading-none group px-1">
           <span className="font-serif text-[0.78rem] min-[370px]:text-[0.84rem] sm:text-2xl xl:text-2xl font-bold tracking-[0.08em] min-[370px]:tracking-[0.12em] sm:tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
-            STYLENEST FASHION
+            STYLE NEST FASHION
           </span>
         </Link>
 
@@ -347,7 +347,7 @@ export function Header() {
         <div className="absolute left-0 top-0 flex h-full w-72 flex-col gap-8 bg-background p-8">
           <div className="flex items-center justify-between">
             <span className="flex items-center leading-none">
-              <span className="font-serif text-lg font-bold tracking-[0.2em] text-accent">STYLENEST FASHION</span>
+              <span className="font-serif text-lg font-bold tracking-[0.2em] text-accent">STYLE NEST FASHION</span>
             </span>
             <button onClick={() => setDrawerOpen(false)} aria-label="Close menu">
               <X className="h-5 w-5" />
@@ -462,7 +462,7 @@ export function Footer() {
   return (
     <footer className="mt-24 border-t">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-4 px-5 py-10 md:flex-row md:items-center md:justify-between md:px-10">
-        <span className="display text-lg tracking-[0.18em]">STYLENEST FASHION</span>
+        <span className="display text-lg tracking-[0.18em]">STYLE NEST FASHION</span>
         <p className="label-xs text-muted-foreground">Considered clothing, made in limited runs.</p>
         <div className="flex flex-wrap items-center gap-6">
           <Link to="/support" className="label-xs link-underline">
