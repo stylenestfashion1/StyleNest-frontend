@@ -192,7 +192,7 @@ export function Header() {
             the effect above), so Layout's <main> spacing adjusts
             automatically rather than assuming a fixed single-line height. */}
         <Link to="/" className="col-start-2 flex items-center justify-center whitespace-nowrap leading-none group px-1">
-          <span className="font-serif text-[0.88rem] min-[380px]:text-[0.98rem] sm:text-2xl xl:text-2xl font-bold tracking-[0.12em] min-[380px]:tracking-[0.16em] sm:tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
+          <span className="font-serif text-[0.78rem] min-[370px]:text-[0.84rem] sm:text-2xl xl:text-2xl font-bold tracking-[0.08em] min-[370px]:tracking-[0.12em] sm:tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
             STYLENEST FASHION
           </span>
         </Link>
