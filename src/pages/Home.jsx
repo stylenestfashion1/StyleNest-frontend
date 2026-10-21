@@ -145,22 +145,32 @@ export default function Home() {
     const el = categoryScrollRef.current;
     if (!el) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+    if (scrollWidth > 0 && clientWidth > 0) {
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
+    }
   }, []);
 
   useEffect(() => {
-    checkScroll();
     const el = categoryScrollRef.current;
     if (!el) return;
 
-    window.addEventListener("resize", checkScroll);
+    checkScroll();
+
+    let ro;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => checkScroll());
+      ro.observe(el);
+    }
+
     el.addEventListener("scroll", checkScroll, { passive: true });
-    const timer = setTimeout(checkScroll, 500);
+    window.addEventListener("resize", checkScroll);
+    const timer = setTimeout(checkScroll, 300);
 
     return () => {
-      window.removeEventListener("resize", checkScroll);
+      if (ro) ro.disconnect();
       el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
       clearTimeout(timer);
     };
   }, [checkScroll]);
