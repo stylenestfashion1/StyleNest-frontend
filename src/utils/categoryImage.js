@@ -1,5 +1,5 @@
-// High-resolution real product photography from StyleNest live catalog
-// Replacing AI / stock imagery with real authentic pieces
+// High-resolution real hero product photography from StyleNest live catalog
+// Discarding stock / AI / Unsplash imagery with real authentic StyleNest pieces
 export const REAL_CATEGORY_PRODUCT_IMAGES = {
   // Women
   KURTI: "https://api.stylenestfashion.com/uploads/products/335f5806-fe57-4387-a85c-020313c668e8.jpg", // White Paisley Print Kurti
@@ -51,4 +51,23 @@ export function categoryImageFallback(name, gender) {
   if (match) return match.image;
 
   return isMen ? REAL_CATEGORY_PRODUCT_IMAGES.MEN_TSHIRTS : REAL_CATEGORY_PRODUCT_IMAGES.KURTI;
+}
+
+/**
+ * Returns the best real hero product image for a category card.
+ * Discards third-party stock/unsplash URLs (which look like AI/stock models)
+ * so the card always displays authentic StyleNest pieces worn by our real models.
+ */
+export function getCategoryHeroImage(category, gender) {
+  const url = typeof category === "string" ? category : category?.imageUrl;
+  const name = typeof category === "string" ? category : category?.name;
+  const gen = typeof category === "object" && category?.gender ? category.gender : gender;
+
+  // If the backend has an uploaded product image from our own domain, use it
+  if (url && (url.includes("/uploads/products") || url.includes("/uploads/categories"))) {
+    return url;
+  }
+
+  // If it's an unsplash stock URL, placeholder, or empty, always use our real hero product photo!
+  return categoryImageFallback(name, gen);
 }

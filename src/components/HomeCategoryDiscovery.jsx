@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { categoryImageFallback } from "../utils/categoryImage";
+import { getCategoryHeroImage } from "../utils/categoryImage";
 import { Reveal } from "./Reveal";
 
 // Prioritized list of common shopping category names per gender.
@@ -118,7 +118,7 @@ export default function HomeCategoryDiscovery({
                 />
               ))
             : selectedCategories.map((cat, idx) => {
-                const imgUrl = cat.imageUrl || categoryImageFallback(cat.name, gender.toUpperCase());
+                const imgUrl = getCategoryHeroImage(cat, gender.toUpperCase());
                 const targetUrl = getCategoryCanonicalPath(cat, gender);
 
                 return (

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import CardCarousel from "./ui/CardCarousel";
-import { categoryImageFallback } from "../utils/categoryImage";
+import { getCategoryHeroImage } from "../utils/categoryImage";
 
 // The exact, curated storefront category lists — matched against real
 // backend category names (not hardcoded category data). Order here is the
@@ -92,7 +92,7 @@ export default function CategoryDepthCarousel({ categories, gender }) {
   if (selected.length === 0) return null;
 
   const items = selected.map((cat) => ({
-    image: cat.imageUrl || categoryImageFallback(cat.name, gender),
+    image: getCategoryHeroImage(cat, gender),
     alt: cat.name,
     category: cat,
   }));

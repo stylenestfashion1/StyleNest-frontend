@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { categoryImageFallback } from "../utils/categoryImage";
+import { getCategoryHeroImage } from "../utils/categoryImage";
 
 export function CategoryHeroTile({ category, gender, blurb }) {
-  const image = category.imageUrl || categoryImageFallback(category.name, gender);
+  const image = getCategoryHeroImage(category, gender);
   return (
     <Link
       to={`/products?gender=${gender}&categoryId=${category.id}`}
@@ -19,7 +19,7 @@ export function CategoryHeroTile({ category, gender, blurb }) {
 }
 
 export function CategoryTile({ category, gender }) {
-  const image = category.imageUrl || categoryImageFallback(category.name, gender);
+  const image = getCategoryHeroImage(category, gender);
   return (
     <Link to={`/products?gender=${gender}&categoryId=${category.id}`} className="group hairline-card zoom-media relative block h-full min-h-[200px]">
       <img src={image} alt={category.name} loading="lazy" className="h-full w-full object-cover" />
