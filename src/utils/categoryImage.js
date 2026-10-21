@@ -56,7 +56,7 @@ export const REAL_CATEGORY_PRODUCT_IMAGES = {
 
 const KEYWORDS = [
   { test: /kurti/i, item: REAL_CATEGORY_PRODUCT_IMAGES.KURTI },
-  { test: /suit/i, item: REAL_CATEGORY_PRODUCT_IMAGES.SUIT },
+  { test: /suit/i, item: REAL_CATEGORY_PRODUCT_IMAGES.SUIT },
   { test: /gown|nighty|nightwear|sleep/i, item: REAL_CATEGORY_PRODUCT_IMAGES.GOWN },
   { test: /dress|one.?piece/i, item: REAL_CATEGORY_PRODUCT_IMAGES.DRESS },
   { test: /top|blouse|shirt/i, item: REAL_CATEGORY_PRODUCT_IMAGES.TOPS },
