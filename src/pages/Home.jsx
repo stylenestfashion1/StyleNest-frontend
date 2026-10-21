@@ -8,8 +8,10 @@ import {
   RotateCcw,
   MessageCircle,
   Sparkles,
+  LayoutGrid,
 } from "lucide-react";
 import { useGender } from "../context/GenderContext";
+import stylenestLogo from "../assets/stylenest-logo.jpeg";
 import * as categoriesApi from "../api/categories";
 import * as productsApi from "../api/products";
 import HomeCategoryDiscovery from "../components/HomeCategoryDiscovery";
@@ -77,9 +79,10 @@ const CATEGORY_CHIPS = [
     image: "https://api.stylenestfashion.com/uploads/products/676d8628-6e36-434a-b8f0-afb370f2dbef.jpg", // Floral Print Nighty
   },
   {
-    name: "All Styles",
+    name: "Explore More",
     to: "/products",
-    image: "https://api.stylenestfashion.com/uploads/products/354-placeholder.jpg" || "https://api.stylenestfashion.com/uploads/products/335f5806-fe57-4387-a85c-020313c668e8.jpg",
+    image: "https://api.stylenestfashion.com/uploads/products/335f5806-fe57-4387-a85c-020313c668e8.jpg",
+    isExplore: true,
   },
 ];
 
@@ -163,23 +166,37 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* ===================== TOP CATEGORY CIRCULAR CHIPS (SD STYLE) ===================== */}
       <section className="border-b border-border/40 bg-card/70 backdrop-blur-sm py-4">
-        <div className="mx-auto max-w-[1440px] px-4 md:px-8">
-          <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto pb-1 scrollbar-none">
+        <div className="mx-auto max-w-[1440px] px-4 sm:px-6 md:px-8">
+          {/* Centered on wider screens, smoothly scrollable on mobile with balanced padding */}
+          <div className="flex items-center justify-start lg:justify-center gap-4 sm:gap-6 md:gap-7 overflow-x-auto pb-1 scrollbar-none">
             {CATEGORY_CHIPS.map((chip) => (
               <Link
                 key={chip.name}
                 to={chip.to}
                 className="flex flex-col items-center gap-1.5 group shrink-0 focus:outline-none"
               >
-                <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border border-border/80 shadow-xs group-hover:border-foreground/80 group-hover:shadow-md transition-all duration-300">
-                  <img
-                    src={chip.image}
-                    alt={chip.name}
-                    loading="lazy"
-                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
-                  />
+                <div className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border shadow-xs transition-all duration-300 ${
+                  chip.isExplore
+                    ? "border-accent bg-accent/10 group-hover:bg-accent/20 group-hover:scale-108"
+                    : "border-border/80 group-hover:border-foreground/80 group-hover:scale-108 group-hover:shadow-md"
+                }`}>
+                  {chip.isExplore ? (
+                    <div className="flex h-full w-full flex-col items-center justify-center bg-card text-accent">
+                      <LayoutGrid className="h-6 w-6 sm:h-7 sm:w-7 transition-transform group-hover:rotate-12" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider mt-0.5">All</span>
+                    </div>
+                  ) : (
+                    <img
+                      src={chip.image}
+                      alt={chip.name}
+                      loading="lazy"
+                      className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-110"
+                    />
+                  )}
                 </div>
-                <span className="text-xs sm:text-[13px] font-medium text-foreground/85 text-center max-w-[76px] sm:max-w-[88px] truncate leading-tight group-hover:text-foreground">
+                <span className={`text-xs sm:text-[13px] font-medium text-center max-w-[76px] sm:max-w-[88px] truncate leading-tight transition-colors ${
+                  chip.isExplore ? "text-accent font-semibold group-hover:text-foreground" : "text-foreground/85 group-hover:text-foreground"
+                }`}>
                   {chip.name}
                 </span>
               </Link>
@@ -192,28 +209,43 @@ export default function Home() {
       <section className="relative overflow-hidden border-b border-border/40 bg-gradient-to-b from-secondary/60 via-background to-background py-10 md:py-16">
         <div className="mx-auto max-w-[1440px] px-5 md:px-10 text-center">
           <Reveal>
-            <span className="label-xs text-accent uppercase tracking-[0.25em] inline-flex items-center gap-1.5 justify-center">
-              <Sparkles className="h-3 w-3" /> STYLE NEST FASHION
-            </span>
-            <h1 className="display mt-3 text-3xl font-medium tracking-tight sm:text-4xl md:text-5xl text-foreground">
-              Fashion For Every Lifestyle
-            </h1>
-            <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base text-muted-foreground">
-              From festive ethnic wear and trending Kurtis to relaxed casuals and daily essentials.
-            </p>
-            <div className="mt-6 flex items-center justify-center gap-3">
-              <Link
-                to="/women"
-                className="btn-solid inline-flex items-center gap-1.5 px-6 py-2.5 text-xs sm:text-sm font-medium shadow-xs hover:shadow"
-              >
-                Shop Women <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-              <Link
-                to="/men"
-                className="btn-secondary inline-flex items-center gap-1.5 px-6 py-2.5 text-xs sm:text-sm font-medium border border-border/70 hover:border-foreground"
-              >
-                Shop Men <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+            <div className="flex flex-col items-center justify-center">
+              {/* StyleNest Brand Logo */}
+              <div className="mb-4 flex items-center justify-center">
+                <img
+                  src={stylenestLogo}
+                  alt="StyleNest Fashion"
+                  className="h-14 sm:h-16 w-auto object-contain rounded-2xl shadow-sm border border-border/60 bg-card p-1.5 transition-transform hover:scale-105"
+                />
+              </div>
+
+              <span className="label-xs text-accent uppercase tracking-[0.25em] inline-flex items-center gap-1.5 justify-center">
+                <Sparkles className="h-3 w-3" /> STYLE NEST FASHION
+              </span>
+
+              <h1 className="display mt-2 text-3xl font-medium tracking-tight sm:text-4xl md:text-5xl text-foreground">
+                Fashion For Every Lifestyle
+              </h1>
+
+              <p className="mx-auto mt-3 max-w-xl text-sm sm:text-base text-muted-foreground">
+                From festive ethnic wear and trending Kurtis to relaxed casuals and daily essentials.
+              </p>
+
+              {/* Both Buttons with identical, pristine styling */}
+              <div className="mt-6 flex items-center justify-center gap-3 sm:gap-4">
+                <Link
+                  to="/women"
+                  className="btn-solid inline-flex items-center gap-1.5 px-6 py-2.5 text-xs sm:text-sm font-medium shadow-xs hover:shadow transition-all"
+                >
+                  Shop Women <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+                <Link
+                  to="/men"
+                  className="btn-solid inline-flex items-center gap-1.5 px-6 py-2.5 text-xs sm:text-sm font-medium shadow-xs hover:shadow transition-all"
+                >
+                  Shop Men <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              </div>
             </div>
           </Reveal>
         </div>
