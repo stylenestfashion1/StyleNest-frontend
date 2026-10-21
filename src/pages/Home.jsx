@@ -27,67 +27,67 @@ const CATEGORY_CHIPS = [
     name: "Kurtis",
     to: "/women/kurti",
     image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/wAyZV8jS_9ADDPQX4P0_2026-10-14_2.jpg",
-    position: "50% 10%",
+    position: "50% 0%",
   },
   {
     name: "Suits",
     to: "/women/suit",
     image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/SJKsbhvE_LYOSGPPSDZ_2026-10-14_1.jpg",
-    position: "50% 10%",
+    position: "50% 0%",
   },
   {
     name: "Dresses",
     to: "/women/one-piece",
     image: "https://api.stylenestfashion.com/uploads/products/1f5ac2d9-76b1-49b0-8176-fa16c8daa36e.jpg",
-    position: "50% 18%",
+    position: "50% 0%",
   },
   {
     name: "Co-ord Sets",
     to: "/women/cordset",
     image: "https://api.stylenestfashion.com/uploads/products/d3ac4dda-bf7d-4863-86d8-2e4d6346cc1f.jpg",
-    position: "50% 20%",
+    position: "50% 0%",
   },
   {
     name: "Tops & Shirts",
     to: "/women/tops",
     image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/4CAcrYeY_YMXCJ3X4QV_2026-10-14_2.jpg",
-    position: "50% 10%",
+    position: "50% 0%",
   },
   {
     name: "Jeans",
     to: "/women/jeans",
     image: "https://api.stylenestfashion.com/uploads/products/88a808cd-3d28-49e9-a684-e8c93526adfc.jpg",
-    position: "50% 74%", // Perfectly shows the white wide-leg jeans!
+    position: "50% 65%", // Perfectly shows the white wide-leg jeans!
   },
   {
     name: "Palazzo & Skirts",
     to: "/women/palazzo",
     image: "https://api.stylenestfashion.com/uploads/products/f90e0d71-21f9-4d8f-92ed-accfcfea8072.jpg",
-    position: "50% 72%", // Perfectly shows the flared boho skirt!
+    position: "50% 65%", // Perfectly shows the flared boho skirt!
   },
   {
     name: "Men's Tees",
     to: "/men/t-shirts",
     image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/uS8q3TcH_1H1L6VE3FY_2026-10-14_2.jpg",
-    position: "50% 10%",
+    position: "50% 0%",
   },
   {
     name: "Men's Co-ords",
     to: "/men/cordset",
     image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/9ZYSTgxv_37UYG1ZF6J_2026-10-14_2.jpg",
-    position: "50% 12%",
+    position: "50% 0%",
   },
   {
     name: "Men's Lowers",
     to: "/men/lower",
     image: "https://d1311wbk6unapo.cloudfront.net/NushopCatalogue/tr:f-webp,w-1200,fo-auto/6acf6ff6d488cd0ea435cb10/cat_img/T77o7hEv_L6N04YKQUC_2026-10-14_2.jpg",
-    position: "50% 68%", // Perfectly shows the piped track pants!
+    position: "50% 60%", // Perfectly shows the piped track pants!
   },
   {
     name: "Nightwear",
     to: "/women/gown",
     image: "https://api.stylenestfashion.com/uploads/products/676d8628-6e36-434a-b8f0-afb370f2dbef.jpg",
-    position: "50% 18%",
+    position: "50% 0%",
   },
   {
     name: "Explore More",
@@ -175,27 +175,28 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       {/* ===================== TOP CATEGORY CIRCULAR CHIPS (SD STYLE) ===================== */}
-      <section className="border-b border-border/40 bg-card/70 backdrop-blur-sm py-4">
+      <section className="border-b border-border/40 bg-card/70 backdrop-blur-sm pt-4 pb-5 sm:pt-5 sm:pb-6">
         <div className="mx-auto max-w-[1440px] px-4 sm:px-6 md:px-8">
-          {/* Centered with safe center so margins are perfectly balanced on desktop, and scrolls safely on mobile */}
+          {/* Centered with safe center so margins are perfectly balanced on desktop, and scrolls safely on mobile.
+              Ample py-3.5 padding ensures hover scale & lift never clips on overflow boundaries. */}
           <div
             style={{ justifyContent: "safe center" }}
-            className="flex items-center gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-x-auto px-2 pb-1 scrollbar-none"
+            className="flex items-center gap-4 sm:gap-5 md:gap-6 lg:gap-7 overflow-x-auto px-4 py-3 sm:py-3.5 scrollbar-none"
           >
             {CATEGORY_CHIPS.map((chip) => (
               <Link
                 key={chip.name}
                 to={chip.to}
-                className="flex flex-col items-center gap-1.5 group shrink-0 focus:outline-none"
+                className="flex flex-col items-center gap-2 group shrink-0 focus:outline-none py-1"
               >
-                <div className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border shadow-xs transition-all duration-300 ${
+                <div className={`relative h-16 w-16 sm:h-20 sm:w-20 rounded-full overflow-hidden border shadow-xs transition-all duration-300 ease-out ${
                   chip.isExplore
-                    ? "border-accent bg-accent/10 group-hover:bg-accent/20 group-hover:scale-108"
-                    : "border-border/80 group-hover:border-foreground/80 group-hover:scale-108 group-hover:shadow-md"
+                    ? "border-accent bg-accent/10 group-hover:bg-accent/20 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-md"
+                    : "border-border/80 group-hover:border-foreground/80 group-hover:scale-105 group-hover:-translate-y-1 group-hover:shadow-lg"
                 }`}>
                   {chip.isExplore ? (
                     <div className="flex h-full w-full flex-col items-center justify-center bg-card text-accent">
-                      <LayoutGrid className="h-6 w-6 sm:h-7 sm:w-7 transition-transform group-hover:rotate-12" />
+                      <LayoutGrid className="h-6 w-6 sm:h-7 sm:w-7 transition-transform duration-300 group-hover:rotate-12" />
                       <span className="text-[10px] font-semibold uppercase tracking-wider mt-0.5">All</span>
                     </div>
                   ) : (
@@ -203,8 +204,8 @@ export default function Home() {
                       src={chip.image}
                       alt={chip.name}
                       loading="lazy"
-                      style={{ objectPosition: chip.position || "50% 20%" }}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      style={{ objectPosition: chip.position || "50% 0%" }}
+                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
                     />
                   )}
                 </div>
