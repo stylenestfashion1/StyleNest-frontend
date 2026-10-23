@@ -51,6 +51,7 @@ import AdminBulkProducts from "./pages/admin/AdminBulkProducts";
 import AdminBulkProductForm from "./pages/admin/AdminBulkProductForm";
 import AdminBulkOrders from "./pages/admin/AdminBulkOrders";
 import AdminQuickPayments from "./pages/admin/AdminQuickPayments";
+import AdminBulkInvoiceGenerator from "./pages/admin/AdminBulkInvoiceGenerator";
 import AdminBulkOrderDetail from "./pages/admin/AdminBulkOrderDetail";
 import AdminBulkOrderInvoice from "./pages/admin/AdminBulkOrderInvoice";
 import SpecialOffer from "./pages/SpecialOffer";
@@ -290,6 +291,7 @@ function App() {
           <Route path="bulk/products/:id" element={<AdminBulkProductForm />} />
           <Route path="bulk/orders" element={<AdminBulkOrders />} />
           <Route path="bulk/quick-payments" element={<AdminQuickPayments />} />
+          <Route path="bulk/invoice-generator" element={<AdminBulkInvoiceGenerator />} />
           <Route path="bulk/orders/:id" element={<AdminBulkOrderDetail />} />
           <Route path="bulk/orders/:id/invoice" element={<AdminBulkOrderInvoice />} />
 

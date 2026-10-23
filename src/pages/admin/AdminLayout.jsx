@@ -26,6 +26,7 @@ const LINKS = [
 const BULK_LINKS = [
   { to: "/admin/bulk/orders", label: "Orders", end: false },
   { to: "/admin/bulk/quick-payments", label: "Quick Payments", end: false },
+  { to: "/admin/bulk/invoice-generator", label: "Invoice Generator", end: false },
   { to: "/admin/bulk/products", label: "Products", end: false },
   { to: "/admin/bulk/categories", label: "Categories", end: false },
   { to: "/admin/bulk/access-tokens", label: "Access Tokens", end: false },
