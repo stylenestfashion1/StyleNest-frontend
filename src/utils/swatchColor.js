@@ -241,3 +241,49 @@ export function getSwatchColor(color, colorHex) {
   if (colorHex) return colorHex;
   return resolveSwatchHex(color);
 }
+
+function hexToRgb(hex) {
+  if (!hex || typeof hex !== "string") return null;
+  const clean = hex.replace("#", "").trim();
+  if (clean.length === 3) {
+    return {
+      r: parseInt(clean[0] + clean[0], 16),
+      g: parseInt(clean[1] + clean[1], 16),
+      b: parseInt(clean[2] + clean[2], 16),
+    };
+  }
+  if (clean.length === 6) {
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+  return null;
+}
+
+/**
+ * Finds the closest recognized apparel color name for a given hex code using weighted RGB Euclidean distance.
+ */
+export function findClosestColorName(hex) {
+  const target = hexToRgb(hex);
+  if (!target) return null;
+  let minDistance = Infinity;
+  let closestName = null;
+
+  const allColors = { ...BASE_COLOR_HEX, ...COMPOUND_COLOR_HEX };
+  for (const [name, colorHex] of Object.entries(allColors)) {
+    const rgb = hexToRgb(colorHex);
+    if (!rgb) continue;
+    const dr = target.r - rgb.r;
+    const dg = target.g - rgb.g;
+    const db = target.b - rgb.b;
+    // Standard human eye perception weighting: 2*r^2 + 4*g^2 + 3*b^2
+    const distance = 2 * dr * dr + 4 * dg * dg + 3 * db * db;
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestName = name;
+    }
+  }
+  return closestName;
+}
