@@ -194,7 +194,7 @@ export async function downloadQuickPayInvoicePdf(payment) {
   doc.text("1", margin + 3, rowY + 5);
 
   doc.setFont("helvetica", "bold");
-  const itemName = payment.note || (isExport ? "Wholesale Apparel Export Merchandise" : "Wholesale Apparel Merchandise");
+  const itemName = payment.note || "Bulk Order";
   doc.text(itemName, margin + 12, rowY + 5);
 
   doc.setFont("helvetica", "normal");
