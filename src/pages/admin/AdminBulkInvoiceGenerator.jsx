@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   FileText,
   Download,
@@ -16,12 +16,13 @@ import {
   Sparkles,
   Loader2,
   Check,
+  Clock,
+  Hash,
 } from "lucide-react";
 import { generateCustomInvoicePdf } from "../../utils/customInvoicePdf";
 import { lookupPostalCode } from "../../api/addresses";
 import { COUNTRY_OPTIONS } from "../QuickPay";
 
-// Indian Apparel GST Threshold as per StyleNest GstRuleProperties (CBIC rationalization)
 const APPAREL_THRESHOLD = 2500;
 
 export default function AdminBulkInvoiceGenerator() {
@@ -36,11 +37,16 @@ export default function AdminBulkInvoiceGenerator() {
     const today = new Date();
     return today.toISOString().split("T")[0];
   });
+  const [invoiceTime, setInvoiceTime] = useState(() => {
+    const now = new Date();
+    return now.toTimeString().substring(0, 5); // "HH:MM"
+  });
   const [orderNo, setOrderNo] = useState(
     () => `SN-BO-${Math.floor(1000 + Math.random() * 9000)}`
   );
   const [paymentMode, setPaymentMode] = useState("Bank Transfer (NEFT/RTGS)");
   const [paymentStatus, setPaymentStatus] = useState("PAID (Settled)");
+  const [transactionId, setTransactionId] = useState("UTR: HDFCN26298102391");
   const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat (State Code: 24)");
 
   // 2. Customer Details
@@ -62,7 +68,7 @@ export default function AdminBulkInvoiceGenerator() {
   const [postalAutofilled, setPostalAutofilled] = useState(false);
   const lookupTimeoutRef = useRef(null);
 
-  // 3. Line Items (with dynamic rate resolution)
+  // 3. Line Items
   const [items, setItems] = useState([
     {
       id: "1",
@@ -96,7 +102,7 @@ export default function AdminBulkInvoiceGenerator() {
   // 4. Shipping Fee
   const [shippingFee, setShippingFee] = useState(0);
 
-  // Helper to determine if State is Intra-State (Madhya Pradesh)
+  // Check if Customer State is Madhya Pradesh (Intra-State)
   const isMadhyaPradesh = useMemo(() => {
     if (mode === "international") return false;
     const s = (customerState || "").trim().toLowerCase();
@@ -182,6 +188,7 @@ export default function AdminBulkInvoiceGenerator() {
       setSelectedCountryCode("IN");
       setDialCode("+91");
       setPaymentMode("Bank Transfer (NEFT/RTGS)");
+      setTransactionId("UTR: HDFCN26298102391");
       setPlaceOfSupply("Gujarat (State Code: 24)");
       setCustomerCountry("India");
       setCustomerCity("Surat");
@@ -226,6 +233,7 @@ export default function AdminBulkInvoiceGenerator() {
       setSelectedCountryCode("AU");
       setDialCode("+61");
       setPaymentMode("Online (PayGlocal Gateway)");
+      setTransactionId("gl_o-a4ed1da62828d8eaa2xt0l5q8");
       setPlaceOfSupply("Australia (Code 96 - Outside India)");
       setCustomerCountry("Australia");
       setCustomerCity("Bowenville");
@@ -278,10 +286,9 @@ export default function AdminBulkInvoiceGenerator() {
 
         let autoTax = item.taxPercent;
         if (mode === "domestic") {
-          // Indian GST Apparel Slab Rule: > Rs.2,500 = 18%, <= Rs.2,500 = 5%
           autoTax = p > APPAREL_THRESHOLD ? 18 : 5;
         } else {
-          autoTax = 0; // Export is 0% LUT
+          autoTax = 0;
         }
 
         return { ...item, price: newPrice, taxPercent: autoTax };
@@ -317,7 +324,7 @@ export default function AdminBulkInvoiceGenerator() {
     );
   };
 
-  // Detailed Financial Computations (Itemized Slabs & Intra/Inter-state)
+  // Live Financial Computations
   const calculations = useMemo(() => {
     const totalQty = items.reduce((acc, it) => acc + (Number(it.qty) || 0), 0);
     const isExp = mode === "international";
@@ -328,7 +335,6 @@ export default function AdminBulkInvoiceGenerator() {
     let totalTaxAmount = 0;
     let totalGrossAmount = 0;
 
-    // Track taxes grouped by rate (e.g. 5% vs 18%)
     const taxByRate = {};
 
     items.forEach((it) => {
@@ -344,11 +350,9 @@ export default function AdminBulkInvoiceGenerator() {
         lineTaxable = lineGross;
         lineTax = 0;
       } else if (taxInclusive) {
-        // Price includes GST: Base = Gross / (1 + Rate/100)
         lineTaxable = lineGross / (1 + rate / 100);
         lineTax = lineGross - lineTaxable;
       } else {
-        // Price excludes GST: Tax = Base * (Rate/100)
         lineTaxable = lineGross;
         lineTax = lineTaxable * (rate / 100);
       }
@@ -405,7 +409,6 @@ export default function AdminBulkInvoiceGenerator() {
       };
     });
 
-    // Generate dynamic summary lines
     const summaryLines = [
       ["Total Quantity:", `${calculations.totalQty} Pieces`, false],
       ["Taxable Amount:", `${calculations.curSymbol}${calculations.totalTaxable.toFixed(2)}`, false],
@@ -415,7 +418,6 @@ export default function AdminBulkInvoiceGenerator() {
       summaryLines.push(["IGST (Export LUT 0%):", "$0.00", false]);
       summaryLines.push(["International Freight:", `$${Number(shippingFee).toFixed(2)}`, false]);
     } else {
-      // Domestic: print grouped taxes (5%, 18%) or CGST/SGST if MP
       const rates = Object.keys(calculations.taxByRate).sort((a, b) => Number(a) - Number(b));
       if (rates.length === 0) {
         summaryLines.push(["GST (0%):", "Rs. 0.00", false]);
@@ -445,7 +447,6 @@ export default function AdminBulkInvoiceGenerator() {
     summaryLines.push(["Payment Status:", paymentStatus, true]);
     summaryLines.push(["Balance Due:", `${calculations.curSymbol}0.00`, false]);
 
-    // Distinct Rates list for compliance note
     const activeRates = Object.keys(calculations.taxByRate);
     const slabsText = activeRates.length > 0 ? activeRates.map((r) => `${r}%`).join(" & ") : "5%";
 
@@ -453,19 +454,22 @@ export default function AdminBulkInvoiceGenerator() {
       ? [
           "• Statutory Export Clause: Supply meant for export under Letter of Undertaking (LUT) without payment of integrated tax (Zero-Rated Supply as per Sec 16 of IGST Act, 2017).",
           "• Export IGST Rate: 0.00% ($0.00 USD) - No Indian GST charged to foreign recipient.",
-          `• Authorized Payment Gateway: ${paymentMode} | Place of Supply: ${placeOfSupply}`,
+          transactionId ? `• Gateway Settlement / GID: ${transactionId}` : "",
+          `• Payment Mode: ${paymentMode} | Place of Supply: ${placeOfSupply}`,
           "• Export Classification: Ready-to-wear apparel under HSN Chapters 61 & 62.",
-        ]
+        ].filter(Boolean)
       : [
           `• Supply Nature: ${isMadhyaPradesh ? "Intra-State Supply (within MP - CGST + SGST)" : "Inter-State B2B Supply (IGST)"}.`,
           `• Applicable GST Slabs: ${slabsText} as per CBIC Apparel Threshold (<=Rs.2,500 @ 5%, >Rs.2,500 @ 18%).`,
+          transactionId ? `• Bank UTR / Payment Ref: ${transactionId}` : "",
           customerGstin
             ? `• Input Tax Credit (ITC): Fully eligible for recipient under GSTIN ${customerGstin}.`
             : "• Consumer / Retail Wholesale Sale (No ITC claimed).",
           "• Reverse Charge: No (Tax payable under forward charge mechanism).",
-        ];
+        ].filter(Boolean);
 
     const fullPhone = `${dialCode} ${customerPhone}`.trim();
+    const formattedDateTime = `${new Date(invoiceDate).toLocaleDateString("en-IN")}${invoiceTime ? `, ${invoiceTime}` : ""}`;
 
     const payload = {
       isExport: isExp,
@@ -476,8 +480,11 @@ export default function AdminBulkInvoiceGenerator() {
         : `TAX INVOICE (${isMadhyaPradesh ? "INTRA-STATE MP" : "INTER-STATE B2B"})`,
       invoiceNo,
       invoiceDate: new Date(invoiceDate).toLocaleDateString("en-IN"),
+      invoiceTime,
+      invoiceDateTime: formattedDateTime,
       orderNo,
       paymentMode,
+      transactionId: transactionId.trim(),
       placeOfSupply,
       customer: {
         name: customerName,
@@ -510,7 +517,7 @@ export default function AdminBulkInvoiceGenerator() {
             Manual Bulk Invoice Generator
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Create, customize, and download official StyleNest tax invoices with smart apparel GST slabs (5% / 18%) and country dial codes.
+            Create, customize, and download official StyleNest tax invoices with exact timestamps, UTR/Gateway IDs, and smart GST slabs.
           </p>
         </div>
 
@@ -547,7 +554,7 @@ export default function AdminBulkInvoiceGenerator() {
                 {mode === "domestic" && <CheckCircle2 className="h-4 w-4 text-primary" />}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Indian states, +91 dial code, automated GST Slabs (5% for &le;₹2,500, 18% for &gt;₹2,500), CGST/SGST/IGST breakdown.
+                Indian states, +91 dial code, automated GST Slabs (5% for &le;₹2,500, 18% for &gt;₹2,500), Bank UTR / UPI Ref support.
               </p>
             </div>
           </button>
@@ -568,7 +575,7 @@ export default function AdminBulkInvoiceGenerator() {
                 {mode === "international" && <CheckCircle2 className="h-4 w-4 text-primary" />}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Global country dropdown, country calling codes, foreign postal auto-lookup, Zero-Rated 0% LUT Tax ($ USD).
+                Global country dropdown, calling codes, PayGlocal GID / Txn Ref support, 0% LUT Zero-Rated Tax ($ USD).
               </p>
             </div>
           </button>
@@ -611,6 +618,19 @@ export default function AdminBulkInvoiceGenerator() {
               />
             </div>
             <div>
+              <label className="label-xs mb-1 block text-muted-foreground">Order / Ref Number</label>
+              <input
+                type="text"
+                value={orderNo}
+                onChange={(e) => setOrderNo(e.target.value)}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+
+          {/* Date & Time Pickers */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <label className="label-xs mb-1 block text-muted-foreground">Invoice Date</label>
               <input
                 type="date"
@@ -619,15 +639,28 @@ export default function AdminBulkInvoiceGenerator() {
                 className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
+            <div>
+              <label className="label-xs mb-1 block text-muted-foreground flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Invoice Time (Exact Timestamp)
+              </label>
+              <input
+                type="time"
+                value={invoiceTime}
+                onChange={(e) => setInvoiceTime(e.target.value)}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Order / Ref Number</label>
+              <label className="label-xs mb-1 block text-muted-foreground">Payment Mode / Gateway</label>
               <input
                 type="text"
-                value={orderNo}
-                onChange={(e) => setOrderNo(e.target.value)}
+                value={paymentMode}
+                onChange={(e) => setPaymentMode(e.target.value)}
+                placeholder="e.g. PayGlocal / Bank Transfer / UPI"
                 className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -645,15 +678,23 @@ export default function AdminBulkInvoiceGenerator() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Transaction ID / UTR Number */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Payment Mode / Gateway</label>
+              <label className="label-xs mb-1 block text-muted-foreground flex items-center gap-1 font-semibold text-foreground">
+                <Hash className="h-3 w-3 text-primary" />
+                {mode === "domestic" ? "Bank UTR / UPI Ref ID" : "PayGlocal GID / Txn Ref"}
+              </label>
               <input
                 type="text"
-                value={paymentMode}
-                onChange={(e) => setPaymentMode(e.target.value)}
-                placeholder="e.g. PayGlocal / Bank Transfer"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                value={transactionId}
+                onChange={(e) => setTransactionId(e.target.value)}
+                placeholder={
+                  mode === "domestic"
+                    ? "e.g. UTR-HDFC298102391 / UPI: 42981"
+                    : "e.g. gl_o-a4ed1da62828d8eaa2xt0l5q8"
+                }
+                className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
