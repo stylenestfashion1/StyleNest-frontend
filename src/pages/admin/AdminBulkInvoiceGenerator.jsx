@@ -679,36 +679,27 @@ export default function AdminBulkInvoiceGenerator() {
           </div>
 
           {/* Transaction ID / UTR Number */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="label-xs mb-1 block text-muted-foreground flex items-center gap-1 font-semibold text-foreground">
-                <Hash className="h-3 w-3 text-primary" />
-                {mode === "domestic" ? "Bank UTR / UPI Ref ID" : "PayGlocal GID / Txn Ref"}
-              </label>
-              <input
-                type="text"
-                value={transactionId}
-                onChange={(e) => setTransactionId(e.target.value)}
-                placeholder={
-                  mode === "domestic"
-                    ? "e.g. UTR-HDFC298102391 / UPI: 42981"
-                    : "e.g. gl_o-a4ed1da62828d8eaa2xt0l5q8"
-                }
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="label-xs mb-1 block text-muted-foreground">
-                Place of Supply {mode === "domestic" && (isMadhyaPradesh ? "(Intra-State MP)" : "(Inter-State)")}
-              </label>
-              <input
-                type="text"
-                value={placeOfSupply}
-                onChange={(e) => setPlaceOfSupply(e.target.value)}
-                placeholder="e.g. Gujarat (24) or Australia (Code 96)"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
+          <div>
+            <label className="label-xs mb-1 block text-muted-foreground flex items-center gap-1 font-semibold text-foreground">
+              <Hash className="h-3 w-3 text-primary" />
+              {mode === "domestic" ? "Bank UTR / UPI Transaction Ref ID" : "PayGlocal GID / Gateway Txn Ref"}
+            </label>
+            <input
+              type="text"
+              value={transactionId}
+              onChange={(e) => setTransactionId(e.target.value)}
+              placeholder={
+                mode === "domestic"
+                  ? "e.g. UTR-HDFCN26298102391 / UPI: 429810482910"
+                  : "e.g. gl_o-a4eef24e48e529f57n4q0ykq8"
+              }
+              className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              {mode === "domestic"
+                ? "Unique Transaction Reference for Bank / GST ITC audit reconciliation."
+                : "PayGlocal global gateway identifier for export remittance and bank FIRC."}
+            </p>
           </div>
         </div>
 
@@ -875,18 +866,39 @@ export default function AdminBulkInvoiceGenerator() {
             </div>
           </div>
 
-          {mode === "domestic" && (
+          {/* Place of Supply (Grouped with Customer Location & GSTIN) */}
+          <div className={mode === "domestic" ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Buyer GSTIN (Optional B2B for Tax Credit)</label>
+              <label className="label-xs mb-1 block text-muted-foreground flex items-center justify-between">
+                <span>Place of Supply</span>
+                {mode === "domestic" && (
+                  <span className="font-semibold text-[10px] text-primary">
+                    {isMadhyaPradesh ? "Intra-State MP (CGST+SGST)" : "Inter-State (IGST)"}
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
-                value={customerGstin}
-                onChange={(e) => setCustomerGstin(e.target.value)}
-                placeholder="e.g. 24AAACA1234B1Z5"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                value={placeOfSupply}
+                onChange={(e) => setPlaceOfSupply(e.target.value)}
+                placeholder={mode === "domestic" ? "e.g. Gujarat (State Code: 24)" : "e.g. Australia (Code 96)"}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
-          )}
+
+            {mode === "domestic" && (
+              <div>
+                <label className="label-xs mb-1 block text-muted-foreground">Buyer GSTIN (Optional B2B for ITC)</label>
+                <input
+                  type="text"
+                  value={customerGstin}
+                  onChange={(e) => setCustomerGstin(e.target.value)}
+                  placeholder="e.g. 24AAACA1234B1Z5"
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
