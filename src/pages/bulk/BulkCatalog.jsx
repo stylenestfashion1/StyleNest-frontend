@@ -257,12 +257,7 @@ export default function BulkCatalog() {
                       </div>
                     )}
 
-                    {/* Fixed Lot Badge */}
-                    <div className="absolute top-3 left-3">
-                      <span className="inline-flex items-center gap-1 rounded bg-black/85 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-sm">
-                        Min: {product.minOrderQuantity} Pcs
-                      </span>
-                    </div>
+
 
 
 
