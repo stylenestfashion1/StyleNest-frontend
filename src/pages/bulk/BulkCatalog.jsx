@@ -264,13 +264,7 @@ export default function BulkCatalog() {
                       </span>
                     </div>
 
-                    {/* Colors Available Badge Overlay */}
-                    <div className="absolute top-3 right-3">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-black/85 text-white border-white/20 px-2.5 py-1 text-[10px] font-bold shadow-md backdrop-blur-sm border border-black/10">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        {colorCount > 1 ? `${colorCount} Colors Available` : "Colors Available"}
-                      </span>
-                    </div>
+
 
                     {/* Multi-angle Photos Badge */}
                     {photoCount > 1 && (
