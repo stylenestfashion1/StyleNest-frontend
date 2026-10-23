@@ -33,12 +33,13 @@ export default function BulkCart() {
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.5fr_1fr]">
         <ul className="divide-y border-y">
           {bulkCart.items.map((item) => {
+            const itemKey = item.itemKey || String(item.bulkProductId);
             const minQty = item.minOrderQuantity ?? 10;
             const itemTotal = item.price * item.quantity;
             const availableStock = item.availableStock;
 
             return (
-              <li key={item.bulkProductId} className="py-6 flex flex-col sm:flex-row gap-5">
+              <li key={itemKey} className="py-6 flex flex-col sm:flex-row gap-5">
                 <div className="h-32 w-28 shrink-0 rounded-lg border bg-[#faf9f6] overflow-hidden flex items-center justify-center p-1">
                   {item.imageUrl ? (
                     <img
@@ -60,6 +61,11 @@ export default function BulkCart() {
                         {item.name}
                       </h3>
                       <div className="mt-1 flex flex-wrap items-center gap-2">
+                        {item.selectedColor && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded border border-primary/20">
+                            Color: {item.selectedColor}
+                          </span>
+                        )}
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
                           <PackageCheck className="h-3 w-3" />
                           Min Order: {minQty} pcs
@@ -76,8 +82,8 @@ export default function BulkCart() {
                     </div>
                     <button
                       aria-label="Remove item"
-                      onClick={() => bulkCart.removeItem(item.bulkProductId)}
-                      className="text-muted-foreground hover:text-destructive p-1 rounded-md hover:bg-muted transition-colors"
+                      onClick={() => bulkCart.removeItem(itemKey)}
+                      className="text-muted-foreground hover:text-destructive p-1 rounded-md hover:bg-muted transition-colors cursor-pointer"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -88,12 +94,12 @@ export default function BulkCart() {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center border rounded-lg overflow-hidden bg-card shadow-2xs">
                         <button
-                          className="px-3 py-1.5 hover:bg-muted text-muted-foreground disabled:opacity-40"
+                          className="px-3 py-1.5 hover:bg-muted text-muted-foreground disabled:opacity-40 cursor-pointer"
                           aria-label="Decrease quantity"
                           disabled={item.quantity <= minQty}
                           onClick={() =>
                             bulkCart.updateQuantity(
-                              item.bulkProductId,
+                              itemKey,
                               Math.max(minQty, item.quantity - 1)
                             )
                           }
@@ -109,14 +115,14 @@ export default function BulkCart() {
                           onChange={(e) => {
                             const val = parseInt(e.target.value, 10);
                             if (!isNaN(val)) {
-                              bulkCart.updateQuantity(item.bulkProductId, val);
+                              bulkCart.updateQuantity(itemKey, val);
                             }
                           }}
                           onBlur={() => {
                             if (item.quantity < minQty) {
-                              bulkCart.updateQuantity(item.bulkProductId, minQty);
+                              bulkCart.updateQuantity(itemKey, minQty);
                             } else if (availableStock != null && item.quantity > availableStock) {
-                              bulkCart.updateQuantity(item.bulkProductId, availableStock);
+                              bulkCart.updateQuantity(itemKey, availableStock);
                             }
                           }}
                           className="w-16 text-center font-bold text-sm text-foreground bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -124,13 +130,13 @@ export default function BulkCart() {
                         />
 
                         <button
-                          className="px-3 py-1.5 hover:bg-muted text-muted-foreground disabled:opacity-40"
+                          className="px-3 py-1.5 hover:bg-muted text-muted-foreground disabled:opacity-40 cursor-pointer"
                           aria-label="Increase quantity"
                           disabled={availableStock != null && item.quantity >= availableStock}
                           onClick={() => {
                             const next = item.quantity + 1;
                             if (availableStock == null || next <= availableStock) {
-                              bulkCart.updateQuantity(item.bulkProductId, next);
+                              bulkCart.updateQuantity(itemKey, next);
                             }
                           }}
                         >
@@ -164,7 +170,7 @@ export default function BulkCart() {
               <div className="flex items-baseline justify-between text-muted-foreground">
                 <dt>Wholesale Items</dt>
                 <dd className="font-semibold text-foreground">
-                  {bulkCart.items.length} product{bulkCart.items.length === 1 ? "" : "s"}
+                  {bulkCart.items.length} line item{bulkCart.items.length === 1 ? "" : "s"}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between text-muted-foreground">

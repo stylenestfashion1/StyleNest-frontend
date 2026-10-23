@@ -51,15 +51,13 @@ export function BulkCartProvider({ children }) {
             if (
               item.price !== freshPrice ||
               item.availableStock !== fresh.availableStock ||
-              item.name !== fresh.name ||
-              item.imageUrl !== fresh.imageUrl
+              item.name !== fresh.name
             ) {
               hasDiff = true;
               return {
                 ...item,
                 price: freshPrice,
                 name: fresh.name,
-                imageUrl: fresh.imageUrl,
                 minOrderQuantity: fresh.minOrderQuantity,
                 availableStock: fresh.availableStock,
               };
@@ -76,19 +74,34 @@ export function BulkCartProvider({ children }) {
     };
   }, []);
 
-  const addItem = useCallback((product, quantity) => {
+  const addItem = useCallback((product, quantity, selectedColor = null) => {
     setItems((prev) => {
       const qty = Math.max(product.minOrderQuantity ?? 1, quantity ?? product.minOrderQuantity ?? 1);
-      const existing = prev.find((i) => i.bulkProductId === product.id);
-      if (existing) {
-        return prev.map((i) =>
-          i.bulkProductId === product.id
+      const colorName = typeof selectedColor === "string" ? selectedColor : selectedColor?.name || null;
+      const itemKey = colorName ? `${product.id}-${colorName}` : String(product.id);
+
+      // Determine photo: if a color is selected, prefer that color's first photo
+      let displayImage = product.imageUrl;
+      if (colorName && product.colors && Array.isArray(product.colors)) {
+        const found = product.colors.find(
+          (c) => (c.name || "").trim().toLowerCase() === colorName.trim().toLowerCase()
+        );
+        if (found && found.images && found.images.length > 0) {
+          displayImage = found.images[0];
+        }
+      }
+
+      const existingIndex = prev.findIndex((i) => (i.itemKey || String(i.bulkProductId)) === itemKey);
+      if (existingIndex > -1) {
+        return prev.map((i, idx) =>
+          idx === existingIndex
             ? {
                 ...i,
                 quantity: qty,
                 price: Number(product.price),
                 name: product.name,
-                imageUrl: product.imageUrl,
+                selectedColor: colorName,
+                imageUrl: displayImage || i.imageUrl,
                 minOrderQuantity: product.minOrderQuantity,
                 availableStock: product.availableStock,
               }
@@ -98,9 +111,11 @@ export function BulkCartProvider({ children }) {
       return [
         ...prev,
         {
+          itemKey,
           bulkProductId: product.id,
           name: product.name,
-          imageUrl: product.imageUrl,
+          selectedColor: colorName,
+          imageUrl: displayImage,
           price: Number(product.price),
           minOrderQuantity: product.minOrderQuantity,
           availableStock: product.availableStock,
@@ -110,18 +125,22 @@ export function BulkCartProvider({ children }) {
     });
   }, []);
 
-  const updateQuantity = useCallback((bulkProductId, quantity) => {
+  const updateQuantity = useCallback((itemKeyOrId, quantity) => {
     setItems((prev) =>
       prev.map((i) =>
-        i.bulkProductId === bulkProductId
+        (i.itemKey || String(i.bulkProductId)) === String(itemKeyOrId) || i.bulkProductId === itemKeyOrId
           ? { ...i, quantity: Math.max(i.minOrderQuantity ?? 1, quantity) }
           : i
       )
     );
   }, []);
 
-  const removeItem = useCallback((bulkProductId) => {
-    setItems((prev) => prev.filter((i) => i.bulkProductId !== bulkProductId));
+  const removeItem = useCallback((itemKeyOrId) => {
+    setItems((prev) =>
+      prev.filter(
+        (i) => (i.itemKey || String(i.bulkProductId)) !== String(itemKeyOrId) && i.bulkProductId !== itemKeyOrId
+      )
+    );
   }, []);
 
   const clear = useCallback(() => setItems([]), []);

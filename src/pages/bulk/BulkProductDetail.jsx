@@ -25,6 +25,7 @@ export default function BulkProductDetail() {
   const bulkCart = useBulkCart();
   const { notify } = useToast();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [selectedColorIndex, setSelectedColorIndex] = useState(0);
 
   const {
     data: product,
@@ -49,20 +50,29 @@ export default function BulkProductDetail() {
     }
   }, [product?.minOrderQuantity]);
 
-  // Extract all gallery photos for this wholesale item
+  // Color selection logic
+  const hasColors = product?.colors && Array.isArray(product.colors) && product.colors.length > 0;
+  const activeColor = hasColors ? product.colors[selectedColorIndex] || product.colors[0] : null;
+
+  // STRICT COLOR PHOTO ISOLATION:
+  // If product has colors, galleryImages strictly derives from activeColor.images!
+  // Mixing photos of different colors is strictly prevented.
   const galleryImages = useMemo(() => {
     if (!product) return [];
+    if (activeColor && activeColor.images && activeColor.images.length > 0) {
+      return activeColor.images;
+    }
     if (product.imageUrls && product.imageUrls.length > 0) {
       return product.imageUrls;
     }
     return product.imageUrl ? [product.imageUrl] : [];
-  }, [product]);
+  }, [product, activeColor]);
 
   if (isLoading) return <LoadingState label="Loading wholesale product..." />;
   if (isError) return <ErrorState message={error.message} onRetry={refetch} />;
   if (!product) return null;
 
-  const currentImage = galleryImages[activeImageIndex] || product.imageUrl;
+  const currentImage = galleryImages[activeImageIndex] || activeColor?.images?.[0] || product.imageUrl;
 
   // Compute validated quantity and live subtotal
   const numericQty =
@@ -119,9 +129,9 @@ export default function BulkProductDetail() {
       );
       return;
     }
-    bulkCart.addItem(product, activeQty);
+    bulkCart.addItem(product, activeQty, activeColor?.name);
     notify(
-      `${product.name} (${activeQty} pieces) added to bulk cart`,
+      `${product.name}${activeColor?.name ? ` (${activeColor.name})` : ""} (${activeQty} pieces) added to bulk cart`,
       "success"
     );
   }
@@ -138,7 +148,7 @@ export default function BulkProductDetail() {
       );
       return;
     }
-    bulkCart.addItem(product, activeQty);
+    bulkCart.addItem(product, activeQty, activeColor?.name);
     navigate("/bulk-orders/cart");
   }
 
@@ -154,7 +164,7 @@ export default function BulkProductDetail() {
             {currentImage ? (
               <img
                 src={currentImage}
-                alt={`${product.name} - View ${activeImageIndex + 1}`}
+                alt={`${product.name} ${activeColor?.name ? `(${activeColor.name})` : ""} - View ${activeImageIndex + 1}`}
                 className="h-full w-full object-contain p-2"
               />
             ) : (
@@ -164,11 +174,20 @@ export default function BulkProductDetail() {
             )}
 
             {/* Wholesale MOQ Overlay Badge */}
-            <div className="absolute top-4 left-4">
+            <div className="absolute top-4 left-4 flex flex-col gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-black/85 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-sm">
                 <PackageCheck className="h-3.5 w-3.5 text-accent" />
                 Wholesale · Min: {minQty} Pcs
               </span>
+              {activeColor?.name && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 border px-3 py-0.5 text-xs font-bold text-foreground backdrop-blur-sm shadow-xs">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full border border-black/20"
+                    style={{ backgroundColor: activeColor.hex || "#000" }}
+                  />
+                  {activeColor.name}
+                </span>
+              )}
             </div>
 
             {/* Photo Counter */}
@@ -179,14 +198,21 @@ export default function BulkProductDetail() {
             )}
           </div>
 
-          {/* Gallery Thumbnails List (All Available Angle Views) */}
+          {/* Gallery Thumbnails List (All Available Angle Views for Currently Selected Color) */}
           {galleryImages.length > 1 && (
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Available Angle Views ({galleryImages.length} Photos):
-                </span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {activeColor?.name ? `${activeColor.name} Views` : "Available Angle Views"} ({galleryImages.length} Photos):
+                  </span>
+                </div>
+                {activeColor?.name && (
+                  <span className="text-[11px] text-muted-foreground">
+                    Strictly showing {activeColor.name} photos
+                  </span>
+                )}
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
                 {galleryImages.map((img, idx) => (
@@ -261,6 +287,55 @@ export default function BulkProductDetail() {
             </div>
           )}
 
+          {/* COLORWAY SELECTOR (STRICT PHOTO ISOLATION) */}
+          {hasColors && (
+            <div className="mt-6 rounded-2xl border-2 border-border/80 bg-muted/20 p-5 shadow-xs">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                  Select Colorway ({product.colors.length} Available):
+                </span>
+                <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20">
+                  {activeColor?.name}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2.5">
+                {product.colors.map((c, idx) => {
+                  const isSelected = selectedColorIndex === idx;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => {
+                        setSelectedColorIndex(idx);
+                        setActiveImageIndex(0);
+                      }}
+                      className={`flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-semibold border-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-primary bg-background text-primary shadow-xs ring-2 ring-primary/25 scale-[1.02]"
+                          : "border-border/80 bg-background/80 text-foreground hover:border-foreground/40"
+                      }`}
+                    >
+                      <span
+                        className="h-4 w-4 rounded-full border border-black/20 shrink-0 shadow-xs"
+                        style={{ backgroundColor: c.hex || "#111827" }}
+                      />
+                      <span>{c.name}</span>
+                      {c.images?.length > 0 && (
+                        <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {c.images.length}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-3 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Switching colors immediately shows only that specific color's photos.
+              </p>
+            </div>
+          )}
+
           {/* CUSTOM QUANTITY SELECTOR (BUYER KE HATH ME QUANTITY) */}
           <div className="mt-8 rounded-2xl border-2 border-primary/25 bg-primary/5 p-6 shadow-sm">
             <div className="flex items-center justify-between">
@@ -312,7 +387,7 @@ export default function BulkProductDetail() {
                   Pieces
                 </span>
                 <span className="text-xs text-muted-foreground font-medium">
-                  Type any custom quantity (e.g. 12, 20, 78)
+                  Type any custom quantity (e.g. 10, 20, 50, 100)
                 </span>
               </div>
             </div>
@@ -353,7 +428,7 @@ export default function BulkProductDetail() {
             <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-background/90 p-3.5 text-xs text-muted-foreground border border-border/80 shadow-xs">
               <ShieldCheck className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
               <span className="leading-relaxed">
-                <strong>Wholesale Rule:</strong> You can order any quantity as long as it meets or exceeds <strong>{minQty} pieces</strong>. Custom sizes/colors can be coordinated with the shop upon order placement.
+                <strong>Wholesale Rule:</strong> Minimum order requirement is <strong>{minQty} pieces</strong> per wholesale batch. Wholesale orders are manufactured and dispatched directly in bulk lots.
               </span>
             </div>
           </div>
@@ -362,14 +437,14 @@ export default function BulkProductDetail() {
           <div className="mt-8 flex flex-col gap-3">
             <button
               onClick={handleAddToCart}
-              className="btn-outline w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 rounded-xl shadow-sm hover:shadow"
+              className="btn-outline w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 rounded-xl shadow-sm hover:shadow cursor-pointer"
             >
               <ShoppingBag className="h-4 w-4" />
-              Add {activeQty} Pieces to Bulk Cart
+              Add {activeQty} Pieces {activeColor?.name ? `(${activeColor.name}) ` : ""}to Bulk Cart
             </button>
             <button
               onClick={handleBuyNow}
-              className="btn-solid w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 rounded-xl shadow-md"
+              className="btn-solid w-full py-3.5 text-sm font-bold flex items-center justify-center gap-2 rounded-xl shadow-md cursor-pointer"
             >
               Order {activeQty} Pieces Now ({formatPrice(totalPrice)})
             </button>

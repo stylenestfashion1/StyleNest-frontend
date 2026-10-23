@@ -101,6 +101,7 @@ export default function BulkCheckout() {
         items: bulkCart.items.map((i) => ({
           bulkProductId: i.bulkProductId,
           quantity: i.quantity,
+          selectedColor: i.selectedColor || null,
         })),
       });
 
@@ -292,9 +293,16 @@ export default function BulkCheckout() {
               <h2 className="text-xl font-bold">Wholesale Order Summary</h2>
               <ul className="mt-6 space-y-3 text-sm divide-y">
                 {bulkCart.items.map((item) => (
-                  <li key={item.bulkProductId} className="pt-3 first:pt-0 flex justify-between gap-4">
+                  <li key={item.itemKey || item.bulkProductId} className="pt-3 first:pt-0 flex justify-between gap-4">
                     <div>
-                      <span className="font-semibold text-foreground block">{item.name}</span>
+                      <span className="font-semibold text-foreground block">
+                        {item.name}
+                        {item.selectedColor && (
+                          <span className="ml-1.5 text-xs text-primary font-medium">
+                            ({item.selectedColor})
+                          </span>
+                        )}
+                      </span>
                       <span className="text-xs text-muted-foreground">
                         {item.quantity} pieces × {formatPrice(item.price)}
                       </span>
