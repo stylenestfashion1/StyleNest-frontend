@@ -645,26 +645,22 @@ function ColorInput({ value, onChange, suggestions = [] }) {
 
 function ShippingPackageFields({ values, onChange }) {
   return (
-    <div className="w-full mt-3 rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2.5">
+    <div className="w-full border-t border-border pt-4 mt-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
-          <Package className="h-3.5 w-3.5 text-primary" />
+        <span className="label-xs text-muted-foreground font-medium uppercase tracking-wider">
           Shipping / Package Details
-        </div>
-        <span className="text-[10px] text-muted-foreground bg-background/80 border border-border/50 px-2 py-0.5 rounded font-mono">
-          DTDC Shipment Ready
+        </span>
+        <span className="label-xs text-muted-foreground/80 font-mono">
+          DTDC Automatic Booking
         </span>
       </div>
-      <p className="text-[11px] text-muted-foreground">
-        Used for automatic DTDC shipment booking & courier volumetric rate.
+      <p className="label-xs text-muted-foreground mt-0.5">
+        Used for automatic DTDC shipment booking &amp; courier volumetric rate.
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-        <div>
-          <label className="text-[11px] font-medium text-muted-foreground flex items-center justify-between mb-1">
-            <span>Shipping Weight</span>
-            <span className="text-[10px] text-muted-foreground font-mono">(grams)</span>
-          </label>
+      <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <label className="block">
+          <span className="label-xs text-muted-foreground">Shipping Weight (g)</span>
           <input
             type="number"
             min="0.01"
@@ -672,15 +668,12 @@ function ShippingPackageFields({ values, onChange }) {
             value={values.shippingWeightGrams ?? ""}
             onChange={(e) => onChange("shippingWeightGrams", e.target.value)}
             placeholder="e.g. 300"
-            className="w-full field text-xs bg-background border rounded-lg px-2.5 py-2 font-mono shadow-2xs"
+            className="field mt-1"
           />
-        </div>
+        </label>
 
-        <div>
-          <label className="text-[11px] font-medium text-muted-foreground flex items-center justify-between mb-1">
-            <span>Package Length</span>
-            <span className="text-[10px] text-muted-foreground font-mono">(cm)</span>
-          </label>
+        <label className="block">
+          <span className="label-xs text-muted-foreground">Package Length (cm)</span>
           <input
             type="number"
             min="0.1"
@@ -688,15 +681,12 @@ function ShippingPackageFields({ values, onChange }) {
             value={values.packageLengthCm ?? ""}
             onChange={(e) => onChange("packageLengthCm", e.target.value)}
             placeholder="e.g. 30"
-            className="w-full field text-xs bg-background border rounded-lg px-2.5 py-2 font-mono shadow-2xs"
+            className="field mt-1"
           />
-        </div>
+        </label>
 
-        <div>
-          <label className="text-[11px] font-medium text-muted-foreground flex items-center justify-between mb-1">
-            <span>Package Width</span>
-            <span className="text-[10px] text-muted-foreground font-mono">(cm)</span>
-          </label>
+        <label className="block">
+          <span className="label-xs text-muted-foreground">Package Width (cm)</span>
           <input
             type="number"
             min="0.1"
@@ -704,15 +694,12 @@ function ShippingPackageFields({ values, onChange }) {
             value={values.packageWidthCm ?? ""}
             onChange={(e) => onChange("packageWidthCm", e.target.value)}
             placeholder="e.g. 20"
-            className="w-full field text-xs bg-background border rounded-lg px-2.5 py-2 font-mono shadow-2xs"
+            className="field mt-1"
           />
-        </div>
+        </label>
 
-        <div>
-          <label className="text-[11px] font-medium text-muted-foreground flex items-center justify-between mb-1">
-            <span>Package Height</span>
-            <span className="text-[10px] text-muted-foreground font-mono">(cm)</span>
-          </label>
+        <label className="block">
+          <span className="label-xs text-muted-foreground">Package Height (cm)</span>
           <input
             type="number"
             min="0.1"
@@ -720,14 +707,13 @@ function ShippingPackageFields({ values, onChange }) {
             value={values.packageHeightCm ?? ""}
             onChange={(e) => onChange("packageHeightCm", e.target.value)}
             placeholder="e.g. 3"
-            className="w-full field text-xs bg-background border rounded-lg px-2.5 py-2 font-mono shadow-2xs"
+            className="field mt-1"
           />
-        </div>
+        </label>
       </div>
     </div>
   );
 }
-
 
 // Lets the admin sample or enter the *exact* shade of the actual garment (with #hex code or color picker)
 // and automatically detects the recognized shade name for optimal storefront swatches.
@@ -766,9 +752,9 @@ function ColorHexPicker({ color, colorHex, onChange, onAutoFillName }) {
   };
 
   return (
-    <div className="block min-w-[240px]">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="label-xs text-muted-foreground font-semibold">Exact Shade (Optional)</span>
+    <label className="block">
+      <div className="flex items-center justify-between">
+        <span className="label-xs text-muted-foreground">Exact Shade (Optional)</span>
         {colorHex && (
           <button
             type="button"
@@ -776,61 +762,51 @@ function ColorHexPicker({ color, colorHex, onChange, onAutoFillName }) {
               setTypedHex("");
               onChange("");
             }}
-            className="text-[10px] text-muted-foreground hover:text-foreground underline transition-colors"
+            className="label-xs link-underline text-muted-foreground ml-2"
           >
             Reset
           </button>
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Color picker square with preview */}
-        <div className="relative group shrink-0">
+      <div className="mt-2 flex items-center gap-2">
+        {/* Color swatch circle that opens native color picker */}
+        <div className="relative shrink-0 cursor-pointer">
           <input
             type="color"
             value={effectiveHex && effectiveHex.length === 7 ? effectiveHex : "#808080"}
             onChange={(e) => handlePickerChange(e.target.value)}
             className="absolute inset-0 opacity-0 cursor-pointer h-full w-full z-10"
-            title="Click to pick exact shade"
+            title="Pick exact shade"
           />
-          <div
-            className="h-9 w-9 rounded-lg border border-border/80 shadow-xs flex items-center justify-center transition-transform group-hover:scale-105 cursor-pointer"
+          <span
+            className="block h-5 w-5 rounded-full ring-1 ring-inset ring-black/20"
             style={{ backgroundColor: effectiveHex || getSwatchColor(color) }}
-          >
-            <span className="h-2 w-2 rounded-full bg-white/40 ring-1 ring-black/20" />
-          </div>
-        </div>
-
-        {/* Text Input for #HEX */}
-        <div className="relative flex items-center">
-          <input
-            type="text"
-            value={typedHex}
-            onChange={(e) => handleTextChange(e.target.value)}
-            placeholder="#2563EB"
-            maxLength={7}
-            className="field text-xs font-mono w-24 py-1.5 px-2 bg-background border rounded-lg focus:ring-1 focus:ring-primary shadow-2xs uppercase"
           />
         </div>
 
-        {/* Detected Shade Badge */}
+        {/* Clean underline field matching ColorInput */}
+        <input
+          type="text"
+          value={typedHex}
+          onChange={(e) => handleTextChange(e.target.value)}
+          placeholder="#2563EB"
+          maxLength={7}
+          className="field font-mono uppercase text-xs w-24"
+        />
+
+        {/* Minimal text indicator for detected shade */}
         {detectedShade && (
           <button
             type="button"
             onClick={() => onAutoFillName && onAutoFillName(detectedShade)}
             title="Click to use this detected color name"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1.5 rounded-lg border border-border/60 bg-muted/40 hover:bg-muted text-foreground transition-colors cursor-pointer"
+            className="label-xs text-muted-foreground hover:text-foreground cursor-pointer transition-colors whitespace-nowrap ml-1"
           >
-            <span
-              className="h-2 w-2 rounded-full border border-black/20 shrink-0"
-              style={{ backgroundColor: effectiveHex || "#000" }}
-            />
-            <span className="text-muted-foreground text-[10px]">Shade:</span>
-            <span className="font-semibold text-primary">{detectedShade}</span>
+            Shade: <span className="font-semibold text-foreground underline decoration-dotted">{detectedShade}</span>
           </button>
         )}
       </div>
-    </div>
+    </label>
   );
 }
-
