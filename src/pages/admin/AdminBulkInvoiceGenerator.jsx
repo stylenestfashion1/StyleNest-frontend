@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import {
   FileText,
   Download,
@@ -14,8 +14,12 @@ import {
   Package,
   Layers,
   Sparkles,
+  Loader2,
+  Check,
 } from "lucide-react";
 import { generateCustomInvoicePdf } from "../../utils/customInvoicePdf";
+import { lookupPostalCode } from "../../api/addresses";
+import { COUNTRY_OPTIONS } from "../QuickPay";
 
 export default function AdminBulkInvoiceGenerator() {
   const [mode, setMode] = useState("international"); // "international" | "domestic"
@@ -37,6 +41,7 @@ export default function AdminBulkInvoiceGenerator() {
   const [placeOfSupply, setPlaceOfSupply] = useState("Australia (Code 96 - Outside India)");
 
   // 2. Customer Details
+  const [selectedCountryCode, setSelectedCountryCode] = useState("AU"); // "IN" for domestic, "AU" for international
   const [customerName, setCustomerName] = useState("Wallace Don Sempf");
   const [customerCompany, setCustomerCompany] = useState("Sempf Apparel & Boutique");
   const [customerPhone, setCustomerPhone] = useState("+61 417754030");
@@ -47,6 +52,11 @@ export default function AdminBulkInvoiceGenerator() {
   const [customerPostalCode, setCustomerPostalCode] = useState("4404");
   const [customerCountry, setCustomerCountry] = useState("Australia");
   const [customerGstin, setCustomerGstin] = useState("");
+
+  // Postal lookup state
+  const [postalLookupLoading, setPostalLookupLoading] = useState(false);
+  const [postalAutofilled, setPostalAutofilled] = useState(false);
+  const lookupTimeoutRef = useRef(null);
 
   // 3. Line Items
   const [items, setItems] = useState([
@@ -82,10 +92,79 @@ export default function AdminBulkInvoiceGenerator() {
   // 4. Shipping & Discounts
   const [shippingFee, setShippingFee] = useState(0);
 
+  // Automatic Postal / PIN Code Lookup
+  const triggerPostalLookup = (code, countryCode) => {
+    if (lookupTimeoutRef.current) {
+      clearTimeout(lookupTimeoutRef.current);
+    }
+
+    const clean = code.trim();
+    if (!clean || clean.length < 2) {
+      setPostalAutofilled(false);
+      return;
+    }
+
+    // Fast check: India needs 6 digits, US needs 5 digits
+    if (countryCode === "IN" && clean.length !== 6) return;
+    if (countryCode === "US" && clean.length !== 5) return;
+
+    lookupTimeoutRef.current = setTimeout(async () => {
+      setPostalLookupLoading(true);
+      try {
+        let res = await lookupPostalCode(clean, countryCode);
+
+        // Fallback for Canada FSA (zippopotam expects 3 chars like M5V)
+        if ((!res || !res.found) && countryCode === "CA" && clean.length >= 3) {
+          const fsa = clean.replace(/\s+/g, "").slice(0, 3);
+          res = await lookupPostalCode(fsa, "CA");
+        }
+
+        if (res && res.found) {
+          if (res.city) setCustomerCity(res.city);
+          if (res.state) {
+            setCustomerState(res.state);
+            if (countryCode === "IN") {
+              setPlaceOfSupply(`${res.state} - Inter-State`);
+            }
+          }
+          setPostalAutofilled(true);
+        } else {
+          setPostalAutofilled(false);
+        }
+      } catch (err) {
+        console.warn("Postal lookup warning:", err?.message || err);
+        setPostalAutofilled(false);
+      } finally {
+        setPostalLookupLoading(false);
+      }
+    }, 350);
+  };
+
+  const handlePostalChange = (val) => {
+    setCustomerPostalCode(val);
+    const countryCodeToUse = mode === "domestic" ? "IN" : selectedCountryCode;
+    triggerPostalLookup(val, countryCodeToUse);
+  };
+
+  const handleCountryDropdownChange = (cCode) => {
+    setSelectedCountryCode(cCode);
+    const opt = COUNTRY_OPTIONS.find((c) => c.code === cCode);
+    if (opt) {
+      setCustomerCountry(opt.name);
+      setPlaceOfSupply(`${opt.name} (Code 96 - Outside India)`);
+    }
+    if (customerPostalCode) {
+      triggerPostalLookup(customerPostalCode, cCode);
+    }
+  };
+
   // Switch between Domestic and International with pre-sets
   const handleModeSwitch = (newMode) => {
     setMode(newMode);
+    setPostalAutofilled(false);
+
     if (newMode === "domestic") {
+      setSelectedCountryCode("IN");
       setPaymentMode("Bank Transfer (NEFT/RTGS)");
       setPlaceOfSupply("Gujarat (State Code: 24)");
       setCustomerCountry("India");
@@ -123,6 +202,7 @@ export default function AdminBulkInvoiceGenerator() {
         },
       ]);
     } else {
+      setSelectedCountryCode("AU");
       setPaymentMode("Online (PayGlocal Gateway)");
       setPlaceOfSupply("Australia (Code 96 - Outside India)");
       setCustomerCountry("Australia");
@@ -338,7 +418,7 @@ export default function AdminBulkInvoiceGenerator() {
             Manual Bulk Invoice Generator
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Create, customize, and download official StyleNest tax invoices for custom domestic or international wholesale orders.
+            Create, customize, and download official StyleNest tax invoices with automated PIN/ZIP lookup for both domestic and global orders.
           </p>
         </div>
 
@@ -375,7 +455,7 @@ export default function AdminBulkInvoiceGenerator() {
                 {mode === "domestic" && <CheckCircle2 className="h-4 w-4 text-primary" />}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Indian states, B2B Buyer GSTIN support, CGST/SGST/IGST breakdown (₹ INR).
+                Indian states, 6-digit PIN code auto-fetch (City/State), B2B Buyer GSTIN support, CGST/SGST/IGST breakdown (₹ INR).
               </p>
             </div>
           </button>
@@ -396,7 +476,7 @@ export default function AdminBulkInvoiceGenerator() {
                 {mode === "international" && <CheckCircle2 className="h-4 w-4 text-primary" />}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Foreign customers, Letter of Undertaking (LUT 0% Tax), PayGlocal gateway settlement proof ($ USD).
+                Global country dropdown, Postal/ZIP code auto-fetch (Australia, US, UK, Canada etc.), 0% LUT Tax ($ USD).
               </p>
             </div>
           </button>
@@ -561,7 +641,61 @@ export default function AdminBulkInvoiceGenerator() {
             />
           </div>
 
-          <div className="grid grid-cols-4 gap-2">
+          {/* Destination Country (Dropdown in International, fixed in Domestic) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="label-xs mb-1 block text-muted-foreground">Destination Country</label>
+              {mode === "international" ? (
+                <select
+                  value={selectedCountryCode}
+                  onChange={(e) => handleCountryDropdownChange(e.target.value)}
+                  className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                >
+                  {COUNTRY_OPTIONS.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.flag} {c.name} {c.code !== "OTHER" ? `(${c.dialCode})` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  readOnly
+                  value="India 🇮🇳"
+                  className="w-full rounded-lg border bg-muted/40 px-3 py-2 text-xs font-semibold cursor-not-allowed"
+                />
+              )}
+            </div>
+
+            {/* PIN / ZIP Code with Live Auto-Lookup */}
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="label-xs font-bold text-primary flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {mode === "domestic" ? "PIN Code (6 digits) *" : "Postal / ZIP Code *"}
+                </label>
+                {postalLookupLoading && (
+                  <span className="text-[10px] text-primary flex items-center gap-1">
+                    <Loader2 className="h-2.5 w-2.5 animate-spin" /> Fetching location...
+                  </span>
+                )}
+                {postalAutofilled && !postalLookupLoading && (
+                  <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
+                    <Check className="h-2.5 w-2.5" /> Auto-fetched
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                value={customerPostalCode}
+                onChange={(e) => handlePostalChange(e.target.value)}
+                placeholder={mode === "domestic" ? "e.g. 395002" : "e.g. 4404 or 90210"}
+                className="w-full rounded-lg border border-primary/40 bg-background px-3 py-2 text-xs font-mono font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="label-xs mb-1 block text-muted-foreground">City</label>
               <input
@@ -569,44 +703,24 @@ export default function AdminBulkInvoiceGenerator() {
                 value={customerCity}
                 onChange={(e) => setCustomerCity(e.target.value)}
                 placeholder="City"
-                className="w-full rounded-lg border bg-background px-2.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">State/Region</label>
+              <label className="label-xs mb-1 block text-muted-foreground">State / Region</label>
               <input
                 type="text"
                 value={customerState}
                 onChange={(e) => setCustomerState(e.target.value)}
-                placeholder="State"
-                className="w-full rounded-lg border bg-background px-2.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="label-xs mb-1 block text-muted-foreground font-bold text-primary">ZIP / Postal *</label>
-              <input
-                type="text"
-                value={customerPostalCode}
-                onChange={(e) => setCustomerPostalCode(e.target.value)}
-                placeholder="Postal"
-                className="w-full rounded-lg border border-primary/40 bg-background px-2.5 py-2 text-xs font-bold text-primary focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Country</label>
-              <input
-                type="text"
-                value={customerCountry}
-                onChange={(e) => setCustomerCountry(e.target.value)}
-                placeholder="Country"
-                className="w-full rounded-lg border bg-background px-2.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="State / Region"
+                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
 
           {mode === "domestic" && (
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Buyer GSTIN (Optional B2B)</label>
+              <label className="label-xs mb-1 block text-muted-foreground">Buyer GSTIN (Optional B2B for Tax Credit)</label>
               <input
                 type="text"
                 value={customerGstin}
