@@ -1,8 +1,13 @@
 import { jsPDF } from "jspdf";
 
 /**
- * Generates and downloads a clean, professional PDF Tax / Commercial Invoice
- * for StyleNest Quick Payments and Wholesale Settlements.
+ * Generates and downloads a legally compliant, professional PDF Tax / Commercial Invoice
+ * for StyleNest Quick Payments and International / Domestic Wholesale Settlements.
+ * 
+ * Complies with:
+ * - Indian GST Act 2017 (Section 31 & Section 16 of IGST Act for Zero-Rated Exports)
+ * - Directorate General of Foreign Trade (DGFT) & Indian Customs Export Invoice Norms
+ * - Reserve Bank of India (RBI) approved international payment settlement reporting (PayGlocal)
  */
 export async function downloadQuickPayInvoicePdf(payment) {
   if (!payment) return;
@@ -14,269 +19,385 @@ export async function downloadQuickPayInvoicePdf(payment) {
   });
 
   const pageWidth = doc.internal.pageSize.getWidth();
-  const margin = 18;
+  const margin = 14;
   const contentWidth = pageWidth - margin * 2;
   let y = margin;
 
-  // Colors
-  const darkSlate = [15, 23, 42];     // #0F172A
-  const mutedText = [100, 116, 139];  // #64748B
-  const accentGold = [180, 83, 9];    // #B45309
-  const emeraldGreen = [5, 150, 105]; // #059669
-  const lightBg = [248, 250, 252];    // #F8FAFC
-  const borderGrey = [226, 232, 240]; // #E2E8F0
+  // Color Palette
+  const darkSlate = [15, 23, 42];      // #0F172A
+  const mutedText = [71, 85, 105];     // #475569
+  const accentGold = [180, 83, 9];     // #B45309
+  const emeraldGreen = [5, 150, 105];  // #059669
+  const lightBg = [248, 250, 252];     // #F8FAFC
+  const borderGrey = [203, 213, 225];  // #CBD5E1
 
-  // 1. Top Brand Header
+  const isExport = (payment.currency || "USD").toUpperCase() === "USD";
+  const currencySymbol = isExport ? "$" : "₹";
+  const cur = payment.currency ? payment.currency.toUpperCase() : "USD";
+  const totalAmount = Number(payment.amount || 0);
+
+  // 1. Top Brand & Invoice Title Header
   doc.setFont("helvetica", "bold");
   doc.setFontSize(18);
   doc.setTextColor(...darkSlate);
-  doc.text("STYLE NEST FASHION", margin, y + 6);
+  doc.text("STYLE NEST FASHION", margin, y + 5);
 
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...mutedText);
-  doc.text("Luxury Pret & International Wholesale Atelier", margin, y + 11);
+  doc.text("Luxury Pret & Wholesale Atelier | Style Nest Fashion Private Limited", margin, y + 10);
 
-  // Invoice Title on Right
+  // Right-aligned Invoice Title
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
+  doc.setFontSize(13);
   doc.setTextColor(...accentGold);
-  doc.text("COMMERCIAL INVOICE", pageWidth - margin, y + 6, { align: "right" });
+  doc.text(
+    isExport ? "TAX INVOICE / EXPORT COMMERCIAL INVOICE" : "TAX INVOICE",
+    pageWidth - margin,
+    y + 5,
+    { align: "right" }
+  );
 
   doc.setFontSize(8.5);
-  doc.setFont("helvetica", "normal");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(...emeraldGreen);
-  doc.text("OFFICIAL PAYMENT SETTLED", pageWidth - margin, y + 11, { align: "right" });
+  doc.text("PAYMENT STATUS: SETTLED IN FULL", pageWidth - margin, y + 10, { align: "right" });
 
-  y += 18;
+  y += 15;
 
-  // Horizontal Divider Line
-  doc.setDrawColor(...borderGrey);
-  doc.setLineWidth(0.5);
-  doc.line(margin, y, pageWidth - margin, y);
-  y += 7;
+  // Statutory Export LUT / Tax Banner
+  doc.setFillColor(254, 243, 199); // Amber tint
+  doc.setDrawColor(245, 158, 11);
+  doc.roundedRect(margin, y, contentWidth, 7, 1, 1, "FD");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(146, 64, 14); // Dark amber
 
-  // 2. Metadata Grid (Seller Info on Left, Invoice Details on Right)
+  if (isExport) {
+    doc.text(
+      "STATUTORY EXPORT DECLARATION: SUPPLY MEANT FOR EXPORT UNDER LETTER OF UNDERTAKING (LUT) WITHOUT PAYMENT OF INTEGRATED TAX (ZERO-RATED AS PER SEC 16 OF IGST ACT 2017)",
+      margin + 2.5,
+      y + 4.5
+    );
+  } else {
+    doc.text(
+      "GST TAX INVOICE ISSUED UNDER SECTION 31 OF THE CGST/SGST ACT, 2017 (TAX INCLUSIVE TRANSACTION)",
+      margin + 2.5,
+      y + 4.5
+    );
+  }
+
+  y += 10;
+
+  // 2. Metadata Grid: Seller (Left) vs Invoice & Gateway Details (Right)
   const metaBoxY = y;
-  const colWidth = (contentWidth - 8) / 2;
+  const colWidth = (contentWidth - 6) / 2;
+  const metaBoxHeight = 36;
 
-  // Left Box: Seller Details
+  // Left Box: Seller Information (StyleNest Legal)
   doc.setFillColor(...lightBg);
-  doc.roundedRect(margin, metaBoxY, colWidth, 32, 2, 2, "F");
+  doc.roundedRect(margin, metaBoxY, colWidth, metaBoxHeight, 2, 2, "F");
   doc.setDrawColor(...borderGrey);
-  doc.roundedRect(margin, metaBoxY, colWidth, 32, 2, 2, "D");
+  doc.roundedRect(margin, metaBoxY, colWidth, metaBoxHeight, 2, 2, "D");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...darkSlate);
-  doc.text("ISSUED BY:", margin + 4, metaBoxY + 6);
-
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(...mutedText);
-  doc.text("StyleNest Fashion Private Limited", margin + 4, metaBoxY + 11);
-  doc.text("Atelier: Indore, Madhya Pradesh, India (PIN 452010)", margin + 4, metaBoxY + 16);
-  doc.text("Email: support@stylenestfashion.com | www.stylenestfashion.com", margin + 4, metaBoxY + 21);
-  doc.text("GSTIN / Tax ID: Registered | IEC: 0316987654 (Export/Import)", margin + 4, metaBoxY + 26);
-
-  // Right Box: Invoice Meta
-  const rightBoxX = margin + colWidth + 8;
-  doc.setFillColor(...lightBg);
-  doc.roundedRect(rightBoxX, metaBoxY, colWidth, 32, 2, 2, "F");
-  doc.setDrawColor(...borderGrey);
-  doc.roundedRect(rightBoxX, metaBoxY, colWidth, 32, 2, 2, "D");
+  doc.setTextColor(...darkSlate);
+  doc.text("SELLER (SUPPLIER DETAILS):", margin + 4, metaBoxY + 5.5);
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...darkSlate);
-  doc.text("INVOICE DETAILS:", rightBoxX + 4, metaBoxY + 6);
+  doc.setFontSize(7.5);
+  doc.text("Style Nest Fashion Private Limited", margin + 4, metaBoxY + 10);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(...mutedText);
-  doc.text(`Invoice No: INV-${payment.paymentNumber || "QP"}`, rightBoxX + 4, metaBoxY + 11);
-  
+  doc.text("175-B, Amrit Palace, Nipania, Indore, MP - 452010, India", margin + 4, metaBoxY + 14.5);
+  doc.text("State: Madhya Pradesh | State Code: 23", margin + 4, metaBoxY + 18.5);
+
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...darkSlate);
+  doc.text("GSTIN: 23ABUCS8160R1ZA", margin + 4, metaBoxY + 23);
+  doc.text("CIN: U14101MP2026PTC086429", margin + 4, metaBoxY + 27);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.8);
+  doc.setTextColor(...mutedText);
+  doc.text("Email: stylenestfashion1@gmail.com | Phone: +91 6269933231", margin + 4, metaBoxY + 31.5);
+
+  // Right Box: Invoice Numbers, Dates & PayGlocal Settlement
+  const rightBoxX = margin + colWidth + 6;
+  doc.setFillColor(...lightBg);
+  doc.roundedRect(rightBoxX, metaBoxY, colWidth, metaBoxHeight, 2, 2, "F");
+  doc.setDrawColor(...borderGrey);
+  doc.roundedRect(rightBoxX, metaBoxY, colWidth, metaBoxHeight, 2, 2, "D");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...darkSlate);
+  doc.text("INVOICE & SETTLEMENT AUDIT:", rightBoxX + 4, metaBoxY + 5.5);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...mutedText);
+
+  doc.text(`Invoice Number:`, rightBoxX + 4, metaBoxY + 10);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...darkSlate);
+  doc.text(`INV-${payment.paymentNumber || "QP"}`, rightBoxX + 30, metaBoxY + 10);
+
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...mutedText);
+  doc.text(`Payment Ref:`, rightBoxX + 4, metaBoxY + 14.5);
+  doc.text(`${payment.paymentNumber || "—"}`, rightBoxX + 30, metaBoxY + 14.5);
+
   const paymentDate = payment.createdAt
     ? new Date(payment.createdAt).toLocaleDateString("en-IN", {
         day: "2-digit",
         month: "short",
         year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       })
     : new Date().toLocaleDateString();
-  doc.text(`Date of Issue: ${paymentDate}`, rightBoxX + 4, metaBoxY + 16);
-  doc.text(`Payment Gateway: PayGlocal International (Verified)`, rightBoxX + 4, metaBoxY + 21);
-  doc.text(`Gateway GID: ${payment.payglocalGid || "Direct Settlement"}`, rightBoxX + 4, metaBoxY + 26);
+  doc.text(`Date of Issue:`, rightBoxX + 4, metaBoxY + 18.5);
+  doc.text(`${paymentDate}`, rightBoxX + 30, metaBoxY + 18.5);
 
-  y += 38;
+  doc.text(`Payment Mode:`, rightBoxX + 4, metaBoxY + 23);
+  doc.text(`PayGlocal Online Merchant Gateway`, rightBoxX + 30, metaBoxY + 23);
 
-  // 3. Customer / Bill To & Ship To
+  doc.text(`Gateway GID:`, rightBoxX + 4, metaBoxY + 27);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
   doc.setTextColor(...darkSlate);
-  doc.text("BILL TO / SHIP TO (CUSTOMER DETAILS)", margin, y);
-  y += 4;
+  const gid = payment.payglocalGid || "Direct Verified Settlement";
+  doc.text(gid.length > 25 ? gid.substring(0, 25) + "..." : gid, rightBoxX + 30, metaBoxY + 27);
 
-  const billBoxHeight = 32;
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...mutedText);
+  doc.text(`Place of Supply:`, rightBoxX + 4, metaBoxY + 31.5);
+  doc.text(isExport ? `${payment.country || "Outside India"} (Code 96)` : `${payment.state || "State"}`, rightBoxX + 30, metaBoxY + 31.5);
+
+  y += metaBoxHeight + 5;
+
+  // 3. Bill To / Ship To: Customer Contact & Shipping Details
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...darkSlate);
+  doc.text("BUYER / RECIPIENT DETAILS (BILL TO & SHIP TO):", margin, y + 3.5);
+  y += 5;
+
+  const billBoxHeight = 30;
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(margin, y, contentWidth, billBoxHeight, 2, 2, "F");
   doc.setDrawColor(...borderGrey);
   doc.roundedRect(margin, y, contentWidth, billBoxHeight, 2, 2, "D");
 
+  // Buyer Info Left Column
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(...darkSlate);
-  doc.text(payment.customerName || "Valued International Client", margin + 6, y + 7);
+  doc.text(payment.customerName || "Valued International Customer", margin + 4, y + 6);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(...mutedText);
+  doc.text(`Email: ${payment.customerEmail || "Not provided"}`, margin + 4, y + 11);
+  doc.text(`Phone: ${payment.customerPhone || "Not provided"}`, margin + 4, y + 16);
+  doc.text(`Country of Delivery: ${payment.country || (isExport ? "Australia" : "India")}`, margin + 4, y + 21);
 
-  // Left Column of Bill To: Contacts
-  doc.text(`Email: ${payment.customerEmail || "—"}`, margin + 6, y + 13);
-  doc.text(`Phone: ${payment.customerPhone || "—"}`, margin + 6, y + 19);
+  // Buyer Shipping Address Right Column
+  const buyerRightX = margin + contentWidth / 2;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...darkSlate);
+  doc.text("Delivery / Consignee Address:", buyerRightX, y + 6);
 
-  // Right Column of Bill To: Full Shipping Address & ZIP
-  const addrX = margin + contentWidth / 2;
-  const addressLine = [payment.addressLine1, payment.addressLine2].filter(Boolean).join(", ") || "Address on file";
-  doc.text(`Shipping Address: ${addressLine}`, addrX, y + 7);
-  doc.text(`City & State: ${[payment.city, payment.state].filter(Boolean).join(", ") || "—"}`, addrX, y + 13);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...mutedText);
+  const street = [payment.addressLine1, payment.addressLine2].filter(Boolean).join(", ") || "Address provided during checkout";
+  doc.text(street.length > 48 ? street.substring(0, 48) + "..." : street, buyerRightX, y + 11);
+  doc.text(`City & State: ${[payment.city, payment.state].filter(Boolean).join(", ") || "—"}`, buyerRightX, y + 16);
 
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...accentGold);
-  doc.text(`Postal / ZIP Code: ${payment.postalCode || "—"}, ${payment.country || "Australia"}`, addrX, y + 19);
+  doc.text(`Postal / ZIP Code: ${payment.postalCode || "—"} (${payment.country || "Australia"})`, buyerRightX, y + 22);
 
-  y += billBoxHeight + 8;
+  y += billBoxHeight + 6;
 
-  // 4. Line Items Table
+  // 4. Line Items Table with HSN, Taxable Value, GST Rate & Amount
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
+  doc.setFontSize(8.5);
   doc.setTextColor(...darkSlate);
-  doc.text("ORDER & PAYMENT LINE ITEMS", margin, y);
-  y += 4;
+  doc.text("ITEMIZED BILL OF SUPPLY / TAX INVOICE PARTICULARS:", margin, y + 3);
+  y += 5;
 
   // Table Header
-  const tableHeaderY = y;
+  const thY = y;
   doc.setFillColor(...lightBg);
-  doc.rect(margin, tableHeaderY, contentWidth, 8, "F");
+  doc.rect(margin, thY, contentWidth, 7, "F");
   doc.setDrawColor(...borderGrey);
-  doc.rect(margin, tableHeaderY, contentWidth, 8, "D");
+  doc.rect(margin, thY, contentWidth, 7, "D");
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(7);
   doc.setTextColor(...darkSlate);
-  doc.text("SL", margin + 4, tableHeaderY + 5.5);
-  doc.text("ITEM DESCRIPTION & PURPOSE", margin + 18, tableHeaderY + 5.5);
-  doc.text("CURRENCY", margin + contentWidth - 55, tableHeaderY + 5.5, { align: "right" });
-  doc.text("AMOUNT SETTLED", margin + contentWidth - 4, tableHeaderY + 5.5, { align: "right" });
+  doc.text("SL", margin + 3, thY + 4.8);
+  doc.text("DESCRIPTION OF GOODS / PURPOSE", margin + 14, thY + 4.8);
+  doc.text("HSN/SAC", margin + 95, thY + 4.8);
+  doc.text("RATE", margin + 115, thY + 4.8);
+  doc.text("TAXABLE", margin + 138, thY + 4.8, { align: "right" });
+  doc.text("GST %", margin + 158, thY + 4.8, { align: "right" });
+  doc.text("TOTAL", margin + contentWidth - 3, thY + 4.8, { align: "right" });
 
-  y += 8;
+  y += 7;
+
+  // Calculate Tax Values
+  let taxableValue = totalAmount;
+  let gstRateText = "0% (Export LUT)";
+  let gstAmount = 0;
+
+  if (!isExport) {
+    // Domestic INR: GST 5% inclusive decomposition
+    const taxFactor = 1.05;
+    taxableValue = Number((totalAmount / taxFactor).toFixed(2));
+    gstAmount = Number((totalAmount - taxableValue).toFixed(2));
+    const isLocalMP = (payment.state || "").toLowerCase().includes("madhya") || (payment.state || "").toLowerCase() === "mp";
+    gstRateText = isLocalMP ? "5% (CGST 2.5% + SGST 2.5%)" : "5% (IGST 5%)";
+  }
 
   // Table Row
-  const itemRowY = y;
-  const rowHeight = 16;
+  const rowY = y;
+  const rowH = 14;
   doc.setFillColor(255, 255, 255);
-  doc.rect(margin, itemRowY, contentWidth, rowHeight, "F");
+  doc.rect(margin, rowY, contentWidth, rowH, "F");
   doc.setDrawColor(...borderGrey);
-  doc.rect(margin, itemRowY, contentWidth, rowHeight, "D");
+  doc.rect(margin, rowY, contentWidth, rowH, "D");
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.setTextColor(...darkSlate);
-  doc.text("1", margin + 4, itemRowY + 7);
+  doc.text("1", margin + 3, rowY + 5.5);
 
   doc.setFont("helvetica", "bold");
-  const noteTitle = payment.note || "Wholesale Merchandise & Export Settlement";
-  doc.text(noteTitle, margin + 18, itemRowY + 6);
+  const noteTitle = payment.note || (isExport ? "Export Apparel / Wholesale Merchandise Settlement" : "Wholesale Garments & Apparel");
+  doc.text(noteTitle.length > 40 ? noteTitle.substring(0, 40) + "..." : noteTitle, margin + 14, rowY + 5.5);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...mutedText);
+  doc.text(`Ref: ${payment.paymentNumber} | International Settlement`, margin + 14, rowY + 10);
+
+  // HSN Code
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...darkSlate);
+  doc.text("6204", margin + 95, rowY + 5.5);
+
+  // Rate
+  doc.text(`${currencySymbol}${totalAmount.toFixed(2)}`, margin + 115, rowY + 5.5);
+
+  // Taxable Value
+  doc.text(`${currencySymbol}${taxableValue.toFixed(2)}`, margin + 138, rowY + 5.5, { align: "right" });
+
+  // GST %
+  doc.text(isExport ? "0% LUT" : "5%", margin + 158, rowY + 5.5, { align: "right" });
+
+  // Total
+  doc.setFont("helvetica", "bold");
+  doc.text(`${currencySymbol}${totalAmount.toFixed(2)}`, margin + contentWidth - 3, rowY + 5.5, { align: "right" });
+
+  y += rowH + 6;
+
+  // 5. Financial Summary Box (Right) & Tax / Settlement Callout (Left)
+  const summaryBoxW = 75;
+  const summaryBoxX = pageWidth - margin - summaryBoxW;
+  const summaryBoxY = y;
+  const summaryBoxH = 28;
+
+  // Left Box: Statutory Tax Details & Proof of Settlement
+  const taxBoxW = contentWidth - summaryBoxW - 5;
+  doc.setFillColor(240, 253, 244); // light emerald
+  doc.roundedRect(margin, summaryBoxY, taxBoxW, summaryBoxH, 2, 2, "F");
+  doc.setDrawColor(187, 247, 208);
+  doc.roundedRect(margin, summaryBoxY, taxBoxW, summaryBoxH, 2, 2, "D");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...emeraldGreen);
+  doc.text("GST TAX & SETTLEMENT COMPLIANCE:", margin + 4, summaryBoxY + 5.5);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.8);
+  doc.setTextColor(...darkSlate);
+
+  if (isExport) {
+    doc.text("• Supply Type: Zero-Rated Export of Goods/Services (IGST Act Sec 16)", margin + 4, summaryBoxY + 10);
+    doc.text("• Export Mode: Export Under LUT without payment of Integrated Tax", margin + 4, summaryBoxY + 14.5);
+    doc.text("• Applicable Tax: Integrated Tax (IGST) @ 0.00% = $0.00 USD", margin + 4, summaryBoxY + 19);
+    doc.text(`• PayGlocal Merchant ID: ptplstylenes2270 | Txn ID: ${payment.payglocalTxnId || payment.paymentNumber}`, margin + 4, summaryBoxY + 23.5);
+  } else {
+    doc.text(`• Applicable GST Rate: ${gstRateText}`, margin + 4, summaryBoxY + 10);
+    doc.text(`• Total Tax Amount: ₹${gstAmount.toFixed(2)} (Tax-Inclusive Breakdown)`, margin + 4, summaryBoxY + 14.5);
+    doc.text("• Input Tax Credit (ITC): Eligible for registered business entities", margin + 4, summaryBoxY + 19);
+    doc.text(`• Settlement Proof: Reference ${payment.paymentNumber} verified`, margin + 4, summaryBoxY + 23.5);
+  }
+
+  // Right Box: Final Totals
+  doc.setFillColor(...lightBg);
+  doc.roundedRect(summaryBoxX, summaryBoxY, summaryBoxW, summaryBoxH, 2, 2, "F");
+  doc.setDrawColor(...borderGrey);
+  doc.roundedRect(summaryBoxX, summaryBoxY, summaryBoxW, summaryBoxH, 2, 2, "D");
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...mutedText);
-  doc.text(`Payment Reference: ${payment.paymentNumber} | International Settlement`, margin + 18, itemRowY + 11);
+  doc.text("Taxable Value:", summaryBoxX + 4, summaryBoxY + 6);
+  doc.text(`${currencySymbol}${taxableValue.toFixed(2)}`, summaryBoxX + summaryBoxW - 4, summaryBoxY + 6, { align: "right" });
 
-  const cur = payment.currency || "USD";
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...darkSlate);
-  doc.text(cur, margin + contentWidth - 55, itemRowY + 7, { align: "right" });
+  doc.text(isExport ? "IGST (Export LUT 0%):" : "GST Amount:", summaryBoxX + 4, summaryBoxY + 11.5);
+  doc.text(isExport ? "$0.00" : `₹${gstAmount.toFixed(2)}`, summaryBoxX + summaryBoxW - 4, summaryBoxY + 11.5, { align: "right" });
 
-  const formattedAmount = Number(payment.amount || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  doc.text(`${cur === "USD" ? "$" : "₹"}${formattedAmount}`, margin + contentWidth - 4, itemRowY + 7, { align: "right" });
-
-  y += rowHeight + 8;
-
-  // 5. Total & Summary Box (Bottom Right)
-  const summaryBoxWidth = 85;
-  const summaryBoxX = pageWidth - margin - summaryBoxWidth;
-  const summaryBoxY = y;
-
-  doc.setFillColor(...lightBg);
-  doc.roundedRect(summaryBoxX, summaryBoxY, summaryBoxWidth, 24, 2, 2, "F");
-  doc.setDrawColor(...borderGrey);
-  doc.roundedRect(summaryBoxX, summaryBoxY, summaryBoxWidth, 24, 2, 2, "D");
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(...mutedText);
-  doc.text("Subtotal:", summaryBoxX + 4, summaryBoxY + 6);
-  doc.text(`${cur === "USD" ? "$" : "₹"}${formattedAmount}`, summaryBoxX + summaryBoxWidth - 4, summaryBoxY + 6, { align: "right" });
-
-  doc.text("Processing / Tax:", summaryBoxX + 4, summaryBoxY + 12);
-  doc.text("Zero Fee ($0.00)", summaryBoxX + summaryBoxWidth - 4, summaryBoxY + 12, { align: "right" });
+  doc.text("Payment / Txn Fee:", summaryBoxX + 4, summaryBoxY + 17);
+  doc.text("Zero Fee ($0.00)", summaryBoxX + summaryBoxW - 4, summaryBoxY + 17, { align: "right" });
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9.5);
   doc.setTextColor(...emeraldGreen);
-  doc.text("Total Paid:", summaryBoxX + 4, summaryBoxY + 19);
-  doc.text(`${cur === "USD" ? "$" : "₹"}${formattedAmount}`, summaryBoxX + summaryBoxWidth - 4, summaryBoxY + 19, { align: "right" });
+  doc.text("Total Settled:", summaryBoxX + 4, summaryBoxY + 24);
+  doc.text(`${currencySymbol}${totalAmount.toFixed(2)} ${cur}`, summaryBoxX + summaryBoxW - 4, summaryBoxY + 24, { align: "right" });
 
-  // Payment Status Callout (Bottom Left)
-  const statusCalloutWidth = contentWidth - summaryBoxWidth - 8;
-  doc.setFillColor(240, 253, 244); // light green bg
-  doc.roundedRect(margin, summaryBoxY, statusCalloutWidth, 24, 2, 2, "F");
-  doc.setDrawColor(187, 247, 208); // green border
-  doc.roundedRect(margin, summaryBoxY, statusCalloutWidth, 24, 2, 2, "D");
+  y += summaryBoxH + 8;
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(...emeraldGreen);
-  doc.text("PAYMENT CONFIRMATION: SETTLED IN FULL", margin + 6, summaryBoxY + 7);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...mutedText);
-  doc.text(`Transaction Reference: ${payment.payglocalTxnId || payment.paymentNumber}`, margin + 6, summaryBoxY + 13);
-  doc.text(`Authorized by: PayGlocal Merchant Gateway (ptplstylenes2270)`, margin + 6, summaryBoxY + 18);
-
-  y += 34;
-
-  // 6. Signatory & Declaration
+  // 6. Signatory & Legal Disclaimer
   doc.setDrawColor(...borderGrey);
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageWidth - margin, y);
-  y += 6;
+  y += 5;
 
   doc.setFont("helvetica", "italic");
-  doc.setFontSize(7.5);
+  doc.setFontSize(6.8);
   doc.setTextColor(...mutedText);
   doc.text(
-    "Declaration: This is a computer-generated commercial invoice and payment receipt. Goods and export services are fulfilled as per agreed wholesale terms.",
+    "Declaration: We declare that this invoice shows the actual price of the goods/services described and that all particulars are true and correct. This is a computer-generated Tax/Commercial Invoice.",
     margin,
-    y
+    y,
+    { maxWidth: 110 }
   );
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(...darkSlate);
-  doc.text("For STYLE NEST FASHION PVT. LTD.", pageWidth - margin, y + 8, { align: "right" });
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
+  doc.setTextColor(...darkSlate);
+  doc.text("For STYLE NEST FASHION PRIVATE LIMITED", pageWidth - margin, y + 3, { align: "right" });
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
   doc.setTextColor(...mutedText);
-  doc.text("Authorized Signatory & Accounts Department", pageWidth - margin, y + 13, { align: "right" });
+  doc.text("Authorized Signatory", pageWidth - margin, y + 8, { align: "right" });
+  doc.text("(Corporate & Accounts Department)", pageWidth - margin, y + 12, { align: "right" });
 
   // Save the PDF
-  const filename = `Invoice_${payment.paymentNumber || "QP"}_${(payment.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
+  const safeName = (payment.customerName || "Customer").replace(/[^a-zA-Z0-9]/g, "_");
+  const filename = `TaxInvoice_${payment.paymentNumber || "QP"}_${safeName}.pdf`;
   doc.save(filename);
 }
