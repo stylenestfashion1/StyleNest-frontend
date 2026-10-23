@@ -174,20 +174,11 @@ export default function BulkProductDetail() {
             )}
 
             {/* Wholesale MOQ Overlay Badge */}
-            <div className="absolute top-4 left-4 flex flex-col gap-2">
+            <div className="absolute top-4 left-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-black/85 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-sm shadow-sm">
                 <PackageCheck className="h-3.5 w-3.5 text-accent" />
                 Wholesale · Min: {minQty} Pcs
               </span>
-              {activeColor?.name && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 border px-3 py-0.5 text-xs font-bold text-foreground backdrop-blur-sm shadow-xs">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full border border-black/20"
-                    style={{ backgroundColor: activeColor.hex || "#000" }}
-                  />
-                  {activeColor.name}
-                </span>
-              )}
             </div>
 
             {/* Photo Counter */}
