@@ -607,69 +607,69 @@ export default function AdminBulkInvoiceGenerator() {
             Invoice & Order Metadata
           </h3>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Invoice Number</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Invoice Number</label>
               <input
                 type="text"
                 value={invoiceNo}
                 onChange={(e) => setInvoiceNo(e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs font-mono font-bold focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Order / Ref Number</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Order / Ref Number</label>
               <input
                 type="text"
                 value={orderNo}
                 onChange={(e) => setOrderNo(e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
 
           {/* Date & Time Pickers */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Invoice Date</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Invoice Date</label>
               <input
                 type="date"
                 value={invoiceDate}
                 onChange={(e) => setInvoiceDate(e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Invoice Time (Exact Timestamp)
+              <label className="label-xs mb-1.5 flex items-center gap-1.5 h-4 text-muted-foreground whitespace-nowrap">
+                <Clock className="h-3 w-3 text-primary shrink-0" />
+                <span>Invoice Time</span>
               </label>
               <input
                 type="time"
                 value={invoiceTime}
                 onChange={(e) => setInvoiceTime(e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Payment Mode / Gateway</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Payment Mode / Gateway</label>
               <input
                 type="text"
                 value={paymentMode}
                 onChange={(e) => setPaymentMode(e.target.value)}
-                placeholder="e.g. PayGlocal / Bank Transfer / UPI"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder="e.g. Bank Transfer / UPI / PayGlocal"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Payment Status</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Payment Status</label>
               <select
                 value={paymentStatus}
                 onChange={(e) => setPaymentStatus(e.target.value)}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               >
                 <option value="PAID (Settled)">PAID (Settled)</option>
                 <option value="PENDING">PENDING</option>
@@ -680,9 +680,9 @@ export default function AdminBulkInvoiceGenerator() {
 
           {/* Transaction ID / UTR Number */}
           <div>
-            <label className="label-xs mb-1 block text-muted-foreground flex items-center gap-1 font-semibold text-foreground">
-              <Hash className="h-3 w-3 text-primary" />
-              {mode === "domestic" ? "Bank UTR / UPI Transaction Ref ID" : "PayGlocal GID / Gateway Txn Ref"}
+            <label className="label-xs mb-1.5 flex items-center gap-1.5 h-4 font-semibold text-foreground whitespace-nowrap">
+              <Hash className="h-3 w-3 text-primary shrink-0" />
+              <span>{mode === "domestic" ? "Bank UTR / UPI Transaction Ref ID" : "PayGlocal GID / Gateway Txn Ref"}</span>
             </label>
             <input
               type="text"
@@ -693,7 +693,7 @@ export default function AdminBulkInvoiceGenerator() {
                   ? "e.g. UTR-HDFCN26298102391 / UPI: 429810482910"
                   : "e.g. gl_o-a4eef24e48e529f57n4q0ykq8"
               }
-              className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-9 w-full rounded-lg border bg-background px-3 text-xs font-mono font-medium focus:outline-none focus:ring-1 focus:ring-primary"
             />
             <p className="text-[10px] text-muted-foreground mt-1">
               {mode === "domestic"
@@ -710,39 +710,39 @@ export default function AdminBulkInvoiceGenerator() {
             Customer / Buyer Details (Bill To & Ship To)
           </h3>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Customer Full Name *</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Customer Full Name *</label>
               <input
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="e.g. Rajesh Sharma"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Company / Business Name</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Company / Business Name</label>
               <input
                 type="text"
                 value={customerCompany}
                 onChange={(e) => setCustomerCompany(e.target.value)}
                 placeholder="e.g. Retail Enterprises"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-end">
             {/* Phone with Country Dial Code Dropdown */}
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Phone / WhatsApp Number</label>
-              <div className="flex rounded-lg border bg-background overflow-hidden focus-within:ring-1 focus-within:ring-primary">
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Phone / WhatsApp Number</label>
+              <div className="h-9 flex rounded-lg border bg-background overflow-hidden focus-within:ring-1 focus-within:ring-primary">
                 {mode === "international" ? (
                   <select
                     value={dialCode}
                     onChange={(e) => setDialCode(e.target.value)}
-                    className="px-2 py-2 bg-muted/60 text-xs font-semibold text-foreground border-r focus:outline-none cursor-pointer max-w-[100px]"
+                    className="h-full px-2 bg-muted/60 text-xs font-semibold text-foreground border-r focus:outline-none cursor-pointer max-w-[100px]"
                     title="Select Calling Code"
                   >
                     {COUNTRY_OPTIONS.map((c) => (
@@ -752,7 +752,7 @@ export default function AdminBulkInvoiceGenerator() {
                     ))}
                   </select>
                 ) : (
-                  <span className="px-2.5 py-2 bg-muted/60 text-xs font-bold text-foreground border-r flex items-center gap-1 select-none">
+                  <span className="h-full px-2.5 bg-muted/60 text-xs font-bold text-foreground border-r flex items-center gap-1 select-none">
                     🇮🇳 +91
                   </span>
                 )}
@@ -761,43 +761,43 @@ export default function AdminBulkInvoiceGenerator() {
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   placeholder="9825144321"
-                  className="flex-1 px-3 py-2 text-xs bg-transparent focus:outline-none min-w-0"
+                  className="h-full flex-1 px-3 text-xs bg-transparent focus:outline-none min-w-0"
                 />
               </div>
             </div>
 
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Email Address</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Email Address</label>
               <input
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
                 placeholder="e.g. client@example.com"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
 
           <div>
-            <label className="label-xs mb-1 block text-muted-foreground">Street Address</label>
+            <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Street Address</label>
             <input
               type="text"
               value={customerAddress}
               onChange={(e) => setCustomerAddress(e.target.value)}
               placeholder="e.g. Shop 42, Market Complex"
-              className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+              className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
 
           {/* Destination Country & PIN/ZIP with Live Lookup */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">Destination Country</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Destination Country</label>
               {mode === "international" ? (
                 <select
                   value={selectedCountryCode}
                   onChange={(e) => handleCountryDropdownChange(e.target.value)}
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
+                  className="h-9 w-full rounded-lg border bg-background px-3 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                 >
                   {COUNTRY_OPTIONS.map((c) => (
                     <option key={c.code} value={c.code}>
@@ -810,21 +810,21 @@ export default function AdminBulkInvoiceGenerator() {
                   type="text"
                   readOnly
                   value="India 🇮🇳"
-                  className="w-full rounded-lg border bg-muted/40 px-3 py-2 text-xs font-semibold cursor-not-allowed"
+                  className="h-9 w-full rounded-lg border bg-muted/40 px-3 text-xs font-semibold cursor-not-allowed"
                 />
               )}
             </div>
 
             {/* PIN / ZIP Code with Live Auto-Lookup */}
             <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="label-xs font-bold text-primary flex items-center gap-1">
+              <div className="h-4 flex items-center justify-between mb-1.5">
+                <label className="label-xs font-bold text-primary flex items-center gap-1 whitespace-nowrap">
                   <MapPin className="h-3 w-3" />
-                  {mode === "domestic" ? "PIN Code (6 digits) *" : "Postal / ZIP Code *"}
+                  <span>{mode === "domestic" ? "PIN Code (6 digits) *" : "Postal / ZIP Code *"}</span>
                 </label>
                 {postalLookupLoading && (
                   <span className="text-[10px] text-primary flex items-center gap-1">
-                    <Loader2 className="h-2.5 w-2.5 animate-spin" /> Fetching location...
+                    <Loader2 className="h-2.5 w-2.5 animate-spin" /> Fetching...
                   </span>
                 )}
                 {postalAutofilled && !postalLookupLoading && (
@@ -838,63 +838,63 @@ export default function AdminBulkInvoiceGenerator() {
                 value={customerPostalCode}
                 onChange={(e) => handlePostalChange(e.target.value)}
                 placeholder={mode === "domestic" ? "e.g. 395002" : "e.g. 4404 or 90210"}
-                className="w-full rounded-lg border border-primary/40 bg-background px-3 py-2 text-xs font-mono font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="h-9 w-full rounded-lg border border-primary/40 bg-background px-3 text-xs font-mono font-bold text-primary focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 items-end">
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">City</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">City</label>
               <input
                 type="text"
                 value={customerCity}
                 onChange={(e) => setCustomerCity(e.target.value)}
                 placeholder="City"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground">State / Region</label>
+              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">State / Region</label>
               <input
                 type="text"
                 value={customerState}
                 onChange={(e) => setCustomerState(e.target.value)}
                 placeholder="State / Region"
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
           </div>
 
           {/* Place of Supply (Grouped with Customer Location & GSTIN) */}
-          <div className={mode === "domestic" ? "grid grid-cols-1 sm:grid-cols-2 gap-3" : ""}>
+          <div className={mode === "domestic" ? "grid grid-cols-1 sm:grid-cols-2 gap-3 items-end" : ""}>
             <div>
-              <label className="label-xs mb-1 block text-muted-foreground flex items-center justify-between">
-                <span>Place of Supply</span>
+              <div className="h-4 flex items-center justify-between mb-1.5">
+                <label className="label-xs text-muted-foreground whitespace-nowrap">Place of Supply</label>
                 {mode === "domestic" && (
-                  <span className="font-semibold text-[10px] text-primary">
-                    {isMadhyaPradesh ? "Intra-State MP (CGST+SGST)" : "Inter-State (IGST)"}
+                  <span className="font-semibold text-[10px] text-primary whitespace-nowrap">
+                    {isMadhyaPradesh ? "Intra-State MP" : "Inter-State"}
                   </span>
                 )}
-              </label>
+              </div>
               <input
                 type="text"
                 value={placeOfSupply}
                 onChange={(e) => setPlaceOfSupply(e.target.value)}
                 placeholder={mode === "domestic" ? "e.g. Gujarat (State Code: 24)" : "e.g. Australia (Code 96)"}
-                className="w-full rounded-lg border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+                className="h-9 w-full rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
 
             {mode === "domestic" && (
               <div>
-                <label className="label-xs mb-1 block text-muted-foreground">Buyer GSTIN (Optional B2B for ITC)</label>
+                <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground whitespace-nowrap">Buyer GSTIN (Optional B2B for ITC)</label>
                 <input
                   type="text"
                   value={customerGstin}
                   onChange={(e) => setCustomerGstin(e.target.value)}
                   placeholder="e.g. 24AAACA1234B1Z5"
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="h-9 w-full rounded-lg border bg-background px-3 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
             )}
