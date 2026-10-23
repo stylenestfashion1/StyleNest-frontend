@@ -28,6 +28,8 @@ const APPAREL_THRESHOLD = 2500;
 export default function AdminBulkInvoiceGenerator() {
   const [mode, setMode] = useState("domestic"); // "domestic" | "international"
   const [taxInclusive, setTaxInclusive] = useState(true);
+  const [exportTaxRate, setExportTaxRate] = useState(5); // Default 5% as requested by client
+  const [exportTaxLabel, setExportTaxLabel] = useState("Tax"); // "Tax" | "IGST" | "Sales Tax / VAT"
 
   // 1. Invoice & Order Details
   const [invoiceNo, setInvoiceNo] = useState(
@@ -341,12 +343,12 @@ export default function AdminBulkInvoiceGenerator() {
       const q = Number(it.qty) || 0;
       const p = Number(it.price) || 0;
       const lineGross = q * p;
-      const rate = isExp ? 0 : Number(it.taxPercent || 0);
+      const rate = isExp ? Number(exportTaxRate || 0) : Number(it.taxPercent || 0);
 
       let lineTaxable = 0;
       let lineTax = 0;
 
-      if (isExp || rate === 0) {
+      if (rate === 0) {
         lineTaxable = lineGross;
         lineTax = 0;
       } else if (taxInclusive) {
@@ -378,7 +380,7 @@ export default function AdminBulkInvoiceGenerator() {
       curSymbol,
       cur,
     };
-  }, [items, mode, taxInclusive, shippingFee]);
+  }, [items, mode, taxInclusive, shippingFee, exportTaxRate]);
 
   // Download Trigger
   const handleGeneratePdf = () => {
@@ -387,10 +389,12 @@ export default function AdminBulkInvoiceGenerator() {
     const formattedItems = items.map((it) => {
       const q = Number(it.qty) || 0;
       const p = Number(it.price) || 0;
-      const r = isExp ? 0 : Number(it.taxPercent || 0);
+      const r = isExp ? Number(exportTaxRate || 0) : Number(it.taxPercent || 0);
 
       let rateLabel = "0% (LUT)";
-      if (!isExp) {
+      if (isExp) {
+        rateLabel = r === 0 ? "0% (LUT)" : `${r}% (${exportTaxLabel})`;
+      } else {
         if (isMadhyaPradesh) {
           rateLabel = `${r}% (CGST ${(r / 2).toFixed(1)}% + SGST ${(r / 2).toFixed(1)}%)`;
         } else {
@@ -415,7 +419,11 @@ export default function AdminBulkInvoiceGenerator() {
     ];
 
     if (isExp) {
-      summaryLines.push(["IGST (Export LUT 0%):", "$0.00", false]);
+      if (exportTaxRate === 0) {
+        summaryLines.push(["IGST (Export LUT 0%):", "$0.00", false]);
+      } else {
+        summaryLines.push([`${exportTaxLabel} (${exportTaxRate}%):`, `$${calculations.totalTaxAmount.toFixed(2)}`, false]);
+      }
       summaryLines.push(["International Freight:", `$${Number(shippingFee).toFixed(2)}`, false]);
     } else {
       const rates = Object.keys(calculations.taxByRate).sort((a, b) => Number(a) - Number(b));
@@ -922,8 +930,48 @@ export default function AdminBulkInvoiceGenerator() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            {mode === "domestic" && (
+          <div className="flex flex-wrap items-center gap-3">
+            {mode === "international" ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-muted/40 px-2.5 py-1.5 rounded-lg border text-xs">
+                  <span className="text-muted-foreground font-medium">Export Tax:</span>
+                  <select
+                    value={exportTaxRate}
+                    onChange={(e) => setExportTaxRate(Number(e.target.value))}
+                    className="bg-transparent font-bold text-foreground focus:outline-none cursor-pointer"
+                  >
+                    <option value={5}>5% Tax (Client Standard)</option>
+                    <option value={18}>18% Tax (High-Value Apparel)</option>
+                    <option value={0}>0% (Zero-Rated LUT Export)</option>
+                  </select>
+                </div>
+
+                {exportTaxRate > 0 && (
+                  <div className="flex items-center gap-1.5 bg-muted/40 px-2.5 py-1.5 rounded-lg border text-xs">
+                    <span className="text-muted-foreground font-medium">Invoice Label:</span>
+                    <select
+                      value={exportTaxLabel}
+                      onChange={(e) => setExportTaxLabel(e.target.value)}
+                      className="bg-transparent font-bold text-foreground focus:outline-none cursor-pointer"
+                    >
+                      <option value="Tax">Tax ({exportTaxRate}%) - Buyer Friendly</option>
+                      <option value="IGST">IGST ({exportTaxRate}%) - Customs / CA</option>
+                      <option value="Sales Tax / VAT">Sales Tax / VAT ({exportTaxRate}%)</option>
+                    </select>
+                  </div>
+                )}
+
+                <label className="flex items-center gap-2 cursor-pointer text-xs bg-muted/40 px-3 py-1.5 rounded-lg border">
+                  <input
+                    type="checkbox"
+                    checked={taxInclusive}
+                    onChange={(e) => setTaxInclusive(e.target.checked)}
+                    className="rounded border-border text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <span className="text-foreground font-semibold">Prices are Tax-Inclusive</span>
+                </label>
+              </div>
+            ) : (
               <label className="flex items-center gap-2 cursor-pointer text-xs bg-muted/40 px-3 py-1.5 rounded-lg border">
                 <input
                   type="checkbox"
@@ -938,7 +986,7 @@ export default function AdminBulkInvoiceGenerator() {
             <button
               type="button"
               onClick={handleAddItem}
-              className="btn-outline flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg"
+              className="btn-outline flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" />
               Add Product Line
@@ -956,7 +1004,7 @@ export default function AdminBulkInvoiceGenerator() {
                 <th className="py-2.5 px-3 w-24">HSN Code</th>
                 <th className="py-2.5 px-3 w-20">Qty (Pcs)</th>
                 <th className="py-2.5 px-3 w-32">Price / Unit ({calculations.curSymbol})</th>
-                <th className="py-2.5 px-3 w-32">GST Slab</th>
+                <th className="py-2.5 px-3 w-32">{mode === "international" ? "Tax Rate" : "GST Slab"}</th>
                 <th className="py-2.5 px-3 w-32 text-right">Line Total</th>
                 <th className="py-2.5 px-3 w-12 text-center">Action</th>
               </tr>
