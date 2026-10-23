@@ -12,7 +12,9 @@ import {
   RotateCcw,
   ExternalLink,
   MessageCircle,
+  Download,
 } from "lucide-react";
+import { downloadQuickPayInvoicePdf } from "../utils/quickPayInvoicePdf";
 
 export default function QuickPayReceipt() {
   const [searchParams] = useSearchParams();
@@ -163,6 +165,15 @@ export default function QuickPayReceipt() {
 
                 {/* Action Buttons: Strictly within Quick Pay Portal */}
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => downloadQuickPayInvoicePdf(payment)}
+                    className="flex-1 py-3 px-4 rounded-xl bg-accent text-white font-semibold text-sm shadow hover:opacity-95 transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download Invoice (PDF)
+                  </button>
+
                   <button
                     onClick={() => window.print()}
                     className="flex-1 py-3 px-4 rounded-xl border border-input bg-background hover:bg-muted font-semibold text-sm text-foreground transition flex items-center justify-center gap-2 cursor-pointer"

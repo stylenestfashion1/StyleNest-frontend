@@ -12,8 +12,21 @@ import {
   DollarSign, 
   CreditCard,
   MessageCircle,
-  HelpCircle
+  HelpCircle,
+  Eye,
+  X,
+  MapPin,
+  Mail,
+  Phone,
+  Calendar,
+  FileText,
+  Download,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  ArrowUpRight
 } from "lucide-react";
+import { downloadQuickPayInvoicePdf } from "../../utils/quickPayInvoicePdf";
 import * as adminApi from "../../api/admin";
 import { formatDate, formatPrice } from "../../utils/format";
 import { StatusPill } from "../../components/StatusPill";
@@ -46,6 +59,39 @@ export default function AdminQuickPayments() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [currencyFilter, setCurrencyFilter] = useState("ALL");
+
+  // Selected Payment Detail Modal State
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [copiedAddress, setCopiedAddress] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+
+  const handleCopyAddress = (p) => {
+    if (!p) return;
+    const parts = [
+      p.customerName,
+      p.customerPhone ? `Phone: ${p.customerPhone}` : "",
+      [p.addressLine1, p.addressLine2].filter(Boolean).join(", "),
+      `${[p.city, p.state].filter(Boolean).join(", ")} ${p.postalCode || ""}`.trim(),
+      p.country
+    ].filter(Boolean);
+    navigator.clipboard.writeText(parts.join("\n"));
+    setCopiedAddress(true);
+    notify("Full shipping address copied to clipboard!");
+    setTimeout(() => setCopiedAddress(false), 2000);
+  };
+
+  const handleDownloadInvoice = async (p) => {
+    try {
+      setDownloadingInvoice(true);
+      await downloadQuickPayInvoicePdf(p);
+      notify("Official Invoice PDF downloaded successfully!");
+    } catch (err) {
+      console.error("Failed to generate invoice", err);
+      notify("Failed to generate invoice PDF");
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  };
 
   // Computed Generated URL
   const generatedUrl = useMemo(() => {
@@ -367,7 +413,11 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
               </thead>
               <tbody>
                 {filteredPayments.map((p) => (
-                  <tr key={p.paymentNumber} className="border-b transition-colors hover:bg-muted/40">
+                  <tr 
+                    key={p.paymentNumber} 
+                    onClick={() => setSelectedPayment(p)}
+                    className="border-b transition-colors hover:bg-muted/60 cursor-pointer"
+                  >
                     {/* Payment ID & Date */}
                     <td className="py-4">
                       <p className="font-mono text-xs font-medium">{p.paymentNumber}</p>
@@ -426,7 +476,22 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
-                          onClick={() => handleCopyPaymentLink(p.paymentNumber)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPayment(p);
+                          }}
+                          className="label-xs flex items-center gap-1 border border-accent/40 bg-accent/5 px-2.5 py-1 text-xs text-accent transition-colors hover:bg-accent hover:text-white"
+                          title="View complete customer & shipping details"
+                        >
+                          <Eye className="h-3 w-3" />
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyPaymentLink(p.paymentNumber);
+                          }}
                           className="label-xs flex items-center gap-1 border px-2.5 py-1 text-xs transition-colors hover:bg-muted"
                           title="Copy receipt link"
                         >
@@ -441,6 +506,7 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                           href={`https://pay.stylenestfashion.com/receipt?paymentNumber=${p.paymentNumber}`}
                           target="_blank"
                           rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
                           className="label-xs flex items-center gap-1 border px-2.5 py-1 text-xs transition-colors hover:bg-muted"
                           title="View receipt"
                         >
@@ -467,6 +533,280 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
           </div>
         )}
       </div>
+
+      {/* ======================================================== */}
+      {/* CUSTOMER PAYMENT & SHIPPING DETAIL MODAL                 */}
+      {/* ======================================================== */}
+      {selectedPayment && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in"
+          onClick={() => setSelectedPayment(null)}
+        >
+          <div 
+            className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b pb-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-bold font-serif">
+                    {selectedPayment.customerName || "Customer Record"}
+                  </h2>
+                  <StatusPill status={selectedPayment.paymentStatus} />
+                </div>
+                <p className="mt-1 font-mono text-xs text-muted-foreground flex items-center gap-2">
+                  <span>Ref: {selectedPayment.paymentNumber}</span>
+                  <span>•</span>
+                  <span>{selectedPayment.createdAt ? formatDate(selectedPayment.createdAt) : "—"}</span>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedPayment(null)}
+                className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Status Context Alert Banner */}
+            {selectedPayment.paymentStatus === "PAID" && (
+              <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-semibold text-emerald-700 dark:text-emerald-400">Payment Successfully Settled</p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Verified by PayGlocal. Order is confirmed and ready for dispatch. Commercial invoice can be downloaded below.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedPayment.paymentStatus === "FAILED" && (
+              <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-semibold text-destructive">Payment Declined by Card Issuing Bank (GENERAL_DECLINE)</p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Customer was NOT charged. International cross-border transactions are often disabled by default in foreign banking apps. Share the retry link or contact them directly via WhatsApp below.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedPayment.paymentStatus === "PENDING" && (
+              <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3">
+                <Clock className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-semibold text-amber-700 dark:text-amber-400">Payment Session Pending</p>
+                  <p className="text-muted-foreground mt-0.5">
+                    The customer initiated the checkout session but has not completed payment yet. You can send them a reminder link.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* 2-Column Information Grid */}
+            <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 text-xs">
+              
+              {/* 1. Customer Contact Details */}
+              <div className="rounded-xl border bg-muted/20 p-4 flex flex-col justify-between">
+                <div>
+                  <h4 className="font-semibold text-foreground flex items-center gap-1.5 border-b pb-2 text-sm">
+                    <Mail className="h-4 w-4 text-accent" />
+                    Customer Information
+                  </h4>
+                  <div className="mt-3 space-y-2">
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">Full Name</span>
+                      <span className="font-medium text-foreground text-sm">{selectedPayment.customerName || "—"}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">Email Address</span>
+                      <a href={`mailto:${selectedPayment.customerEmail}`} className="font-medium text-accent hover:underline">
+                        {selectedPayment.customerEmail || "—"}
+                      </a>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">Contact Phone</span>
+                      <div className="flex items-center gap-2">
+                        <a href={`tel:${selectedPayment.customerPhone}`} className="font-medium hover:underline">
+                          {selectedPayment.customerPhone || "—"}
+                        </a>
+                        {selectedPayment.customerPhone && (
+                          <a
+                            href={`https://wa.me/${selectedPayment.customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
+                              `Hello ${selectedPayment.customerName || ""}, regarding your StyleNest wholesale payment ref ${selectedPayment.paymentNumber}: `
+                            )}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 rounded bg-[#25D366]/10 px-1.5 py-0.5 text-[10px] font-semibold text-[#25D366] hover:bg-[#25D366]/20"
+                            title="Chat on WhatsApp"
+                          >
+                            <MessageCircle className="h-3 w-3" /> WhatsApp
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Complete Shipping & Postal Address */}
+              <div className="rounded-xl border bg-muted/20 p-4 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h4 className="font-semibold text-foreground flex items-center gap-1.5 text-sm">
+                      <MapPin className="h-4 w-4 text-accent" />
+                      Shipping Address
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyAddress(selectedPayment)}
+                      className="label-xs flex items-center gap-1 text-accent hover:underline"
+                      title="Copy formatted address for courier"
+                    >
+                      {copiedAddress ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                      {copiedAddress ? "Copied!" : "Copy"}
+                    </button>
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <div>
+                      <span className="text-muted-foreground block text-[11px]">Street Address</span>
+                      <span className="font-medium text-foreground">
+                        {[selectedPayment.addressLine1, selectedPayment.addressLine2].filter(Boolean).join(", ") || "—"}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">City</span>
+                        <span className="font-medium">{selectedPayment.city || "—"}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">State / Region</span>
+                        <span className="font-medium">{selectedPayment.state || "—"}</span>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">Postal / ZIP Code</span>
+                        <span className="inline-block rounded bg-accent/15 px-2 py-0.5 font-mono text-xs font-bold text-accent">
+                          {selectedPayment.postalCode || "—"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">Country</span>
+                        <span className="font-medium">{selectedPayment.country || "—"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Payment & Settlement Breakdown */}
+              <div className="rounded-xl border bg-muted/20 p-4">
+                <h4 className="font-semibold text-foreground flex items-center gap-1.5 border-b pb-2 text-sm">
+                  <CreditCard className="h-4 w-4 text-accent" />
+                  Financial Summary
+                </h4>
+                <div className="mt-3 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Amount:</span>
+                    <span className="font-bold text-base text-foreground">
+                      {selectedPayment.currency === "USD" ? `${Number(selectedPayment.amount).toFixed(2)}` : `₹${Number(selectedPayment.amount).toLocaleString("en-IN")}`} ${selectedPayment.currency}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Payment Status:</span>
+                    <StatusPill status={selectedPayment.paymentStatus} />
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Purpose / Note:</span>
+                    <span className="font-medium text-right max-w-[180px] truncate" title={selectedPayment.note}>
+                      {selectedPayment.note || "Direct Payment"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Gateway Audit Details */}
+              <div className="rounded-xl border bg-muted/20 p-4">
+                <h4 className="font-semibold text-foreground flex items-center gap-1.5 border-b pb-2 text-sm">
+                  <Receipt className="h-4 w-4 text-accent" />
+                  Gateway Audit Trail
+                </h4>
+                <div className="mt-3 space-y-2 font-mono text-[11px]">
+                  <div>
+                    <span className="text-muted-foreground font-sans block text-[10px]">Payment Reference Number</span>
+                    <span className="font-bold">{selectedPayment.paymentNumber}</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground font-sans block text-[10px]">PayGlocal GID</span>
+                    <span className="truncate block" title={selectedPayment.payglocalGid || "N/A"}>
+                      {selectedPayment.payglocalGid || "—"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground font-sans block text-[10px]">PayGlocal Txn ID</span>
+                    <span className="truncate block" title={selectedPayment.payglocalTxnId || "N/A"}>
+                      {selectedPayment.payglocalTxnId || "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Action Footer */}
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+              <div className="flex items-center gap-2">
+                {selectedPayment.paymentStatus === "PAID" && (
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadInvoice(selectedPayment)}
+                    disabled={downloadingInvoice}
+                    className="label-xs flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-white font-medium shadow hover:opacity-95 transition"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {downloadingInvoice ? "Generating..." : "Download Invoice (PDF)"}
+                  </button>
+                )}
+
+                <a
+                  href={`https://pay.stylenestfashion.com/receipt?paymentNumber=${selectedPayment.paymentNumber}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="label-xs flex items-center gap-1.5 rounded-lg border px-3.5 py-2 hover:bg-muted transition"
+                >
+                  <Receipt className="h-3.5 w-3.5" />
+                  View Public Receipt
+                </a>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleCopyPaymentLink(selectedPayment.paymentNumber)}
+                  className="label-xs flex items-center gap-1.5 rounded-lg border px-3.5 py-2 hover:bg-muted transition"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  Copy Payment Link
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPayment(null)}
+                  className="label-xs rounded-lg border bg-muted/60 px-4 py-2 text-muted-foreground hover:bg-muted hover:text-foreground transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
