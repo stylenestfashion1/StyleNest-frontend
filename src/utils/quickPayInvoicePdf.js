@@ -221,40 +221,23 @@ export async function downloadQuickPayInvoicePdf(payment) {
   const summaryBoxX = pageWidth - margin - summaryBoxW;
   const summaryBoxY = y;
 
-  // Left: Statutory Tax Notes & Settlement Proof
+  // Left Side: Payment Confirmation (Clean, no statutory compliance box)
   const leftBoxW = contentWidth - summaryBoxW - 6;
-  doc.setFillColor(...lightGrey);
-  doc.setDrawColor(...borderGrey);
-  doc.rect(margin, summaryBoxY, leftBoxW, 36, "FD");
-
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(...darkSlate);
-  doc.text("Tax & Settlement Compliance:", margin + 4, summaryBoxY + 5);
+  doc.text("Payment Confirmation:", margin, summaryBoxY + 5);
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
+  doc.setFontSize(7.2);
   doc.setTextColor(...textMuted);
+  doc.text(`Order & Settlement Ref: ${payment.paymentNumber || ""}`, margin, summaryBoxY + 9.5);
+  doc.text("Payment Status: PAID (Settled)", margin, summaryBoxY + 13.5);
 
-  if (isExport) {
-    const declText = "Statutory Export Clause: Supply meant for export under Letter of Undertaking (LUT) without payment of integrated tax (Zero-Rated Supply as per Section 16 of IGST Act, 2017).";
-    const wrappedDecl = doc.splitTextToSize(declText, leftBoxW - 8);
-    doc.text(wrappedDecl, margin + 4, summaryBoxY + 10);
-
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...darkSlate);
-    doc.text("• Export IGST Rate: 0.00% ($0.00 USD)", margin + 4, summaryBoxY + 22);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(...textMuted);
-    doc.text(`• PayGlocal Merchant ID: ptplstylenes2270`, margin + 4, summaryBoxY + 26.5);
-    doc.text(`• Authorized Settlement Ref: ${payment.payglocalTxnId || payment.paymentNumber}`, margin + 4, summaryBoxY + 31);
-  } else {
-    doc.text("GST Tax Invoice issued under Section 31 of CGST/SGST Act, 2017.", margin + 4, summaryBoxY + 10);
-    doc.text("Taxable value and GST are calculated on inclusive retail/wholesale basis.", margin + 4, summaryBoxY + 15);
-    doc.text(`Payment Settlement Ref: ${payment.paymentNumber}`, margin + 4, summaryBoxY + 20);
-  }
-
-  // Right: Amounts Breakdown (Exact match to normal invoice)
+  // Right: Amounts Breakdown Box
+  doc.setFillColor(...lightGrey);
+  doc.setDrawColor(...borderGrey);
+  doc.rect(summaryBoxX, summaryBoxY, summaryBoxW, 36, "FD");
   let amtY = summaryBoxY + 4;
   const addAmtRow = (lbl, val, bold = false) => {
     doc.setFont("helvetica", bold ? "bold" : "normal");

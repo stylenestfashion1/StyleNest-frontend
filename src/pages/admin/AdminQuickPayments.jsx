@@ -401,14 +401,15 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
           <div className="skeleton mt-6 h-80 w-full" />
         ) : (
           <div className="mt-6 overflow-x-auto">
-            <table className="w-full min-w-[960px] text-left text-sm">
+            <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b">
-                  {["Payment ID & Date", "Customer Details", "Amount", "Note / Reference", "Gateway Txn", "Status", "Actions"].map((h) => (
-                    <th key={h} className="label-xs py-3 font-normal text-muted-foreground">
-                      {h}
-                    </th>
-                  ))}
+                  <th className="label-xs py-3 font-normal text-muted-foreground whitespace-nowrap">Payment ID & Date</th>
+                  <th className="label-xs py-3 font-normal text-muted-foreground">Customer</th>
+                  <th className="label-xs py-3 font-normal text-muted-foreground whitespace-nowrap">Amount</th>
+                  <th className="label-xs py-3 font-normal text-muted-foreground">Note / Reference</th>
+                  <th className="label-xs py-3 font-normal text-muted-foreground whitespace-nowrap">Status</th>
+                  <th className="label-xs py-3 font-normal text-muted-foreground text-right pr-4 whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -419,28 +420,24 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                     className="border-b transition-colors hover:bg-muted/60 cursor-pointer"
                   >
                     {/* Payment ID & Date */}
-                    <td className="py-4">
-                      <p className="font-mono text-xs font-medium">{p.paymentNumber}</p>
+                    <td className="py-3.5 whitespace-nowrap">
+                      <p className="font-mono text-xs font-semibold text-foreground">{p.paymentNumber}</p>
                       <p className="label-xs mt-0.5 text-muted-foreground">
                         {p.createdAt ? formatDate(p.createdAt) : "—"}
                       </p>
                     </td>
 
-                    {/* Customer Info */}
-                    <td className="py-4">
-                      <p className="font-medium">{p.customerName || "—"}</p>
-                      <p className="label-xs text-muted-foreground">{p.customerEmail}</p>
-                      <p className="label-xs text-muted-foreground">{p.customerPhone}</p>
-                      {(p.city || p.country) && (
-                        <p className="label-xs text-muted-foreground">
-                          {[p.city, p.country].filter(Boolean).join(", ")}
-                        </p>
-                      )}
+                    {/* Customer Info (Clean: Name + Location; Full details in View modal) */}
+                    <td className="py-3.5">
+                      <p className="font-semibold text-xs text-foreground">{p.customerName || "Wholesale Buyer"}</p>
+                      <p className="label-xs text-muted-foreground mt-0.5">
+                        {[p.city, p.country].filter(Boolean).join(", ") || p.customerEmail || "—"}
+                      </p>
                     </td>
 
                     {/* Amount & Currency */}
-                    <td className="py-4">
-                      <span className="font-medium">
+                    <td className="py-3.5 whitespace-nowrap">
+                      <span className="font-semibold text-xs text-foreground">
                         {p.currency === "USD" ? `$${Number(p.amount).toFixed(2)}` : `₹${Number(p.amount).toLocaleString("en-IN")}`}
                       </span>
                       <span className="label-xs ml-1.5 border px-1.5 py-0.5 text-muted-foreground">
@@ -449,38 +446,24 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                     </td>
 
                     {/* Note / Purpose */}
-                    <td className="py-4 max-w-[200px]">
+                    <td className="py-3.5 max-w-[200px]">
                       <p className="truncate text-xs text-muted-foreground" title={p.note}>
-                        {p.note || "Direct Payment"}
+                        {p.note || "Direct Wholesale Payment"}
                       </p>
                     </td>
 
-                    {/* Gateway Ref */}
-                    <td className="py-4">
-                      {p.payglocalTxnId ? (
-                        <span className="font-mono text-xs text-muted-foreground" title={p.payglocalTxnId}>
-                          {p.payglocalTxnId.length > 14 ? `${p.payglocalTxnId.substring(0, 14)}...` : p.payglocalTxnId}
-                        </span>
-                      ) : (
-                        <span className="label-xs text-muted-foreground">—</span>
-                      )}
-                    </td>
-
                     {/* Status */}
-                    <td className="py-4">
+                    <td className="py-3.5 whitespace-nowrap">
                       <StatusPill status={p.paymentStatus} />
                     </td>
 
                     {/* Actions */}
-                    <td className="py-4">
-                      <div className="flex items-center gap-2">
+                    <td className="py-3.5 text-right pr-4 whitespace-nowrap">
+                      <div className="inline-flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPayment(p);
-                          }}
-                          className="label-xs flex items-center gap-1 border border-accent/40 bg-accent/5 px-2.5 py-1 text-xs text-accent transition-colors hover:bg-accent hover:text-white"
+                          onClick={() => setSelectedPayment(p)}
+                          className="label-xs flex items-center gap-1 border border-accent/40 bg-accent/5 px-2.5 py-1 text-xs text-accent transition-colors hover:bg-accent hover:text-white rounded"
                           title="View complete customer & shipping details"
                         >
                           <Eye className="h-3 w-3" />
@@ -488,11 +471,8 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                         </button>
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopyPaymentLink(p.paymentNumber);
-                          }}
-                          className="label-xs flex items-center gap-1 border px-2.5 py-1 text-xs transition-colors hover:bg-muted"
+                          onClick={() => handleCopyPaymentLink(p.paymentNumber)}
+                          className="label-xs flex items-center gap-1 border px-2.5 py-1 text-xs transition-colors hover:bg-muted rounded"
                           title="Copy receipt link"
                         >
                           {copiedId === p.paymentNumber ? (
@@ -506,8 +486,7 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                           href={`https://pay.stylenestfashion.com/receipt?paymentNumber=${p.paymentNumber}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="label-xs flex items-center gap-1 border px-2.5 py-1 text-xs transition-colors hover:bg-muted"
+                          className="label-xs flex items-center gap-1 border px-2.5 py-1 text-xs transition-colors hover:bg-muted rounded"
                           title="View receipt"
                         >
                           <Receipt className="h-3 w-3" />

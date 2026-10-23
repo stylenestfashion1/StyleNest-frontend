@@ -259,35 +259,25 @@ export function generateCustomInvoicePdf(data) {
   const summaryLines = data.summaryLines || [];
   const summaryBoxH = Math.max(36, summaryLines.length * 4.6 + 6);
 
-  // Left Box: Tax Breakup & Statutory Compliance
+  // Left Side: Amount in Words (Clean, no statutory compliance box)
   const leftBoxW = contentWidth - summaryBoxW - 6;
-  doc.setFillColor(...lightGrey);
-  doc.setDrawColor(...borderGrey);
-  doc.rect(margin, summaryBoxY, leftBoxW, summaryBoxH, "FD");
+  if (data.amountInWords) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...darkSlate);
+    doc.text("Amount in Words:", margin, summaryBoxY + 5);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(...darkSlate);
-  doc.text("Tax Analysis & Statutory Compliance:", margin + 4, summaryBoxY + 5);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(...textMuted);
-
-  let complianceY = summaryBoxY + 9.5;
-  const complianceNotes = data.complianceNotes && data.complianceNotes.length > 0 ? data.complianceNotes : [
-    isExport
-      ? "• Statutory Export Clause: Supply meant for export under Letter of Undertaking (LUT) without payment of integrated tax (Zero-Rated Supply as per Sec 16 of IGST Act, 2017)."
-      : "• Supply Type: Domestic B2B Wholesale Supply as per Section 31 of CGST/SGST Act, 2017."
-  ];
-
-  complianceNotes.forEach((note) => {
-    const wrappedNote = doc.splitTextToSize(note, leftBoxW - 8);
-    doc.text(wrappedNote, margin + 4, complianceY);
-    complianceY += wrappedNote.length * 3.6;
-  });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.2);
+    doc.setTextColor(...textMuted);
+    const wrappedWords = doc.splitTextToSize(String(data.amountInWords), leftBoxW);
+    doc.text(wrappedWords, margin, summaryBoxY + 9.5);
+  }
 
   // Right Box: Amounts Breakdown
+  doc.setFillColor(...lightGrey);
+  doc.setDrawColor(...borderGrey);
+  doc.rect(summaryBoxX, summaryBoxY, summaryBoxW, summaryBoxH, "FD");
   let amtY = summaryBoxY + 4.5;
   summaryLines.forEach(([lbl, val, bold]) => {
     if (lbl === "LINE") {
@@ -306,14 +296,7 @@ export function generateCustomInvoicePdf(data) {
 
   y = summaryBoxY + summaryBoxH + 6;
 
-  // Amount In Words
-  if (data.amountInWords) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...darkSlate);
-    doc.text(`Amount in Words: ${data.amountInWords}`, margin, y);
-    y += 6;
-  }
+  // Amount in Words already placed on left side of summary
 
   // 6. Footer & Signatory
   doc.setDrawColor(...borderGrey);
