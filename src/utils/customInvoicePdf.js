@@ -253,7 +253,7 @@ export function generateCustomInvoicePdf(data) {
   y += 6;
 
   // 5. Summary & Tax Compliance Section
-  const summaryBoxW = 80;
+  const summaryBoxW = 88;
   const summaryBoxX = pageWidth - margin - summaryBoxW;
   const summaryBoxY = y;
   const summaryLines = data.summaryLines || [];

@@ -393,7 +393,7 @@ export default function AdminBulkInvoiceGenerator() {
 
       let rateLabel = "0% (LUT)";
       if (isExp) {
-        rateLabel = r === 0 ? "0% (LUT)" : `${r}% (${exportTaxLabel})`;
+        rateLabel = r === 0 ? "0% (LUT)" : `${r}% (${exportTaxLabel}${taxInclusive ? " Incl." : ""})`;
       } else {
         if (isMadhyaPradesh) {
           rateLabel = `${r}% (CGST ${(r / 2).toFixed(1)}% + SGST ${(r / 2).toFixed(1)}%)`;
@@ -420,11 +420,15 @@ export default function AdminBulkInvoiceGenerator() {
 
     if (isExp) {
       if (exportTaxRate === 0) {
-        summaryLines.push(["IGST (Export LUT 0%):", "$0.00", false]);
+        summaryLines.push(["IGST (Export LUT 0%):", `${calculations.curSymbol}0.00`, false]);
       } else {
-        summaryLines.push([`${exportTaxLabel} (${exportTaxRate}%):`, `$${calculations.totalTaxAmount.toFixed(2)}`, false]);
+        summaryLines.push([
+          `${exportTaxLabel} (${exportTaxRate}%${taxInclusive ? " Incl." : ""}):`,
+          `${calculations.curSymbol}${calculations.totalTaxAmount.toFixed(2)}`,
+          false,
+        ]);
       }
-      summaryLines.push(["International Freight:", `$${Number(shippingFee).toFixed(2)}`, false]);
+      summaryLines.push(["International Freight:", `${calculations.curSymbol}${Number(shippingFee).toFixed(2)}`, false]);
     } else {
       const rates = Object.keys(calculations.taxByRate).sort((a, b) => Number(a) - Number(b));
       if (rates.length === 0) {
@@ -1070,8 +1074,10 @@ export default function AdminBulkInvoiceGenerator() {
                     {/* GST Rate Selector / Indicator */}
                     <td className="py-2.5 px-3">
                       {mode === "international" ? (
-                        <span className="inline-block rounded bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-600">
-                          0% (LUT Export)
+                        <span className="inline-block rounded bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary">
+                          {exportTaxRate === 0
+                            ? "0% (LUT Export)"
+                            : `${exportTaxRate}% (${exportTaxLabel}${taxInclusive ? " Incl." : ""})`}
                         </span>
                       ) : (
                         <div className="flex items-center gap-1.5">
@@ -1124,7 +1130,9 @@ export default function AdminBulkInvoiceGenerator() {
             <p>
               • <strong>Tax Regime:</strong>{" "}
               {mode === "international"
-                ? "Zero-Rated Export (LUT 0%)"
+                ? (exportTaxRate === 0
+                    ? "Zero-Rated Export (LUT 0%)"
+                    : `Export Supply with Tax (${exportTaxRate}% ${exportTaxLabel} ${taxInclusive ? "Included in Price" : "Added Extra"})`)
                 : isMadhyaPradesh
                 ? "Intra-State Supply (Within MP - CGST + SGST)"
                 : "Inter-State Supply (Outside MP - IGST)"}
@@ -1149,10 +1157,19 @@ export default function AdminBulkInvoiceGenerator() {
 
             {/* Render taxes grouped by rate */}
             {mode === "international" ? (
-              <div className="flex justify-between text-muted-foreground">
-                <span>IGST (Export LUT 0%):</span>
-                <span className="font-mono font-medium">$0.00</span>
-              </div>
+              exportTaxRate === 0 ? (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>IGST (Export LUT 0%):</span>
+                  <span className="font-mono font-medium">$0.00</span>
+                </div>
+              ) : (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>{exportTaxLabel} ({exportTaxRate}%{taxInclusive ? " Incl." : ""}):</span>
+                  <span className="font-mono font-medium">
+                    {calculations.curSymbol}{calculations.totalTaxAmount.toFixed(2)}
+                  </span>
+                </div>
+              )
             ) : Object.keys(calculations.taxByRate).length === 0 ? (
               <div className="flex justify-between text-muted-foreground">
                 <span>GST:</span>

@@ -33,6 +33,11 @@ export async function downloadQuickPayInvoicePdf(payment) {
   const isExport = (payment.currency || "USD").toUpperCase() === "USD";
   const curSymbol = isExport ? "$" : "Rs. ";
   const totalAmount = Number(payment.amount || 0);
+  const taxRate = 5; // Standard 5% tax-inclusive
+  const taxableAmount = totalAmount / (1 + taxRate / 100);
+  const taxAmount = totalAmount - taxableAmount;
+  const taxableStr = `${curSymbol}${taxableAmount.toFixed(2)}`;
+  const taxStr = `${curSymbol}${taxAmount.toFixed(2)}`;
 
   // 1. Centered Seller Header (Exact match to normal website invoice)
   doc.setFont("helvetica", "bold");
@@ -146,7 +151,7 @@ export async function downloadQuickPayInvoicePdf(payment) {
     ["Order / Ref No.:", payment.paymentNumber || "—"],
     ["Payment Mode:", "Online (PayGlocal Gateway)"],
     ["Gateway ID:", payment.payglocalGid ? (payment.payglocalGid.length > 20 ? payment.payglocalGid.substring(0, 20) + "..." : payment.payglocalGid) : "Settled"],
-    ["Place of Supply:", isExport ? `${payment.country || "Outside India"} (Code 96)` : (payment.state || "Madhya Pradesh")],
+    ["Place of Supply:", isExport ? `${payment.country || "Outside India"} (Export)` : (payment.state || "Madhya Pradesh")],
   ];
 
   doc.setFontSize(8);
@@ -177,7 +182,7 @@ export async function downloadQuickPayInvoicePdf(payment) {
   doc.text("HSN/SAC", margin + 88, thY + 4.5);
   doc.text("Qty", margin + 112, thY + 4.5);
   doc.text("Price/Unit", margin + 134, thY + 4.5, { align: "right" });
-  doc.text("GST %", margin + 155, thY + 4.5, { align: "right" });
+  doc.text(isExport ? "Tax Rate" : "GST %", margin + 155, thY + 4.5, { align: "right" });
   doc.text("Amount", margin + contentWidth - 3, thY + 4.5, { align: "right" });
 
   y += 6.5;
@@ -210,16 +215,18 @@ export async function downloadQuickPayInvoicePdf(payment) {
 
   const amountStr = `${curSymbol}${totalAmount.toFixed(2)}`;
   doc.text(amountStr, margin + 134, rowY + 5, { align: "right" });
-  doc.text(isExport ? "0% (LUT)" : "5%", margin + 155, rowY + 5, { align: "right" });
+  doc.text("5% (Incl.)", margin + 155, rowY + 5, { align: "right" });
   doc.setFont("helvetica", "bold");
   doc.text(amountStr, margin + contentWidth - 3, rowY + 5, { align: "right" });
 
   y += rowH + 6;
 
   // 5. Bottom Amount Table (Right) & Tax Breakup (Left)
-  const summaryBoxW = 75;
+  const summaryBoxW = 82;
   const summaryBoxX = pageWidth - margin - summaryBoxW;
   const summaryBoxY = y;
+  const isMP = (payment.state || "").toLowerCase().includes("madhya pradesh") || (payment.state || "").toLowerCase().includes("mp");
+  const summaryBoxH = (!isExport && isMP) ? 45 : 41;
 
   // Left Side: Payment Confirmation (Clean, no statutory compliance box)
   const leftBoxW = contentWidth - summaryBoxW - 6;
@@ -237,7 +244,7 @@ export async function downloadQuickPayInvoicePdf(payment) {
   // Right: Amounts Breakdown Box
   doc.setFillColor(...lightGrey);
   doc.setDrawColor(...borderGrey);
-  doc.rect(summaryBoxX, summaryBoxY, summaryBoxW, 36, "FD");
+  doc.rect(summaryBoxX, summaryBoxY, summaryBoxW, summaryBoxH, "FD");
   let amtY = summaryBoxY + 4;
   const addAmtRow = (lbl, val, bold = false) => {
     doc.setFont("helvetica", bold ? "bold" : "normal");
@@ -248,24 +255,27 @@ export async function downloadQuickPayInvoicePdf(payment) {
     amtY += 4.5;
   };
 
-  addAmtRow("Taxable Amount:", amountStr);
+  addAmtRow("Taxable Amount:", taxableStr);
   if (isExport) {
-    addAmtRow("IGST (Export 0%):", "$0.00");
+    addAmtRow("Tax (5% Included):", taxStr);
+  } else if (isMP) {
+    addAmtRow("CGST (2.5% Incl.):", `Rs. ${(taxAmount / 2).toFixed(2)}`);
+    addAmtRow("SGST (2.5% Incl.):", `Rs. ${(taxAmount / 2).toFixed(2)}`);
   } else {
-    addAmtRow("GST (5%):", `Rs. ${(totalAmount * 0.05 / 1.05).toFixed(2)}`);
+    addAmtRow("IGST (5% Included):", `Rs. ${taxAmount.toFixed(2)}`);
   }
-  addAmtRow("Shipping / Fees:", "$0.00");
-  addAmtRow("Round Off:", "0.00");
+  addAmtRow("Shipping / Freight:", `${curSymbol}0.00`);
+  addAmtRow("Round Off:", `${curSymbol}0.00`);
 
   doc.setDrawColor(...borderGrey);
   doc.line(summaryBoxX + 4, amtY - 1, summaryBoxX + summaryBoxW - 4, amtY - 1);
   amtY += 2;
 
-  addAmtRow("Grand Total:", `${amountStr} ${payment.currency || "USD"}`, true);
+  addAmtRow("Grand Total:", `${amountStr} ${payment.currency || (isExport ? "USD" : "INR")}`, true);
   addAmtRow("Payment Status:", "PAID (Settled)", true);
-  addAmtRow("Balance Due:", "$0.00", false);
+  addAmtRow("Balance Due:", `${curSymbol}0.00`, false);
 
-  y = summaryBoxY + 42;
+  y = summaryBoxY + summaryBoxH + 6;
 
   // 6. Footer & Signatory
   doc.setDrawColor(...borderGrey);

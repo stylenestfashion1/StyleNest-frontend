@@ -32,6 +32,7 @@ export default function InvoiceView({ invoice }) {
   if (!invoice) return null;
 
   const taxBreakup = invoice.taxBreakup || [];
+  const isExport = invoice.billingCountry && !["india", "in"].includes(invoice.billingCountry.toLowerCase().trim());
 
   return (
     <div
@@ -57,7 +58,7 @@ export default function InvoiceView({ invoice }) {
       </div>
 
       <div className="mt-6 py-2 text-center text-sm font-semibold uppercase tracking-wide" style={{ background: ACCENT, color: "#ffffff" }}>
-        Tax Invoice
+        {isExport ? "Tax Invoice / Export Commercial Invoice" : "Tax Invoice"}
       </div>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-2">
@@ -119,7 +120,7 @@ export default function InvoiceView({ invoice }) {
               <Th>Unit</Th>
               <Th right>Price/Unit</Th>
               <Th right>Discount</Th>
-              <Th right>GST</Th>
+              <Th right>{isExport ? "Tax (5%)" : "GST"}</Th>
               <Th right>Amount</Th>
             </tr>
           </thead>
@@ -194,12 +195,14 @@ export default function InvoiceView({ invoice }) {
         <dl className="w-full space-y-1.5 text-sm sm:w-1/2">
           <Row label="Taxable Amount" value={money(invoice.taxableAmount)} />
           {Number(invoice.totalDiscount) > 0 && <Row label="Total Discount" value={money(invoice.totalDiscount)} />}
-          {invoice.interState ? (
-            <Row label="IGST" value={money(invoice.igstAmount)} />
+          {isExport ? (
+            <Row label="Tax (5% Included)" value={money(invoice.igstAmount)} />
+          ) : invoice.interState ? (
+            <Row label="IGST (5% Included)" value={money(invoice.igstAmount)} />
           ) : (
             <>
-              <Row label="CGST" value={money(invoice.cgstAmount)} />
-              <Row label="SGST" value={money(invoice.sgstAmount)} />
+              <Row label="CGST (2.5% Incl.)" value={money(invoice.cgstAmount)} />
+              <Row label="SGST (2.5% Incl.)" value={money(invoice.sgstAmount)} />
             </>
           )}
           {Number(invoice.shippingCharge) > 0 && <Row label="Shipping" value={money(invoice.shippingCharge)} />}
