@@ -1118,7 +1118,7 @@ export default function AdminBulkInvoiceGenerator() {
                             className="w-36 shrink-0 rounded border bg-background px-1.5 py-1 text-[11px] text-muted-foreground truncate cursor-pointer hover:bg-muted/40"
                             title="Auto-fill from bulk catalog"
                           >
-                            <option value="">⚡ Select Catalog...</option>
+                            <option value="">Select from Catalog...</option>
                             {bulkProducts.map((bp) => (
                               <option key={bp.id} value={bp.id}>
                                 {bp.name} (Rs. {bp.price})
