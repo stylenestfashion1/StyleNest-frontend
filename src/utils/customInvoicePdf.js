@@ -1,3 +1,4 @@
+import { amountToWords } from "./numberToWords";
 import { jsPDF } from "jspdf";
 
 /**
@@ -279,7 +280,12 @@ export function generateCustomInvoicePdf(data) {
 
   // Left Side: Amount in Words (Clean, no statutory compliance box)
   const leftBoxW = contentWidth - summaryBoxW - 6;
-  if (data.amountInWords) {
+  const rawWords = data.amountInWords;
+  const wordsToPrint = rawWords && !/^\d+(\.\d+)?\s*[A-Z]*$/i.test(String(rawWords).trim())
+    ? String(rawWords)
+    : (data.grandTotal != null ? amountToWords(data.grandTotal, data.currency || (data.isExport ? "USD" : "INR")) : "");
+
+  if (wordsToPrint) {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(...darkSlate);
@@ -288,7 +294,7 @@ export function generateCustomInvoicePdf(data) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.2);
     doc.setTextColor(...textMuted);
-    const wrappedWords = doc.splitTextToSize(String(data.amountInWords), leftBoxW);
+    const wrappedWords = doc.splitTextToSize(wordsToPrint, leftBoxW);
     doc.text(wrappedWords, margin, summaryBoxY + 9.5);
   }
 

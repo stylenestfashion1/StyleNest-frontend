@@ -21,6 +21,7 @@ import {
   Hash,
 } from "lucide-react";
 import { generateCustomInvoicePdf } from "../../utils/customInvoicePdf";
+import { amountToWords } from "../../utils/numberToWords";
 import { lookupPostalCode } from "../../api/addresses";
 import { COUNTRY_OPTIONS } from "../QuickPay";
 
@@ -590,7 +591,7 @@ export default function AdminBulkInvoiceGenerator() {
       items: formattedItems,
       summaryLines,
       complianceNotes,
-      amountInWords: `${calculations.grandTotal.toFixed(2)} ${calculations.cur}`,
+      amountInWords: amountToWords(calculations.grandTotal, calculations.cur),
     };
 
     generateCustomInvoicePdf(payload);

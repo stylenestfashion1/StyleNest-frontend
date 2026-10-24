@@ -1,3 +1,4 @@
+import { amountToWords } from "./numberToWords";
 import { jsPDF } from "jspdf";
 
 /**
@@ -274,6 +275,20 @@ export async function downloadQuickPayInvoicePdf(payment) {
     curLeftY += splitTxn.length * 3.4;
   }
   doc.text("Payment Status: PAID (Settled)", margin, curLeftY);
+  curLeftY += 4.5;
+
+  const words = amountToWords(payment.amount, isExport ? "USD" : "INR");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...darkSlate);
+  doc.text("Amount in Words:", margin, curLeftY);
+  curLeftY += 3.5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...textMuted);
+  const wrappedWords = doc.splitTextToSize(words, leftBoxW);
+  doc.text(wrappedWords, margin, curLeftY);
 
   // Right: Amounts Breakdown Box
   doc.setFillColor(...lightGrey);

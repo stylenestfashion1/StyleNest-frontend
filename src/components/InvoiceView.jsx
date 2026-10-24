@@ -1,3 +1,4 @@
+import { amountToWords } from "../utils/numberToWords";
 import { formatDate } from "../utils/format";
 
 // Fixed, theme-independent palette -- this is a formal business document and
@@ -192,8 +193,10 @@ export default function InvoiceView({ invoice }) {
           <p className="text-xs font-medium uppercase tracking-wide" style={{ color: ACCENT }}>
             Amount in Words
           </p>
-          <p className="mt-2 text-sm" style={{ color: INK }}>
-            {invoice.amountInWords}
+          <p className="mt-2 text-sm font-medium" style={{ color: INK }}>
+            {invoice.amountInWords && !/^\d+(\.\d+)?\s*[A-Z]*$/i.test(String(invoice.amountInWords).trim())
+              ? invoice.amountInWords
+              : amountToWords(invoice.grandTotal, isExport ? "USD" : "INR")}
           </p>
         </div>
       </div>
