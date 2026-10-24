@@ -553,7 +553,7 @@ export default function AdminBulkInvoiceGenerator() {
             Manual Bulk Invoice Generator
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Create, customize, and download official StyleNest tax invoices with exact timestamps, UTR/Gateway IDs, and smart GST slabs.
+            Create, customize, and download official StyleNest Fashion tax invoices with exact timestamps, UTR/Gateway IDs, and smart GST slabs.
           </p>
         </div>
 

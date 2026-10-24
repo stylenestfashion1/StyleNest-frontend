@@ -284,7 +284,7 @@ export default function QuickPay() {
       const payload = {
         amount: parsedAmount,
         currency: "USD",
-        note: note.trim() || "StyleNest International Wholesale Settlement",
+        note: note.trim() || "StyleNest Fashion International Wholesale Settlement",
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim(),
         customerPhone: fullPhoneNumber,
@@ -321,7 +321,7 @@ export default function QuickPay() {
               Verified International B2B Settlement Portal
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight font-serif">
-              StyleNest Quick Pay (USD)
+              StyleNest Fashion Quick Pay (USD)
             </h1>
             <p className="mt-2 text-sm sm:text-base text-muted-foreground">
               Direct checkout for international wholesale orders, custom export batches, and global settlements. Instant, seamless & secure.
@@ -330,7 +330,7 @@ export default function QuickPay() {
             {isPrefilled && (
               <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
                 <Sparkles className="h-4 w-4 shrink-0" />
-                Custom export invoice details pre-filled by StyleNest sales desk
+                Custom export invoice details pre-filled by StyleNest Fashion sales desk
               </div>
             )}
           </div>
@@ -693,7 +693,7 @@ export default function QuickPay() {
                     </div>
                     <div className="flex items-start gap-2">
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Immediate batch reconciliation with StyleNest export desk</span>
+                      <span>Immediate batch reconciliation with StyleNest Fashion export desk</span>
                     </div>
                   </div>
 

@@ -65,7 +65,7 @@ export default function BulkOrderConfirmation() {
                 Continue Wholesale Browsing <ArrowRight className="h-4 w-4" />
               </Link>
               <Link to="/" replace={true} className="btn-outline inline-flex items-center justify-center">
-                Back to StyleNest Home
+                Back to StyleNest Fashion Home
               </Link>
             </div>
           </div>

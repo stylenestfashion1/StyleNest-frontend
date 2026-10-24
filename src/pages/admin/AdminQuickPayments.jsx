@@ -616,7 +616,7 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                         {selectedPayment.customerPhone && (
                           <a
                             href={`https://wa.me/${selectedPayment.customerPhone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(
-                              `Hello ${selectedPayment.customerName || ""}, regarding your StyleNest wholesale payment ref ${selectedPayment.paymentNumber}: `
+                              `Hello ${selectedPayment.customerName || ""}, regarding your StyleNest Fashion wholesale payment ref ${selectedPayment.paymentNumber}: `
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"

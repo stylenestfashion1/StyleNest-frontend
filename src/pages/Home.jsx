@@ -468,7 +468,7 @@ export default function Home() {
 
       {/* Floating WhatsApp Quick Action Button */}
       <a
-        href="https://wa.me/916269933231?text=Hi%20StyleNest,%20I%20need%20help%20with%20an%20order"
+        href="https://wa.me/916269933231?text=Hi%20StyleNest%20Fashion,%20I%20need%20help%20with%20an%20order"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat on WhatsApp"
