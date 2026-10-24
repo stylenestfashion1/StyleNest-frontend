@@ -107,6 +107,10 @@ export default function InvoiceView({ invoice }) {
             {invoice.paymentTransactionId && (
               <Row label="Gateway / Txn ID" value={invoice.paymentTransactionId} />
             )}
+            <Row
+              label="Place of Supply"
+              value={isExport ? `${invoice.billingCountry || "Outside India"} (Export)` : (invoice.billingState || "Madhya Pradesh")}
+            />
           </dl>
         </div>
       </div>

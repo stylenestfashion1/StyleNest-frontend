@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import * as adminApi from "../../api/admin";
 import {
   FileText,
   Download,
@@ -31,6 +33,30 @@ export default function AdminBulkInvoiceGenerator() {
   const [exportTaxRate, setExportTaxRate] = useState(5); // Default 5% as requested by client
   const [exportTaxLabel, setExportTaxLabel] = useState("Tax"); // "Tax" | "IGST" | "Sales Tax / VAT"
 
+  // Fetch catalog bulk products to auto-fill items and prices
+  const { data: bulkProductsData } = useQuery({
+    queryKey: ["admin", "bulk-products"],
+    queryFn: adminApi.getAdminBulkProducts,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const bulkProducts = useMemo(() => {
+    const list = bulkProductsData?.data || bulkProductsData;
+    return Array.isArray(list) ? list : [];
+  }, [bulkProductsData]);
+
+  // Live exchange rate fetch with fallback
+  useEffect(() => {
+    fetch("https://open.er-api.com/v6/latest/USD")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.rates?.INR && typeof d.rates.INR === "number") {
+          setExchangeRate(Number(d.rates.INR.toFixed(2)));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // 1. Invoice & Order Details
   const [invoiceNo, setInvoiceNo] = useState(
     () => `INV-BO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
@@ -49,7 +75,8 @@ export default function AdminBulkInvoiceGenerator() {
   const [paymentMode, setPaymentMode] = useState("Bank Transfer (NEFT/RTGS)");
   const [paymentStatus, setPaymentStatus] = useState("PAID (Settled)");
   const [transactionId, setTransactionId] = useState("UTR: HDFCN26298102391");
-  const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat (State Code: 24)");
+  const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat");
+  const [exchangeRate, setExchangeRate] = useState(86);
 
   // 2. Customer Details
   const [selectedCountryCode, setSelectedCountryCode] = useState("IN");
@@ -142,11 +169,7 @@ export default function AdminBulkInvoiceGenerator() {
             setCustomerState(res.state);
             if (countryCode === "IN") {
               const stateNorm = res.state.toLowerCase();
-              if (stateNorm.includes("madhya") || stateNorm === "mp") {
-                setPlaceOfSupply("Madhya Pradesh (State Code: 23) - Intra-State");
-              } else {
-                setPlaceOfSupply(`${res.state} - Inter-State`);
-              }
+              setPlaceOfSupply(res.state);
             }
           }
           setPostalAutofilled(true);
@@ -174,7 +197,7 @@ export default function AdminBulkInvoiceGenerator() {
     if (opt) {
       setDialCode(opt.dialCode);
       setCustomerCountry(opt.name);
-      setPlaceOfSupply(`${opt.name} (Code 96 - Outside India)`);
+      setPlaceOfSupply(`${opt.name} (Export)`);
     }
     if (customerPostalCode) {
       triggerPostalLookup(customerPostalCode, cCode);
@@ -191,7 +214,7 @@ export default function AdminBulkInvoiceGenerator() {
       setDialCode("+91");
       setPaymentMode("Bank Transfer (NEFT/RTGS)");
       setTransactionId("UTR: HDFCN26298102391");
-      setPlaceOfSupply("Gujarat (State Code: 24)");
+      setPlaceOfSupply("Gujarat");
       setCustomerCountry("India");
       setCustomerCity("Surat");
       setCustomerState("Gujarat");
@@ -236,7 +259,7 @@ export default function AdminBulkInvoiceGenerator() {
       setDialCode("+61");
       setPaymentMode("Online (PayGlocal Gateway)");
       setTransactionId("gl_o-a4ed1da62828d8eaa2xt0l5q8");
-      setPlaceOfSupply("Australia (Code 96 - Outside India)");
+      setPlaceOfSupply("Australia (Export)");
       setCustomerCountry("Australia");
       setCustomerCity("Bowenville");
       setCustomerState("QLD");
@@ -294,6 +317,32 @@ export default function AdminBulkInvoiceGenerator() {
         }
 
         return { ...item, price: newPrice, taxPercent: autoTax };
+      })
+    );
+  };
+
+  // Auto-fill from catalog product
+  const handleSelectCatalogProduct = (itemId, prodId) => {
+    if (!prodId) return;
+    const prod = bulkProducts.find((p) => String(p.id) === String(prodId));
+    if (!prod) return;
+
+    const rawInrPrice = Number(prod.price || 0);
+    const convertedPrice = mode === "international"
+      ? Number((rawInrPrice / (exchangeRate || 86)).toFixed(2))
+      : rawInrPrice;
+
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== itemId) return it;
+        return {
+          ...it,
+          name: prod.name || it.name,
+          desc: prod.description ? `Fabric: ${prod.description}` : it.desc,
+          hsn: prod.hsnCode || it.hsn || "6204",
+          price: convertedPrice,
+          taxPercent: mode === "international" ? (exportTaxRate || 0) : (convertedPrice > APPAREL_THRESHOLD ? 18 : 5),
+        };
       })
     );
   };
@@ -871,7 +920,11 @@ export default function AdminBulkInvoiceGenerator() {
               <input
                 type="text"
                 value={customerState}
-                onChange={(e) => setCustomerState(e.target.value)}
+                onChange={(e) => {
+                    const s = e.target.value;
+                    setCustomerState(s);
+                    if (mode === "domestic") setPlaceOfSupply(s);
+                  }}
                 placeholder="State / Region"
                 className="h-9 w-full min-w-0 rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
@@ -893,7 +946,7 @@ export default function AdminBulkInvoiceGenerator() {
                 type="text"
                 value={placeOfSupply}
                 onChange={(e) => setPlaceOfSupply(e.target.value)}
-                placeholder={mode === "domestic" ? "e.g. Gujarat (State Code: 24)" : "e.g. Australia (Code 96)"}
+                placeholder={mode === "domestic" ? "e.g. Gujarat" : "e.g. Australia (Export)"}
                 className="h-9 w-full min-w-0 rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -987,6 +1040,22 @@ export default function AdminBulkInvoiceGenerator() {
               </label>
             )}
 
+            {mode === "international" && (
+              <div className="flex items-center gap-1.5 bg-muted/40 px-2.5 py-1 rounded-lg border text-xs">
+                <span className="text-muted-foreground font-medium">USD Rate:</span>
+                <span className="font-semibold text-foreground">$1 = Rs.</span>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  value={exchangeRate}
+                  onChange={(e) => setExchangeRate(Number(e.target.value) || 86)}
+                  className="w-16 rounded border bg-background px-1.5 py-0.5 text-xs font-bold text-center"
+                  title="Daily exchange rate for USD price auto-conversion"
+                />
+              </div>
+            )}
+
             <button
               type="button"
               onClick={handleAddItem}
@@ -1022,13 +1091,42 @@ export default function AdminBulkInvoiceGenerator() {
                   <tr key={item.id} className="hover:bg-muted/10">
                     <td className="py-2.5 px-3 font-semibold text-muted-foreground">{idx + 1}</td>
                     <td className="py-2.5 px-3 space-y-1">
-                      <input
-                        type="text"
-                        value={item.name}
-                        onChange={(e) => handleUpdateItem(item.id, "name", e.target.value)}
-                        placeholder="e.g. Cotton T-Shirts"
-                        className="w-full rounded border bg-background px-2 py-1 text-xs font-semibold"
-                      />
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          list="bulk-catalog-list"
+                          value={item.name}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleUpdateItem(item.id, "name", val);
+                            const matched = bulkProducts.find(
+                              (p) => (p.name || "").toLowerCase() === val.trim().toLowerCase()
+                            );
+                            if (matched) {
+                              handleSelectCatalogProduct(item.id, matched.id);
+                            }
+                          }}
+                          placeholder="Type or pick product..."
+                          className="w-full rounded border bg-background px-2 py-1 text-xs font-semibold"
+                        />
+                        {bulkProducts.length > 0 && (
+                          <select
+                            onChange={(e) => {
+                              handleSelectCatalogProduct(item.id, e.target.value);
+                              e.target.value = "";
+                            }}
+                            className="w-36 shrink-0 rounded border bg-background px-1.5 py-1 text-[11px] text-muted-foreground truncate cursor-pointer hover:bg-muted/40"
+                            title="Auto-fill from bulk catalog"
+                          >
+                            <option value="">⚡ Select Catalog...</option>
+                            {bulkProducts.map((bp) => (
+                              <option key={bp.id} value={bp.id}>
+                                {bp.name} (Rs. {bp.price})
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
                       <input
                         type="text"
                         value={item.desc}
@@ -1121,6 +1219,13 @@ export default function AdminBulkInvoiceGenerator() {
               })}
             </tbody>
           </table>
+            <datalist id="bulk-catalog-list">
+              {bulkProducts.map((bp) => (
+                <option key={bp.id} value={bp.name}>
+                  Rs. {bp.price} | HSN {bp.hsnCode || "6204"}
+                </option>
+              ))}
+            </datalist>
         </div>
 
         {/* Live Calculation & Grand Total Breakdown */}

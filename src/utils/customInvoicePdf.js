@@ -167,7 +167,14 @@ export function generateCustomInvoicePdf(data) {
     invDetails.push(["Txn / UTR Ref:", data.transactionId]);
   }
 
-  invDetails.push(["Place of Supply:", data.placeOfSupply || (isExport ? "Outside India (Code 96)" : "State")]);
+  const cleanPlaceOfSupply = data.placeOfSupply
+    ? String(data.placeOfSupply)
+        .replace(/\s*\(Code\s*96\s*-\s*Outside\s*India\)/gi, " (Export)")
+        .replace(/\s*\(State\s*Code:\s*\d+\)/gi, "")
+        .replace(/\s*-\s*(Inter|Intra)-State/gi, "")
+        .trim()
+    : (isExport ? `${data.customer?.country || "Outside India"} (Export)` : (data.customer?.state || "Madhya Pradesh"));
+  invDetails.push(["Place of Supply:", cleanPlaceOfSupply]);
 
   doc.setFontSize(8);
   invDetails.forEach(([label, val]) => {

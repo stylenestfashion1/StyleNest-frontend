@@ -163,7 +163,10 @@ export async function downloadQuickPayInvoicePdf(payment) {
     invDetails.push(["Txn Ref:", payment.payglocalTxnId]);
   }
 
-  invDetails.push(["Place of Supply:", isExport ? `${payment.country || "Outside India"} (Export)` : (payment.state || "Madhya Pradesh")]);
+  const cleanQuickSupply = isExport
+    ? `${(payment.country || "Outside India").replace(/\s*\(Code\s*96\s*-\s*Outside\s*India\)/gi, "").trim()} (Export)`
+    : (payment.state || "Madhya Pradesh").replace(/\s*\(State\s*Code:\s*\d+\)/gi, "").replace(/\s*-\s*(Inter|Intra)-State/gi, "").trim();
+  invDetails.push(["Place of Supply:", cleanQuickSupply]);
 
   doc.setFontSize(8);
   invDetails.forEach(([label, val]) => {
