@@ -203,13 +203,13 @@ export default function InvoiceView({ invoice }) {
           <Row label="Taxable Amount" value={money(invoice.taxableAmount)} />
           {Number(invoice.totalDiscount) > 0 && <Row label="Total Discount" value={money(invoice.totalDiscount)} />}
           {isExport ? (
-            <Row label="Tax (5% Included)" value={money(invoice.igstAmount)} />
+            <Row label="Tax (Included)" value={money(invoice.igstAmount)} />
           ) : invoice.interState ? (
-            <Row label="IGST (5% Included)" value={money(invoice.igstAmount)} />
+            <Row label="IGST (Included)" value={money(invoice.igstAmount)} />
           ) : (
             <>
-              <Row label="CGST (2.5% Incl.)" value={money(invoice.cgstAmount)} />
-              <Row label="SGST (2.5% Incl.)" value={money(invoice.sgstAmount)} />
+              <Row label="CGST (Included)" value={money(invoice.cgstAmount)} />
+              <Row label="SGST (Included)" value={money(invoice.sgstAmount)} />
             </>
           )}
           {Number(invoice.shippingCharge) > 0 && <Row label="Shipping" value={money(invoice.shippingCharge)} />}

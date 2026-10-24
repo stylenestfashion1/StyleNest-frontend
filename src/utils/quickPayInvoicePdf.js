@@ -291,12 +291,12 @@ export async function downloadQuickPayInvoicePdf(payment) {
 
   addAmtRow("Taxable Amount:", taxableStr);
   if (isExport) {
-    addAmtRow("Tax (5% Included):", taxStr);
+    addAmtRow("Tax (Included):", taxStr);
   } else if (isMP) {
-    addAmtRow("CGST (2.5% Incl.):", `Rs. ${(taxAmount / 2).toFixed(2)}`);
-    addAmtRow("SGST (2.5% Incl.):", `Rs. ${(taxAmount / 2).toFixed(2)}`);
+    addAmtRow("CGST (Included):", `Rs. ${(taxAmount / 2).toFixed(2)}`);
+    addAmtRow("SGST (Included):", `Rs. ${(taxAmount / 2).toFixed(2)}`);
   } else {
-    addAmtRow("IGST (5% Included):", `Rs. ${taxAmount.toFixed(2)}`);
+    addAmtRow("IGST (Included):", `Rs. ${taxAmount.toFixed(2)}`);
   }
   addAmtRow("Shipping / Freight:", `${curSymbol}0.00`);
   addAmtRow("Round Off:", `${curSymbol}0.00`);
