@@ -152,13 +152,11 @@ export function generateCustomInvoicePdf(data) {
   doc.text("Invoice & Order Details:", rightX, rightY);
   rightY += 4.5;
 
-  const dateTimeFormatted = data.invoiceDateTime || (
-    data.invoiceTime ? `${data.invoiceDate || ""} ${data.invoiceTime}` : (data.invoiceDate || new Date().toLocaleDateString("en-IN"))
-  );
+  const formattedDate = data.invoiceDate || new Date().toLocaleDateString("en-IN");
 
   const invDetails = [
     ["Invoice No.:", data.invoiceNo || "INV-BO"],
-    ["Date & Time:", dateTimeFormatted],
+    ["Invoice Date:", formattedDate],
     ["Order / Ref No.:", data.orderNo || "SN-BO"],
     ["Payment Mode:", data.paymentMode || "Online (PayGlocal / Bank)"],
   ];

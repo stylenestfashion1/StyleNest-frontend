@@ -18,7 +18,6 @@ import {
   Sparkles,
   Loader2,
   Check,
-  Clock,
   Hash,
 } from "lucide-react";
 import { generateCustomInvoicePdf } from "../../utils/customInvoicePdf";
@@ -64,10 +63,6 @@ export default function AdminBulkInvoiceGenerator() {
   const [invoiceDate, setInvoiceDate] = useState(() => {
     const today = new Date();
     return today.toISOString().split("T")[0];
-  });
-  const [invoiceTime, setInvoiceTime] = useState(() => {
-    const now = new Date();
-    return now.toTimeString().substring(0, 5); // "HH:MM"
   });
   const [orderNo, setOrderNo] = useState(
     () => `SN-BO-${Math.floor(1000 + Math.random() * 9000)}`
@@ -352,7 +347,6 @@ export default function AdminBulkInvoiceGenerator() {
     setInvoiceNo(`INV-BO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
     const today = new Date();
     setInvoiceDate(today.toISOString().split("T")[0]);
-    setInvoiceTime(today.toTimeString().substring(0, 5));
     setOrderNo(`SN-BO-${Math.floor(1000 + Math.random() * 9000)}`);
     setTransactionId("");
     setPaymentStatus("PAID (Settled)");
@@ -567,7 +561,6 @@ export default function AdminBulkInvoiceGenerator() {
         ].filter(Boolean);
 
     const fullPhone = `${dialCode} ${customerPhone}`.trim();
-    const formattedDateTime = `${new Date(invoiceDate).toLocaleDateString("en-IN")}${invoiceTime ? `, ${invoiceTime}` : ""}`;
 
     const payload = {
       isExport: isExp,
@@ -578,8 +571,6 @@ export default function AdminBulkInvoiceGenerator() {
         : `TAX INVOICE (${isMadhyaPradesh ? "INTRA-STATE MP" : "INTER-STATE B2B"})`,
       invoiceNo,
       invoiceDate: new Date(invoiceDate).toLocaleDateString("en-IN"),
-      invoiceTime,
-      invoiceDateTime: formattedDateTime,
       orderNo,
       paymentMode,
       transactionId: transactionId.trim(),
@@ -726,7 +717,6 @@ export default function AdminBulkInvoiceGenerator() {
             </div>
           </div>
 
-          {/* Date & Time Pickers */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-end">
             <div>
               <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground ">Invoice Date</label>
@@ -734,31 +724,6 @@ export default function AdminBulkInvoiceGenerator() {
                 type="date"
                 value={invoiceDate}
                 onChange={(e) => setInvoiceDate(e.target.value)}
-                className="h-9 w-full min-w-0 rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-            <div>
-              <label className="label-xs mb-1.5 flex items-center gap-1.5 h-4 text-muted-foreground ">
-                <Clock className="h-3 w-3 text-primary shrink-0" />
-                <span>Invoice Time</span>
-              </label>
-              <input
-                type="time"
-                value={invoiceTime}
-                onChange={(e) => setInvoiceTime(e.target.value)}
-                className="h-9 w-full min-w-0 rounded-lg border bg-background px-3 text-xs font-mono focus:outline-none focus:ring-1 focus:ring-primary"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 items-end">
-            <div>
-              <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground ">Payment Mode / Gateway</label>
-              <input
-                type="text"
-                value={paymentMode}
-                onChange={(e) => setPaymentMode(e.target.value)}
-                placeholder="e.g. Bank Transfer / UPI / PayGlocal"
                 className="h-9 w-full min-w-0 rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
@@ -774,6 +739,17 @@ export default function AdminBulkInvoiceGenerator() {
                 <option value="PARTIALLY PAID">PARTIALLY PAID</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="label-xs mb-1.5 flex items-center h-4 text-muted-foreground ">Payment Mode / Gateway</label>
+            <input
+              type="text"
+              value={paymentMode}
+              onChange={(e) => setPaymentMode(e.target.value)}
+              placeholder="e.g. Bank Transfer / UPI / PayGlocal"
+              className="h-9 w-full min-w-0 rounded-lg border bg-background px-3 text-xs focus:outline-none focus:ring-1 focus:ring-primary"
+            />
           </div>
 
           {/* Transaction ID / UTR Number */}
