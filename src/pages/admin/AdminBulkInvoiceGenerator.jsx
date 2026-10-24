@@ -347,6 +347,43 @@ export default function AdminBulkInvoiceGenerator() {
     );
   };
 
+  // Reset all fields to clean empty state to fill a fresh invoice from scratch
+  const handleResetForm = () => {
+    setInvoiceNo(`INV-BO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`);
+    const today = new Date();
+    setInvoiceDate(today.toISOString().split("T")[0]);
+    setInvoiceTime(today.toTimeString().substring(0, 5));
+    setOrderNo(`SN-BO-${Math.floor(1000 + Math.random() * 9000)}`);
+    setTransactionId("");
+    setPaymentStatus("PAID (Settled)");
+
+    setCustomerName("");
+    setCustomerCompany("");
+    setCustomerPhone("");
+    setCustomerEmail("");
+    setCustomerAddress("");
+    setCustomerCity("");
+    setCustomerState("");
+    setCustomerPostalCode("");
+    setCustomerGstin("");
+    setPostalAutofilled(false);
+
+    setShippingFee(0);
+    setPlaceOfSupply(mode === "international" && customerCountry ? `${customerCountry} (Export)` : "");
+
+    setItems([
+      {
+        id: String(Date.now()),
+        name: "",
+        desc: "",
+        hsn: "6204",
+        qty: 1,
+        price: 0,
+        taxPercent: mode === "international" ? (exportTaxRate || 0) : 5,
+      },
+    ]);
+  };
+
   const handleAddItem = () => {
     const defaultPrice = mode === "international" ? 10.0 : 400.0;
     const defaultTax = mode === "international" ? 0 : (defaultPrice > APPAREL_THRESHOLD ? 18 : 5);
@@ -1338,11 +1375,12 @@ export default function AdminBulkInvoiceGenerator() {
       <div className="flex flex-wrap items-center justify-end gap-3 border-t pt-4">
         <button
           type="button"
-          onClick={() => handleModeSwitch(mode)}
-          className="btn-outline flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-medium rounded-xl w-full sm:w-auto"
+          onClick={handleResetForm}
+          className="btn-outline flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-medium rounded-xl w-full sm:w-auto hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition cursor-pointer"
+          title="Clear all fields to create a fresh invoice"
         >
           <RefreshCw className="h-3.5 w-3.5" />
-          Reset to Sample Data
+          Reset
         </button>
 
         <button
