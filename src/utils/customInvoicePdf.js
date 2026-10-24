@@ -177,9 +177,11 @@ export function generateCustomInvoicePdf(data) {
 
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...darkSlate);
-    const displayVal = String(val).length > 25 ? String(val).substring(0, 25) + "..." : String(val);
-    doc.text(displayVal, rightX + 32, rightY);
-    rightY += 4;
+    const valStr = String(val || "");
+    const maxValW = (pageWidth - margin) - (rightX + 24);
+    const splitVal = doc.splitTextToSize(valStr, maxValW);
+    doc.text(splitVal, rightX + 24, rightY);
+    rightY += Math.max(4, splitVal.length * 3.4);
   });
 
   y = Math.max(leftBottomY, rightY) + 5;

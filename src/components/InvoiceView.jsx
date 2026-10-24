@@ -104,6 +104,9 @@ export default function InvoiceView({ invoice }) {
             <Row label="Invoice Date" value={formatDate(invoice.invoiceDate)} />
             <Row label="Order No." value={invoice.orderNumber} />
             <Row label="Payment" value={`${invoice.paymentStatus || "-"} (${invoice.paymentMethod || "-"})`} />
+            {invoice.paymentTransactionId && (
+              <Row label="Gateway / Txn ID" value={invoice.paymentTransactionId} />
+            )}
           </dl>
         </div>
       </div>

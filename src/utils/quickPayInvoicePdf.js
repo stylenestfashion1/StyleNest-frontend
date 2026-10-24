@@ -149,10 +149,21 @@ export async function downloadQuickPayInvoicePdf(payment) {
     ["Invoice No.:", `INV-${payment.paymentNumber || "QP"}`],
     ["Invoice Date:", payment.createdAt ? new Date(payment.createdAt).toLocaleDateString("en-IN") : new Date().toLocaleDateString("en-IN")],
     ["Order / Ref No.:", payment.paymentNumber || "—"],
-    ["Payment Mode:", "Online (PayGlocal Gateway)"],
-    ["Gateway ID:", payment.payglocalGid ? (payment.payglocalGid.length > 20 ? payment.payglocalGid.substring(0, 20) + "..." : payment.payglocalGid) : "Settled"],
-    ["Place of Supply:", isExport ? `${payment.country || "Outside India"} (Export)` : (payment.state || "Madhya Pradesh")],
+    ["Payment Mode:", isExport ? "Online (PayGlocal Gateway)" : "Online Gateway"],
   ];
+
+  const gatewayRef = payment.payglocalGid || payment.gatewayId || payment.providerPaymentId;
+  if (gatewayRef) {
+    invDetails.push(["Gateway ID:", gatewayRef]);
+  } else {
+    invDetails.push(["Gateway ID:", "Settled"]);
+  }
+
+  if (payment.payglocalTxnId) {
+    invDetails.push(["Txn Ref:", payment.payglocalTxnId]);
+  }
+
+  invDetails.push(["Place of Supply:", isExport ? `${payment.country || "Outside India"} (Export)` : (payment.state || "Madhya Pradesh")]);
 
   doc.setFontSize(8);
   invDetails.forEach(([label, val]) => {
@@ -162,8 +173,11 @@ export async function downloadQuickPayInvoicePdf(payment) {
 
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...darkSlate);
-    doc.text(val, rightX + 32, rightY);
-    rightY += 4;
+    const valStr = String(val || "");
+    const maxValW = (pageWidth - margin) - (rightX + 24);
+    const splitVal = doc.splitTextToSize(valStr, maxValW);
+    doc.text(splitVal, rightX + 24, rightY);
+    rightY += Math.max(4, splitVal.length * 3.4);
   });
 
   y = Math.max(leftBottomY, rightY) + 4;
@@ -239,7 +253,21 @@ export async function downloadQuickPayInvoicePdf(payment) {
   doc.setFontSize(7.2);
   doc.setTextColor(...textMuted);
   doc.text(`Order & Settlement Ref: ${payment.paymentNumber || ""}`, margin, summaryBoxY + 9.5);
-  doc.text("Payment Status: PAID (Settled)", margin, summaryBoxY + 13.5);
+  
+  let curLeftY = summaryBoxY + 13.5;
+  if (payment.payglocalGid || payment.gatewayId) {
+    const gidLabel = `Gateway GID: ${payment.payglocalGid || payment.gatewayId}`;
+    const splitGid = doc.splitTextToSize(gidLabel, leftBoxW);
+    doc.text(splitGid, margin, curLeftY);
+    curLeftY += splitGid.length * 3.4;
+  }
+  if (payment.payglocalTxnId) {
+    const txnLabel = `Txn ID: ${payment.payglocalTxnId}`;
+    const splitTxn = doc.splitTextToSize(txnLabel, leftBoxW);
+    doc.text(splitTxn, margin, curLeftY);
+    curLeftY += splitTxn.length * 3.4;
+  }
+  doc.text("Payment Status: PAID (Settled)", margin, curLeftY);
 
   // Right: Amounts Breakdown Box
   doc.setFillColor(...lightGrey);
