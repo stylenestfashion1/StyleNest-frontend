@@ -211,43 +211,54 @@ export function generateCustomInvoicePdf(data) {
   ];
 
   items.forEach((item, index) => {
-    const rowY = y;
-    const hasDesc = !!item.desc;
-    const rowH = hasDesc ? 12 : 9;
+    const nameStr = String(item.name || "Item");
+    const descStr = item.desc ? String(item.desc) : "";
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    const splitName = doc.splitTextToSize(nameStr, 67);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.8);
+    const splitDesc = descStr ? doc.splitTextToSize(descStr, 67) : [];
+
+    const nameHeight = splitName.length * 3.6;
+    const descHeight = splitDesc.length > 0 ? (splitDesc.length * 3.1 + 1) : 0;
+    const rowH = Math.max(9, nameHeight + descHeight + 3.8);
 
     doc.setDrawColor(...borderGrey);
-    doc.rect(margin, rowY, contentWidth, rowH, "D");
+    doc.rect(margin, y, contentWidth, rowH, "D");
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...darkSlate);
-    doc.text(String(index + 1), margin + 3, rowY + 5);
+    doc.text(String(index + 1), margin + 3, y + 5);
 
     doc.setFont("helvetica", "bold");
-    const nameStr = String(item.name || "Item");
-    doc.text(nameStr.length > 36 ? nameStr.substring(0, 36) + "..." : nameStr, margin + 12, rowY + 5);
+    doc.setFontSize(8);
+    doc.setTextColor(...darkSlate);
+    doc.text(splitName, margin + 12, y + 4.8);
 
-    if (hasDesc) {
+    if (splitDesc.length > 0) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.8);
       doc.setTextColor(...textMuted);
-      const descStr = String(item.desc);
-      doc.text(descStr.length > 46 ? descStr.substring(0, 46) + "..." : descStr, margin + 12, rowY + 9);
+      doc.text(splitDesc, margin + 12, y + 4.8 + nameHeight);
     }
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...darkSlate);
-    doc.text(String(item.hsn || "6204"), margin + 82, rowY + 5);
-    doc.text(`${item.qty} pcs`, margin + 102, rowY + 5);
+    doc.text(String(item.hsn || "6204"), margin + 82, y + 5);
+    doc.text(`${item.qty} pcs`, margin + 102, y + 5);
 
     const priceNum = Number(item.price || 0);
     const lineTotalNum = Number(item.lineTotal || (item.qty * priceNum));
-    doc.text(`${curSymbol}${priceNum.toFixed(2)}`, margin + 128, rowY + 5, { align: "right" });
-    doc.text(String(item.gstRate || (isExport ? "0% (LUT)" : "5%")), margin + 152, rowY + 5, { align: "right" });
+    doc.text(`${curSymbol}${priceNum.toFixed(2)}`, margin + 128, y + 5, { align: "right" });
+    doc.text(String(item.gstRate || (isExport ? "0% (LUT)" : "5%")), margin + 152, y + 5, { align: "right" });
 
     doc.setFont("helvetica", "bold");
-    doc.text(`${curSymbol}${lineTotalNum.toFixed(2)}`, margin + contentWidth - 3, rowY + 5, { align: "right" });
+    doc.text(`${curSymbol}${lineTotalNum.toFixed(2)}`, margin + contentWidth - 3, y + 5, { align: "right" });
 
     y += rowH;
   });

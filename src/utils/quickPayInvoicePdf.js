@@ -214,12 +214,15 @@ export async function downloadQuickPayInvoicePdf(payment) {
 
   doc.setFont("helvetica", "bold");
   const itemName = payment.note || "Bulk Order";
-  doc.text(itemName, margin + 12, rowY + 5);
+  const splitItemName = doc.splitTextToSize(itemName, 72);
+  doc.text(splitItemName, margin + 12, rowY + 5);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(...textMuted);
-  doc.text(`Settlement Ref: ${payment.paymentNumber} | International Gateway`, margin + 12, rowY + 9.5);
+  const refText = `Settlement Ref: ${payment.paymentNumber} | International Gateway`;
+  const splitRef = doc.splitTextToSize(refText, 72);
+  doc.text(splitRef, margin + 12, rowY + 5 + Math.max(4, splitItemName.length * 3.4));
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
