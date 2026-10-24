@@ -106,8 +106,10 @@ export default function AdminBulkInvoiceGenerator() {
     },
   ]);
 
-  // 4. Shipping Fee
+  // 4. Shipping Fee & Round Off
   const [shippingFee, setShippingFee] = useState(0);
+  const [autoRoundOff, setAutoRoundOff] = useState(false);
+  const [manualRoundOff, setManualRoundOff] = useState(0);
 
   // Check if Customer State is Madhya Pradesh (Intra-State)
   const isMadhyaPradesh = useMemo(() => {
@@ -310,6 +312,8 @@ export default function AdminBulkInvoiceGenerator() {
     setPostalAutofilled(false);
 
     setShippingFee(0);
+    setAutoRoundOff(false);
+    setManualRoundOff(0);
     setPlaceOfSupply(mode === "international" && customerCountry ? `${customerCountry} (Export)` : "");
 
     setItems([
@@ -395,19 +399,31 @@ export default function AdminBulkInvoiceGenerator() {
       }
     });
 
-    const grandTotal = totalGrossAmount + Number(shippingFee || 0);
+    const rawTotal = totalGrossAmount + Number(shippingFee || 0);
+
+    let roundOff = 0;
+    if (autoRoundOff) {
+      const rounded = Math.round(rawTotal);
+      roundOff = Number((rounded - rawTotal).toFixed(2));
+    } else {
+      roundOff = Number(manualRoundOff) || 0;
+    }
+
+    const grandTotal = Math.max(0, rawTotal + roundOff);
 
     return {
       totalQty,
       totalTaxable,
       totalTaxAmount,
       totalGrossAmount,
+      rawTotal,
+      roundOff,
       grandTotal,
       taxByRate,
       curSymbol,
       cur,
     };
-  }, [items, mode, taxInclusive, shippingFee, exportTaxRate]);
+  }, [items, mode, taxInclusive, shippingFee, exportTaxRate, autoRoundOff, manualRoundOff]);
 
   // Download Trigger
   const handleGeneratePdf = () => {
@@ -476,7 +492,13 @@ export default function AdminBulkInvoiceGenerator() {
       summaryLines.push(["Freight / Shipping:", `Rs. ${Number(shippingFee).toFixed(2)}`, false]);
     }
 
-    summaryLines.push(["Round Off:", `${calculations.curSymbol}0.00`, false]);
+    if (autoRoundOff || Math.abs(calculations.roundOff) > 0.0001) {
+      const sign = calculations.roundOff > 0 ? "+" : calculations.roundOff < 0 ? "-" : "";
+      const formattedVal = `${sign}${calculations.curSymbol}${Math.abs(calculations.roundOff).toFixed(2)}`;
+      summaryLines.push(["Round Off:", formattedVal, false]);
+    } else {
+      summaryLines.push(["Round Off:", `${calculations.curSymbol}0.00`, false]);
+    }
     summaryLines.push(["LINE", "", false]);
     summaryLines.push([
       "Grand Total:",
@@ -1272,7 +1294,7 @@ export default function AdminBulkInvoiceGenerator() {
 
             <div className="flex justify-between items-center text-muted-foreground">
               <span>Shipping Fee:</span>
-              <div className="w-24">
+              <div className="w-28">
                 <input
                   type="number"
                   step="any"
@@ -1281,6 +1303,42 @@ export default function AdminBulkInvoiceGenerator() {
                   onChange={(e) => setShippingFee(Number(e.target.value) || 0)}
                   className="w-full text-right rounded border bg-background px-2 py-0.5 text-xs font-mono"
                 />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center text-muted-foreground pt-1">
+              <div className="flex items-center gap-1.5">
+                <span>Round Off:</span>
+                <label className="inline-flex items-center gap-1 cursor-pointer select-none text-[10px] px-1.5 py-0.5 rounded-full bg-muted/80 hover:bg-muted text-foreground transition-colors border border-border/60">
+                  <input
+                    type="checkbox"
+                    checked={autoRoundOff}
+                    onChange={(e) => {
+                      setAutoRoundOff(e.target.checked);
+                      if (e.target.checked) setManualRoundOff(0);
+                    }}
+                    className="h-3 w-3 rounded accent-primary cursor-pointer"
+                  />
+                  <span className="font-semibold uppercase tracking-wider">Auto</span>
+                </label>
+              </div>
+              <div className="w-28">
+                {autoRoundOff ? (
+                  <span className={`block w-full text-right font-mono text-xs font-medium py-0.5 px-2 ${calculations.roundOff !== 0 ? "text-primary" : "text-muted-foreground"}`}>
+                    {calculations.roundOff > 0 ? "+" : calculations.roundOff < 0 ? "-" : ""}
+                    {calculations.curSymbol}{Math.abs(calculations.roundOff).toFixed(2)}
+                  </span>
+                ) : (
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={manualRoundOff === 0 ? "" : manualRoundOff}
+                    onChange={(e) => setManualRoundOff(e.target.value === "" ? 0 : Number(e.target.value))}
+                    className="w-full text-right rounded border bg-background px-2 py-0.5 text-xs font-mono focus:border-primary focus:outline-none"
+                    title="Manual round off adjustment (+ or -)"
+                  />
+                )}
               </div>
             </div>
 
