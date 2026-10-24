@@ -70,56 +70,38 @@ export default function AdminBulkInvoiceGenerator() {
   );
   const [paymentMode, setPaymentMode] = useState("Bank Transfer (NEFT/RTGS)");
   const [paymentStatus, setPaymentStatus] = useState("PAID (Settled)");
-  const [transactionId, setTransactionId] = useState("UTR: HDFCN26298102391");
-  const [placeOfSupply, setPlaceOfSupply] = useState("Gujarat");
+  const [transactionId, setTransactionId] = useState("");
+  const [placeOfSupply, setPlaceOfSupply] = useState("");
   const [exchangeRate, setExchangeRate] = useState(86);
 
-  // 2. Customer Details
+  // 2. Customer Details (Clean & Blank by default for fresh invoice creation)
   const [selectedCountryCode, setSelectedCountryCode] = useState("IN");
   const [dialCode, setDialCode] = useState("+91");
-  const [customerPhone, setCustomerPhone] = useState("9825144321");
-  const [customerName, setCustomerName] = useState("Rajesh Kumar Aggarwal");
-  const [customerCompany, setCustomerCompany] = useState("Aggarwal Garments & Retail Hub");
-  const [customerEmail, setCustomerEmail] = useState("rajesh.aggarwal@aggarwalretail.com");
-  const [customerAddress, setCustomerAddress] = useState("Shop No. 42-44, Millennium Textile Market, Ring Road");
-  const [customerCity, setCustomerCity] = useState("Surat");
-  const [customerState, setCustomerState] = useState("Gujarat");
-  const [customerPostalCode, setCustomerPostalCode] = useState("395002");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerCompany, setCustomerCompany] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerState, setCustomerState] = useState("");
+  const [customerPostalCode, setCustomerPostalCode] = useState("");
   const [customerCountry, setCustomerCountry] = useState("India");
-  const [customerGstin, setCustomerGstin] = useState("24AAACA1234B1Z5");
+  const [customerGstin, setCustomerGstin] = useState("");
 
   // Postal lookup state
   const [postalLookupLoading, setPostalLookupLoading] = useState(false);
   const [postalAutofilled, setPostalAutofilled] = useState(false);
   const lookupTimeoutRef = useRef(null);
 
-  // 3. Line Items
+  // 3. Line Items: 1 fresh empty row ready for admin input or catalog selection
   const [items, setItems] = useState([
     {
       id: "1",
-      name: "Bio-Wash Cotton Round Neck T-Shirts",
-      desc: "Fabric: 100% Combed Cotton 180 GSM",
+      name: "",
+      desc: "",
       hsn: "6109",
       qty: 10,
-      price: 350,
-      taxPercent: 5,
-    },
-    {
-      id: "2",
-      name: "Men's Stretch Lycra Trackpants / Lowers",
-      desc: "Fabric: 4-Way Stretch Lycra, Zipper Pockets",
-      hsn: "6203",
-      qty: 20,
-      price: 450,
-      taxPercent: 5,
-    },
-    {
-      id: "3",
-      name: "Women's Rayon Flared Embroidered Plazos",
-      desc: "Fabric: Heavy Rayon, Premium Stitching",
-      hsn: "6204",
-      qty: 20,
-      price: 500,
+      price: 0,
       taxPercent: 5,
     },
   ]);
@@ -209,44 +191,26 @@ export default function AdminBulkInvoiceGenerator() {
       setSelectedCountryCode("IN");
       setDialCode("+91");
       setPaymentMode("Bank Transfer (NEFT/RTGS)");
-      setTransactionId("UTR: HDFCN26298102391");
-      setPlaceOfSupply("Gujarat");
+      setTransactionId("");
+      setPlaceOfSupply("");
       setCustomerCountry("India");
-      setCustomerCity("Surat");
-      setCustomerState("Gujarat");
-      setCustomerPostalCode("395002");
-      setCustomerPhone("9825144321");
-      setCustomerGstin("24AAACA1234B1Z5");
-      setCustomerName("Rajesh Kumar Aggarwal");
-      setCustomerCompany("Aggarwal Garments & Retail Hub");
-      setCustomerEmail("rajesh.aggarwal@aggarwalretail.com");
-      setCustomerAddress("Shop No. 42-44, Millennium Textile Market, Ring Road");
+      setCustomerCity("");
+      setCustomerState("");
+      setCustomerPostalCode("");
+      setCustomerPhone("");
+      setCustomerGstin("");
+      setCustomerName("");
+      setCustomerCompany("");
+      setCustomerEmail("");
+      setCustomerAddress("");
       setItems([
         {
           id: "1",
-          name: "Bio-Wash Cotton Round Neck T-Shirts",
-          desc: "Fabric: 100% Combed Cotton 180 GSM",
+          name: "",
+          desc: "",
           hsn: "6109",
           qty: 10,
-          price: 350,
-          taxPercent: 5,
-        },
-        {
-          id: "2",
-          name: "Men's Stretch Lycra Trackpants / Lowers",
-          desc: "Fabric: 4-Way Stretch Lycra, Zipper Pockets",
-          hsn: "6203",
-          qty: 20,
-          price: 450,
-          taxPercent: 5,
-        },
-        {
-          id: "3",
-          name: "Women's Rayon Flared Embroidered Plazos",
-          desc: "Fabric: Heavy Rayon, Premium Stitching",
-          hsn: "6204",
-          qty: 20,
-          price: 500,
+          price: 0,
           taxPercent: 5,
         },
       ]);
@@ -254,45 +218,27 @@ export default function AdminBulkInvoiceGenerator() {
       setSelectedCountryCode("AU");
       setDialCode("+61");
       setPaymentMode("Online (PayGlocal Gateway)");
-      setTransactionId("gl_o-a4ed1da62828d8eaa2xt0l5q8");
+      setTransactionId("");
       setPlaceOfSupply("Australia (Export)");
       setCustomerCountry("Australia");
-      setCustomerCity("Bowenville");
-      setCustomerState("QLD");
-      setCustomerPostalCode("4404");
-      setCustomerPhone("417754030");
+      setCustomerCity("");
+      setCustomerState("");
+      setCustomerPostalCode("");
+      setCustomerPhone("");
       setCustomerGstin("");
-      setCustomerName("Wallace Don Sempf");
-      setCustomerCompany("Sempf Apparel & Boutique");
-      setCustomerEmail("wallace.sempf0@bigpond.com");
-      setCustomerAddress("896 Jondaryan-Saint Ruth Rd");
+      setCustomerName("");
+      setCustomerCompany("");
+      setCustomerEmail("");
+      setCustomerAddress("");
       setItems([
         {
           id: "1",
-          name: "Cotton Round Neck Export T-Shirts",
-          desc: "Fabric: 100% Combed Cotton 180 GSM | Export Quality",
+          name: "",
+          desc: "",
           hsn: "6109",
           qty: 10,
-          price: 8.0,
-          taxPercent: 0,
-        },
-        {
-          id: "2",
-          name: "Men's Stretch Lycra Trackpants / Lowers",
-          desc: "Fabric: 4-Way Stretch Lycra, Export Quality",
-          hsn: "6203",
-          qty: 20,
-          price: 6.5,
-          taxPercent: 0,
-        },
-        {
-          id: "3",
-          name: "Women's Rayon Flared Embroidered Plazos",
-          desc: "Fabric: Heavy Rayon, Hand-Embroidered Hemline",
-          hsn: "6204",
-          qty: 20,
-          price: 7.0,
-          taxPercent: 0,
+          price: 0,
+          taxPercent: exportTaxRate || 0,
         },
       ]);
     }
