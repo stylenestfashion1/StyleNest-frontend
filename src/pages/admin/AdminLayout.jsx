@@ -163,6 +163,18 @@ export default function AdminLayout() {
           <button onClick={() => { logout(); navigate("/admin/login", { replace: true }); }} className="label-xs link-underline text-left text-muted-foreground">
             Logout
           </button>
+
+          <div className="mt-4 border-t pt-4 text-[11px] text-muted-foreground">
+            <span>Powered by </span>
+            <a
+              href="https://vyonixtechno.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-foreground transition-colors hover:underline"
+            >
+              Vyonix Techno Pvt. Ltd.
+            </a>
+          </div>
         </nav>
         <div className="min-w-0">
           <Outlet />

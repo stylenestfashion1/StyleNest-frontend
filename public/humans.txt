@@ -1,0 +1,9 @@
+/* TEAM */
+Developer: Vyonix Techno Pvt. Ltd.
+Website: https://vyonixtechno.com/
+Contact: info@vyonixtechno.com
+
+/* SITE */
+Client: StyleNest Fashion
+Language: English
+Doctype: HTML5

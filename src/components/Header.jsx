@@ -482,11 +482,25 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t">
-        <div className="mx-auto flex max-w-[1440px] flex-col gap-2 px-5 py-4 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between md:px-10">
+        <div className="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-4 text-[11px] text-muted-foreground sm:flex-row sm:items-center sm:justify-between md:px-10">
           <p>&copy; 2026 StyleNest Fashion. All rights reserved.</p>
-          <a href="mailto:stylenestfashion1@gmail.com" className="link-underline break-all sm:break-normal">
-            stylenestfashion1@gmail.com
-          </a>
+          <div className="flex flex-wrap items-center gap-4">
+            <p>
+              Designed &amp; Developed by{' '}
+              <a
+                href="https://vyonixtechno.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground transition-colors hover:text-primary hover:underline"
+              >
+                Vyonix Techno Pvt. Ltd.
+              </a>
+            </p>
+            <span className="hidden sm:inline text-muted-foreground/40">•</span>
+            <a href="mailto:stylenestfashion1@gmail.com" className="link-underline break-all sm:break-normal">
+              stylenestfashion1@gmail.com
+            </a>
+          </div>
         </div>
       </div>
     </footer>
