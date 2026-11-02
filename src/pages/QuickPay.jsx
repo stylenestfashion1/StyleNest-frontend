@@ -275,6 +275,27 @@ export default function QuickPay() {
       return;
     }
 
+    if (!addressLine1.trim()) {
+      setError("Please enter your delivery street address.");
+      return;
+    }
+
+    if (!city.trim()) {
+      setError("Please enter your city or suburb.");
+      return;
+    }
+
+    if (!postalCode.trim()) {
+      setError("Please enter your postal / ZIP code.");
+      return;
+    }
+
+    // Auto-clean Australian city typos where state is appended like 'High WycombeWA'
+    let cleanedCity = city.trim();
+    if (selectedCountryCode === "AU") {
+      cleanedCity = cleanedCity.replace(/(wa|vic|nsw|qld|sa|tas|act|nt)$/i, "").trim() || cleanedCity;
+    }
+
     const fullPhoneNumber = `${dialCode} ${cleanPhone}`.trim();
     const countryName = currentCountryConfig.name;
 
@@ -288,11 +309,11 @@ export default function QuickPay() {
         customerName: customerName.trim(),
         customerEmail: customerEmail.trim(),
         customerPhone: fullPhoneNumber,
-        addressLine1: addressLine1.trim() || "International Shipping Address",
+        addressLine1: addressLine1.trim(),
         addressLine2: addressLine2.trim() || "",
-        city: city.trim() || (selectedCountryCode === "GB" ? "London" : "New York"),
-        state: state.trim() || (selectedCountryCode === "GB" ? "England" : "NY"),
-        postalCode: postalCode.trim() || (selectedCountryCode === "GB" ? "SW1A 1AA" : "10001"),
+        city: cleanedCity,
+        state: state.trim() || "",
+        postalCode: postalCode.trim(),
         country: countryName,
       };
 
@@ -446,7 +467,7 @@ export default function QuickPay() {
                         <div className="flex rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition overflow-hidden">
                           <select
                             value={dialCode}
-                            onChange={(e) => setDialCode(e.target.value)}
+                            onChange={(e) => handleDialCodeChange(e.target.value)}
                             className="px-2.5 sm:px-3 py-2.5 bg-muted/60 text-xs sm:text-sm font-semibold text-foreground border-r border-input focus:outline-none cursor-pointer max-w-[110px] sm:max-w-[125px]"
                             title="Select Country Calling Code"
                           >
@@ -462,7 +483,7 @@ export default function QuickPay() {
                             required
                             placeholder={currentCountryConfig.placeholder}
                             value={customerPhone}
-                            onChange={(e) => setCustomerPhone(e.target.value)}
+                            onChange={(e) => handlePhoneChange(e.target.value)}
                             className="flex-1 px-3 py-2.5 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground/60 min-w-0"
                           />
                         </div>
@@ -506,7 +527,7 @@ export default function QuickPay() {
 
                     <div>
                       <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                        Street Address
+                        Street Address *
                       </label>
                       <input
                         type="text"
@@ -564,7 +585,7 @@ export default function QuickPay() {
 
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                          City
+                          City / Suburb *
                         </label>
                         <input
                           type="text"
