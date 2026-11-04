@@ -343,33 +343,33 @@ export default function QuickPay() {
 
   return (
     <PageFade>
-      <div className="py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
+      <div className="py-5 sm:py-12 px-2.5 sm:px-6 lg:px-8 w-full max-w-full">
+        <div className="max-w-5xl mx-auto w-full">
           {/* Header Banner */}
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-4">
-              <ShieldCheck className="h-4 w-4" />
-              Verified International B2B Settlement Portal
+          <div className="text-center max-w-2xl mx-auto mb-5 sm:mb-10 px-1 w-full">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-2.5 sm:mb-4 max-w-full">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">Verified B2B Settlement Portal</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight font-serif">
-              StyleNest Fashion Quick Pay (USD)
+            <h1 className="text-xl sm:text-3xl font-extrabold text-foreground tracking-tight font-serif leading-tight">
+              StyleNest Fashion Quick Pay
             </h1>
-            <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-              Direct checkout for international wholesale orders, custom export batches, and global settlements. Instant, seamless & secure.
+            <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Direct checkout for international wholesale orders, custom export batches, and global settlements.
             </p>
 
             {isPrefilled && (
-              <div className="mt-4 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium">
+              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium text-left">
                 <Sparkles className="h-4 w-4 shrink-0" />
-                Custom export invoice details pre-filled by StyleNest Fashion sales desk
+                <span>Custom export invoice details pre-filled by StyleNest Fashion sales desk</span>
               </div>
             )}
           </div>
 
           {error && (
-            <div className="mb-8 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive flex items-start gap-3">
+            <div className="mb-5 sm:mb-8 p-3 sm:p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive flex items-start gap-2.5 sm:gap-3">
               <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
-              <div className="text-sm">
+              <div className="text-xs sm:text-sm">
                 <p className="font-semibold">Unable to proceed</p>
                 <p className="mt-0.5">{error}</p>
               </div>
@@ -377,27 +377,28 @@ export default function QuickPay() {
           )}
 
           {/* Main Grid: Form Left, Summary Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start w-full">
             {/* Form Section */}
-            <div className="lg:col-span-7 bg-card rounded-2xl border border-border shadow-sm p-6 sm:p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="lg:col-span-7 bg-card rounded-xl sm:rounded-2xl border border-border shadow-sm p-3.5 sm:p-6 lg:p-8 w-full">
+              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                 {/* 1. Payment Details (Fixed USD) */}
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-base font-bold text-foreground flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between items-start gap-2 mb-3">
+                    <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2">
+                      <span className="flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold">
                         1
                       </span>
                       Payment Amount (USD)
                     </h2>
 
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs font-bold tracking-wide">
-                      $ USD (Global Settlement)
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[10px] sm:text-xs font-bold tracking-wide">
+                      <Globe2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 shrink-0" />
+                      <span>USD (Global Settlement)</span>
                     </div>
                   </div>
 
                   <div className="relative">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-muted-foreground font-semibold text-xl">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 sm:pl-4 text-muted-foreground font-semibold text-lg sm:text-xl">
                       $
                     </div>
                     <input
@@ -408,40 +409,40 @@ export default function QuickPay() {
                       placeholder="0.00"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-background text-2xl font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                      className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-3 rounded-xl border border-input bg-background text-lg sm:text-2xl font-bold text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                     />
                   </div>
-                  <p className="mt-1.5 text-xs text-muted-foreground">
+                  <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground">
                     Enter the agreed settlement amount in USD ($).
                   </p>
                 </div>
 
                 {/* Purpose / Remarks */}
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+                  <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                     Order Remarks / Export Invoice Note (Optional)
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g., 50 Pcs Wholesale Kurti / Dress Batch #12, Sample Order"
+                    placeholder="e.g., 50 Pcs Wholesale Kurti / Dress Batch #12"
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                   />
                 </div>
 
                 {/* 2. Customer Information */}
-                <div className="pt-4 border-t border-border">
-                  <h2 className="text-base font-bold text-foreground flex items-center gap-2 mb-4">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                <div className="pt-3.5 sm:pt-4 border-t border-border">
+                  <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2 mb-3">
+                    <span className="flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold">
                       2
                     </span>
                     Customer & Billing Contact
                   </h2>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                         Full Name / Business Name *
                       </label>
                       <input
@@ -450,13 +451,13 @@ export default function QuickPay() {
                         placeholder="e.g. John Doe / Style Traders LLC"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                           Email Address * (For Receipt)
                         </label>
                         <input
@@ -465,20 +466,20 @@ export default function QuickPay() {
                           placeholder="client@company.com"
                           value={customerEmail}
                           onChange={(e) => setCustomerEmail(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                         />
                       </div>
 
                       {/* Phone with International Calling Code Dropdown */}
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                           Phone / WhatsApp Number *
                         </label>
                         <div className="flex rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition overflow-hidden">
                           <select
                             value={selectedCountryCode}
                             onChange={(e) => handleCountryChange(e.target.value)}
-                            className="px-2.5 sm:px-3 py-2.5 bg-muted/60 text-xs sm:text-sm font-semibold text-foreground border-r border-input focus:outline-none cursor-pointer max-w-[110px] sm:max-w-[125px]"
+                            className="px-2 sm:px-3 py-2 sm:py-2.5 bg-muted/60 text-xs sm:text-sm font-semibold text-foreground border-r border-input focus:outline-none cursor-pointer w-[90px] sm:w-[125px] shrink-0"
                             title="Select Country Calling Code"
                           >
                             {COUNTRY_OPTIONS.map((c) => (
@@ -494,7 +495,7 @@ export default function QuickPay() {
                             placeholder={currentCountryConfig.placeholder}
                             value={customerPhone}
                             onChange={(e) => handlePhoneChange(e.target.value)}
-                            className="flex-1 px-3 py-2.5 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground/60 min-w-0"
+                            className="flex-1 px-2.5 sm:px-3 py-2 sm:py-2.5 bg-transparent text-xs sm:text-sm text-foreground focus:outline-none placeholder:text-muted-foreground/60 min-w-0"
                           />
                         </div>
                       </div>
@@ -503,25 +504,25 @@ export default function QuickPay() {
                 </div>
 
                 {/* 3. Address Information */}
-                <div className="pt-4 border-t border-border">
-                  <h2 className="text-base font-bold text-foreground flex items-center gap-2 mb-4">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                <div className="pt-3.5 sm:pt-4 border-t border-border">
+                  <h2 className="text-sm sm:text-base font-bold text-foreground flex items-center gap-2 mb-3">
+                    <span className="flex h-5 w-5 sm:h-6 sm:w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] sm:text-xs font-bold">
                       3
                     </span>
                     Shipping / Billing Address
                   </h2>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 sm:space-y-4">
                     {/* Country Selector Dropdown */}
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                         Destination Country / Territory *
                       </label>
                       <div className="relative">
                         <select
                           value={selectedCountryCode}
                           onChange={(e) => handleCountryChange(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition cursor-pointer appearance-none"
+                          className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition cursor-pointer appearance-none truncate pr-9"
                         >
                           {COUNTRY_OPTIONS.map((c) => (
                             <option key={c.code} value={c.code}>
@@ -529,14 +530,14 @@ export default function QuickPay() {
                             </option>
                           ))}
                         </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-muted-foreground">
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 sm:px-4 text-muted-foreground">
                           <Globe2 className="h-4 w-4" />
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                      <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                         Street Address *
                       </label>
                       <input
@@ -544,15 +545,15 @@ export default function QuickPay() {
                         placeholder="Plot / Street / Suite No."
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                       {/* PIN / ZIP with instant autofetch indicator */}
                       <div className="col-span-2 sm:col-span-1">
                         <div className="flex items-center justify-between mb-1">
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                             {selectedCountryCode === "IN"
                               ? "PIN Code"
                               : selectedCountryCode === "US"
@@ -578,23 +579,23 @@ export default function QuickPay() {
                             }
                             value={postalCode}
                             onChange={handlePostalChange}
-                            className={`w-full px-3 py-2.5 rounded-xl border ${
+                            className={`w-full px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border ${
                               postalAutofilled ? "border-emerald-500/60 bg-emerald-500/5" : "border-input bg-background"
-                            } text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition pr-8`}
+                            } text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition pr-7 sm:pr-8`}
                           />
                           {postalLookupLoading && (
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-muted-foreground">
-                              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-2.5 sm:pr-3 pointer-events-none text-muted-foreground">
+                              <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin text-primary" />
                             </div>
                           )}
                         </div>
-                        <p className="mt-1 text-[11px] text-muted-foreground truncate">
+                        <p className="mt-1 text-[10px] sm:text-[11px] text-muted-foreground truncate">
                           {currentCountryConfig.postalLabel}
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                           City / Suburb *
                         </label>
                         <input
@@ -602,12 +603,12 @@ export default function QuickPay() {
                           placeholder="City / District"
                           value={city}
                           onChange={(e) => setCity(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                          className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                        <label className="block text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
                           State / Region
                         </label>
                         <input
@@ -615,7 +616,7 @@ export default function QuickPay() {
                           placeholder="State / Province"
                           value={state}
                           onChange={(e) => setState(e.target.value)}
-                          className="w-full px-3 py-2.5 rounded-xl border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                          className="w-full px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                         />
                       </div>
                     </div>
@@ -627,24 +628,26 @@ export default function QuickPay() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 px-6 rounded-xl bg-primary text-primary-foreground font-bold text-base shadow-lg hover:shadow-xl hover:bg-primary/95 transition duration-200 flex items-center justify-center gap-3 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                    className="w-full py-3.5 sm:py-4 px-4 sm:px-6 rounded-xl bg-primary text-primary-foreground font-bold text-sm sm:text-base shadow-lg hover:shadow-xl hover:bg-primary/95 transition duration-200 flex items-center justify-center gap-2 sm:gap-3 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                   >
                     {loading ? (
                       <>
-                        <div className="h-5 w-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
-                        Redirecting to PayGlocal Gateway...
+                        <div className="h-4 w-4 sm:h-5 sm:w-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin shrink-0" />
+                        <span>Redirecting to PayGlocal Gateway...</span>
                       </>
                     ) : (
                       <>
-                        <Lock className="h-5 w-5" />
-                        Pay Securely {amount ? `$${parseFloat(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "USD"}
-                        <ArrowRight className="h-5 w-5" />
+                        <Lock className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                        <span className="truncate">
+                          Pay Securely {amount ? `$${parseFloat(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : "USD"}
+                        </span>
+                        <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                       </>
                     )}
                   </button>
 
-                  <div className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                    <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <div className="mt-3 flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground text-center">
+                    <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 shrink-0" />
                     <span>256-Bit SSL Encrypted | PayGlocal Global Gateway</span>
                   </div>
                 </div>
@@ -652,42 +655,42 @@ export default function QuickPay() {
             </div>
 
             {/* Right Summary Section */}
-            <div className="lg:col-span-5 space-y-6">
+            <div className="lg:col-span-5 space-y-4 sm:space-y-6 w-full">
               {/* Settlement Card */}
-              <div className="bg-card rounded-2xl border border-border shadow-sm p-6 sticky top-24">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-4">
+              <div className="bg-card rounded-xl sm:rounded-2xl border border-border shadow-sm p-3.5 sm:p-6 sticky top-20 sm:top-24 w-full">
+                <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3 sm:mb-4">
                   Export Invoice & Settlement Summary
                 </h3>
 
-                <div className="space-y-3 pb-4 border-b border-border">
-                  <div className="flex justify-between items-center text-sm">
+                <div className="space-y-2.5 sm:space-y-3 pb-3 sm:pb-4 border-b border-border">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
                     <span className="text-muted-foreground">Settlement Currency</span>
                     <span className="font-semibold text-foreground">USD ($)</span>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
                     <span className="text-muted-foreground">Destination</span>
                     <span className="font-semibold text-foreground flex items-center gap-1.5">
                       <span>{currentCountryConfig.flag}</span>
                       <span>{currentCountryConfig.name}</span>
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
                     <span className="text-muted-foreground">Remarks</span>
-                    <span className="font-medium text-foreground truncate max-w-[180px]">
+                    <span className="font-medium text-foreground truncate max-w-[150px] sm:max-w-[180px]">
                       {note || "International Wholesale Settlement"}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
+                  <div className="flex justify-between items-center text-xs sm:text-sm">
                     <span className="text-muted-foreground">Gateway Surcharge</span>
                     <span className="text-emerald-600 font-medium">Free (Zero Fees)</span>
                   </div>
                 </div>
 
-                <div className="pt-4 pb-4 border-b border-border">
+                <div className="pt-3 sm:pt-4 pb-3 sm:pb-4 border-b border-border">
                   <div className="flex justify-between items-baseline">
-                    <span className="text-base font-bold text-foreground">Total Payable</span>
+                    <span className="text-sm sm:text-base font-bold text-foreground">Total Payable</span>
                     <div className="text-right">
-                      <span className="text-3xl font-extrabold text-foreground font-serif">
+                      <span className="text-2xl sm:text-3xl font-extrabold text-foreground font-serif">
                         $
                         {amount && !isNaN(amount)
                           ? parseFloat(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -698,38 +701,38 @@ export default function QuickPay() {
                 </div>
 
                 {/* Accepted Cards & Benefits */}
-                <div className="pt-5 space-y-4">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <div className="pt-4 sm:pt-5 space-y-3.5 sm:space-y-4">
+                  <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Accepted Global Payment Methods
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border/60">
-                      <CreditCard className="h-4 w-4 text-primary" />
-                      <span>Visa & Mastercard</span>
+                  <div className="grid grid-cols-2 gap-2 text-[11px] sm:text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/50 border border-border/60">
+                      <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+                      <span className="truncate">Visa & Mastercard</span>
                     </div>
-                    <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 border border-border/60">
-                      <Globe2 className="h-4 w-4 text-primary" />
-                      <span>Amex & Diners</span>
+                    <div className="flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-muted/50 border border-border/60">
+                      <Globe2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary shrink-0" />
+                      <span className="truncate">Amex & Diners</span>
                     </div>
                   </div>
 
-                  <div className="space-y-2.5 pt-2 text-xs text-muted-foreground">
+                  <div className="space-y-2 sm:space-y-2.5 pt-1 sm:pt-2 text-[11px] sm:text-xs text-muted-foreground">
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 shrink-0 mt-0.5" />
                       <span>Official export payment receipt automatically dispatched to your email</span>
                     </div>
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 shrink-0 mt-0.5" />
                       <span>PCI-DSS Level 1 compliant secure checkout powered by PayGlocal</span>
                     </div>
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 shrink-0 mt-0.5" />
                       <span>Immediate batch reconciliation with StyleNest Fashion export desk</span>
                     </div>
                   </div>
 
-                  <div className="pt-4 border-t border-border/60 text-center">
-                    <p className="text-[11px] text-muted-foreground">
+                  <div className="pt-3 sm:pt-4 border-t border-border/60 text-center">
+                    <p className="text-[10px] sm:text-[11px] text-muted-foreground">
                       StyleNest Fashion Pvt. Ltd. | Exports & Wholesale Settlements
                     </p>
                   </div>
