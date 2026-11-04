@@ -50,90 +50,6 @@ export const COUNTRY_OPTIONS = [
   { code: "OTHER", name: "Other Country", dialCode: "+1", flag: "🌐", placeholder: "Contact number", postalLabel: "Postal / ZIP Code" }
 ];
 
-export const SG_DISTRICTS = {
-  "01": { city: "Raffles Place / Marina", state: "Central Singapore" },
-  "02": { city: "Raffles Place / Marina", state: "Central Singapore" },
-  "03": { city: "Raffles Place / Marina", state: "Central Singapore" },
-  "04": { city: "Raffles Place / Marina", state: "Central Singapore" },
-  "05": { city: "Downtown / Marina", state: "Central Singapore" },
-  "06": { city: "Downtown / City Hall", state: "Central Singapore" },
-  "07": { city: "Anson / Tanjong Pagar", state: "Central Singapore" },
-  "08": { city: "Tanjong Pagar / Chinatown", state: "Central Singapore" },
-  "09": { city: "HarbourFront / Telok Blangah", state: "South Singapore" },
-  "10": { city: "HarbourFront / Sentosa", state: "South Singapore" },
-  "11": { city: "Pasir Panjang", state: "South-West Singapore" },
-  "12": { city: "Pasir Panjang / Clementi", state: "South-West Singapore" },
-  "13": { city: "Clementi New Town", state: "West Singapore" },
-  "14": { city: "Queenstown", state: "Central Singapore" },
-  "15": { city: "Queenstown / Tiong Bahru", state: "Central Singapore" },
-  "16": { city: "Tiong Bahru / Bukit Merah", state: "Central Singapore" },
-  "17": { city: "High Street / Beach Road", state: "Central Singapore" },
-  "18": { city: "Middle Road / Bugis", state: "Central Singapore" },
-  "19": { city: "Golden Mile / Bugis", state: "Central Singapore" },
-  "20": { city: "Little India / Farrer Park", state: "Central Singapore" },
-  "21": { city: "Little India / Rochor", state: "Central Singapore" },
-  "22": { city: "Orchard / Somerset", state: "Central Singapore" },
-  "23": { city: "Orchard / River Valley", state: "Central Singapore" },
-  "24": { city: "Tanglin / Grange Road", state: "Central Singapore" },
-  "25": { city: "Tanglin / Botanic Gardens", state: "Central Singapore" },
-  "26": { city: "Bukit Timah / Holland", state: "Central Singapore" },
-  "27": { city: "Holland Village", state: "Central Singapore" },
-  "28": { city: "Watten / Dunearn", state: "Central Singapore" },
-  "29": { city: "Novena", state: "Central Singapore" },
-  "30": { city: "Thomson / Balestier", state: "Central Singapore" },
-  "31": { city: "Toa Payoh", state: "Central Singapore" },
-  "32": { city: "Toa Payoh / Balestier", state: "Central Singapore" },
-  "33": { city: "Serangoon", state: "North-East Singapore" },
-  "34": { city: "Macpherson / Potong Pasir", state: "Central Singapore" },
-  "35": { city: "Macpherson", state: "Central Singapore" },
-  "36": { city: "Aljunied", state: "Central Singapore" },
-  "37": { city: "Aljunied / Macpherson", state: "Central Singapore" },
-  "38": { city: "Geylang", state: "East Singapore" },
-  "39": { city: "Geylang / Mountbatten", state: "East Singapore" },
-  "40": { city: "Geylang / Eunos", state: "East Singapore" },
-  "41": { city: "Eunos / Kembangan", state: "East Singapore" },
-  "42": { city: "Katong / Joo Chiat", state: "East Singapore" },
-  "43": { city: "Katong / Tanjong Rhu", state: "East Singapore" },
-  "44": { city: "Marine Parade", state: "East Singapore" },
-  "45": { city: "Marine Parade / Siglap", state: "East Singapore" },
-  "46": { city: "Bedok", state: "East Singapore" },
-  "47": { city: "Bedok / Upper East Coast", state: "East Singapore" },
-  "48": { city: "Bedok / Eastwood", state: "East Singapore" },
-  "49": { city: "Loyang / Changi", state: "East Singapore" },
-  "50": { city: "Changi / Flora", state: "East Singapore" },
-  "51": { city: "Pasir Ris", state: "East Singapore" },
-  "52": { city: "Tampines", state: "East Singapore" },
-  "53": { city: "Hougang", state: "North-East Singapore" },
-  "54": { city: "Sengkang", state: "North-East Singapore" },
-  "55": { city: "Serangoon Garden", state: "North-East Singapore" },
-  "56": { city: "Bishan", state: "Central Singapore" },
-  "57": { city: "Ang Mo Kio", state: "North-East Singapore" },
-  "58": { city: "Upper Bukit Timah", state: "West Singapore" },
-  "59": { city: "Upper Bukit Timah / Hillview", state: "West Singapore" },
-  "60": { city: "Jurong East", state: "West Singapore" },
-  "61": { city: "Jurong West", state: "West Singapore" },
-  "62": { city: "Jurong West / Boon Lay", state: "West Singapore" },
-  "63": { city: "Jurong / Tuas", state: "West Singapore" },
-  "64": { city: "Jurong / Pioneer", state: "West Singapore" },
-  "65": { city: "Hillview / Bukit Batok", state: "West Singapore" },
-  "66": { city: "Bukit Batok", state: "West Singapore" },
-  "67": { city: "Bukit Panjang", state: "North-West Singapore" },
-  "68": { city: "Choa Chu Kang", state: "North-West Singapore" },
-  "69": { city: "Tengah", state: "West Singapore" },
-  "70": { city: "Lim Chu Kang", state: "North-West Singapore" },
-  "71": { city: "Lim Chu Kang", state: "North-West Singapore" },
-  "72": { city: "Kranji", state: "North Singapore" },
-  "73": { city: "Woodlands", state: "North Singapore" },
-  "75": { city: "Sembawang", state: "North Singapore" },
-  "76": { city: "Yishun", state: "North Singapore" },
-  "77": { city: "Upper Thomson", state: "North Singapore" },
-  "78": { city: "Springleaf", state: "North Singapore" },
-  "79": { city: "Seletar", state: "North-East Singapore" },
-  "80": { city: "Seletar", state: "North-East Singapore" },
-  "81": { city: "Changi Airport", state: "East Singapore" },
-  "82": { city: "Punggol", state: "North-East Singapore" }
-};
-
 export default function QuickPay() {
   const [searchParams] = useSearchParams();
 
@@ -292,14 +208,6 @@ export default function QuickPay() {
       setDialCode(match.dialCode);
     }
 
-    if (newCode === "SG") {
-      setCity("Singapore");
-      setState("Singapore");
-      if (postalCode.trim().length === 6) {
-        setPostalAutofilled(true);
-      }
-    }
-
     if (postalCode.trim().length >= 2) {
       triggerPostalLookup(postalCode.trim(), newCode);
     }
@@ -321,29 +229,10 @@ export default function QuickPay() {
       return;
     }
 
-    // Singapore postal sector lookup (6 digits -> specific town / district)
-    if (countryCode === "SG") {
-      const cleanDigits = clean.replace(/\D/g, "");
-      if (cleanDigits.length === 6) {
-        const sector = cleanDigits.slice(0, 2);
-        const match = SG_DISTRICTS[sector];
-        if (match) {
-          setCity(match.city);
-          setState(match.state);
-        } else {
-          setCity("Singapore");
-          setState("Central Singapore");
-        }
-        setPostalAutofilled(true);
-      } else {
-        setPostalAutofilled(false);
-      }
-      return;
-    }
-
-    // Fast check: US needs 5 digits to trigger
+    // Fast check: length requirements before triggering network lookup
     if (countryCode === "US" && clean.length !== 5) return;
     if (countryCode === "IN" && clean.length !== 6) return;
+    if (countryCode === "SG" && clean.length !== 6) return;
 
     lookupTimeoutRef.current = setTimeout(async () => {
       setPostalLookupLoading(true);
