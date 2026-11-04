@@ -783,13 +783,13 @@ export default function AdminBulkInvoiceGenerator() {
               <div className="h-9 flex rounded-lg border bg-background overflow-hidden focus-within:ring-1 focus-within:ring-primary">
                 {mode === "international" ? (
                   <select
-                    value={dialCode}
-                    onChange={(e) => setDialCode(e.target.value)}
+                    value={selectedCountryCode}
+                    onChange={(e) => handleCountryDropdownChange(e.target.value)}
                     className="h-full px-2 bg-muted/60 text-xs font-semibold text-foreground border-r focus:outline-none cursor-pointer max-w-[100px]"
                     title="Select Calling Code"
                   >
                     {COUNTRY_OPTIONS.map((c) => (
-                      <option key={`${c.code}-${c.dialCode}`} value={c.dialCode}>
+                      <option key={c.code} value={c.code}>
                         {c.flag} {c.dialCode}
                       </option>
                     ))}

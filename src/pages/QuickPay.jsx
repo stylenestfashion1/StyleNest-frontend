@@ -185,17 +185,9 @@ export default function QuickPay() {
     }
   }, [searchParams]);
 
-  // Phone Handlers
+  // Phone Handler
   const handlePhoneChange = (val) => {
     setCustomerPhone(val);
-  };
-
-  const handleDialCodeChange = (newDial) => {
-    setDialCode(newDial);
-    const match = COUNTRY_OPTIONS.find((c) => c.dialCode === newDial && c.code !== "OTHER");
-    if (match && match.code !== selectedCountryCode) {
-      handleCountryChange(match.code);
-    }
   };
 
   // Country Selection Change
@@ -484,13 +476,13 @@ export default function QuickPay() {
                         </label>
                         <div className="flex rounded-xl border border-input bg-background focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition overflow-hidden">
                           <select
-                            value={dialCode}
-                            onChange={(e) => handleDialCodeChange(e.target.value)}
+                            value={selectedCountryCode}
+                            onChange={(e) => handleCountryChange(e.target.value)}
                             className="px-2.5 sm:px-3 py-2.5 bg-muted/60 text-xs sm:text-sm font-semibold text-foreground border-r border-input focus:outline-none cursor-pointer max-w-[110px] sm:max-w-[125px]"
                             title="Select Country Calling Code"
                           >
                             {COUNTRY_OPTIONS.map((c) => (
-                              <option key={`${c.code}-${c.dialCode}`} value={c.dialCode}>
+                              <option key={c.code} value={c.code}>
                                 {c.flag} {c.dialCode} ({c.name})
                               </option>
                             ))}
