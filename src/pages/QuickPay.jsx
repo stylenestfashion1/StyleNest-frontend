@@ -149,6 +149,10 @@ export default function QuickPay() {
       if (detectedCountry) {
         setSelectedCountryCode(detectedCountry.code);
         setDialCode(detectedCountry.dialCode);
+        if (detectedCountry.code === "SG") {
+          if (!pCity) setCity("Singapore");
+          if (!pState) setState("Singapore");
+        }
         hasPre = true;
       }
     }
@@ -181,6 +185,19 @@ export default function QuickPay() {
     }
   }, [searchParams]);
 
+  // Phone Handlers
+  const handlePhoneChange = (val) => {
+    setCustomerPhone(val);
+  };
+
+  const handleDialCodeChange = (newDial) => {
+    setDialCode(newDial);
+    const match = COUNTRY_OPTIONS.find((c) => c.dialCode === newDial && c.code !== "OTHER");
+    if (match && match.code !== selectedCountryCode) {
+      handleCountryChange(match.code);
+    }
+  };
+
   // Country Selection Change
   const handleCountryChange = (newCode) => {
     setSelectedCountryCode(newCode);
@@ -189,6 +206,14 @@ export default function QuickPay() {
     const match = COUNTRY_OPTIONS.find((c) => c.code === newCode);
     if (match && match.code !== "OTHER") {
       setDialCode(match.dialCode);
+    }
+
+    if (newCode === "SG") {
+      setCity("Singapore");
+      setState("Singapore");
+      if (postalCode.trim().length === 6) {
+        setPostalAutofilled(true);
+      }
     }
 
     if (postalCode.trim().length >= 2) {
@@ -209,6 +234,19 @@ export default function QuickPay() {
     }
 
     if (countryCode === "OTHER") {
+      return;
+    }
+
+    // Singapore is a unitary city-state: 6-digit postal code resolves to Singapore
+    if (countryCode === "SG") {
+      const cleanDigits = clean.replace(/\D/g, "");
+      if (cleanDigits.length === 6) {
+        setCity("Singapore");
+        setState("Singapore");
+        setPostalAutofilled(true);
+      } else {
+        setPostalAutofilled(false);
+      }
       return;
     }
 
