@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /account
+Disallow: /orders
+Disallow: /bulk-orders/cart
+Disallow: /bulk-orders/checkout
+Disallow: /special-offer/
+Disallow: /pay
+Disallow: /api/
+
+Sitemap: https://stylenestfashion.com/sitemap.xml
