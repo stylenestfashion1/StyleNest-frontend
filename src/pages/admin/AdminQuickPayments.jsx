@@ -24,9 +24,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  ArrowUpRight
+  ArrowUpRight,
+  Package
 } from "lucide-react";
 import { downloadQuickPayInvoicePdf } from "../../utils/quickPayInvoicePdf";
+import { downloadShippingLabelPdf } from "../../utils/shippingLabelPdf";
 import * as adminApi from "../../api/admin";
 import { formatDate, formatPrice } from "../../utils/format";
 import { StatusPill } from "../../components/StatusPill";
@@ -64,6 +66,7 @@ export default function AdminQuickPayments() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [downloadingLabel, setDownloadingLabel] = useState(false);
 
   const handleCopyAddress = (p) => {
     if (!p) return;
@@ -90,6 +93,19 @@ export default function AdminQuickPayments() {
       notify("Failed to generate invoice PDF");
     } finally {
       setDownloadingInvoice(false);
+    }
+  };
+
+  const handleDownloadShippingLabel = async (p) => {
+    try {
+      setDownloadingLabel(true);
+      downloadShippingLabelPdf(p);
+      notify("Official 4x6 Shipping Label PDF downloaded!");
+    } catch (err) {
+      console.error("Failed to generate shipping label", err);
+      notify("Failed to generate shipping label PDF");
+    } finally {
+      setDownloadingLabel(false);
     }
   };
 
@@ -460,6 +476,18 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                     {/* Actions */}
                     <td className="py-3.5 text-right pr-4 whitespace-nowrap">
                       <div className="inline-flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        {(p.paymentStatus === "PAID" || p.paymentStatus === "SUCCESS") && (
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadShippingLabel(p)}
+                            disabled={downloadingLabel}
+                            className="label-xs flex items-center gap-1 border border-[#9A4D16]/40 bg-[#9A4D16]/10 px-2.5 py-1 text-xs text-[#9A4D16] font-semibold transition-colors hover:bg-[#9A4D16] hover:text-white rounded cursor-pointer"
+                            title="Download 4x6 Shipping Label PDF for this paid order"
+                          >
+                            <Package className="h-3 w-3" />
+                            Label
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => setSelectedPayment(p)}
@@ -740,16 +768,27 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
             {/* Modal Action Footer */}
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t pt-4">
               <div className="flex items-center gap-2">
-                {selectedPayment.paymentStatus === "PAID" && (
-                  <button
-                    type="button"
-                    onClick={() => handleDownloadInvoice(selectedPayment)}
-                    disabled={downloadingInvoice}
-                    className="label-xs flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-white font-medium shadow hover:opacity-95 transition"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    {downloadingInvoice ? "Generating..." : "Download Invoice (PDF)"}
-                  </button>
+                {(selectedPayment.paymentStatus === "PAID" || selectedPayment.paymentStatus === "SUCCESS") && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadInvoice(selectedPayment)}
+                      disabled={downloadingInvoice}
+                      className="label-xs flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-white font-medium shadow hover:opacity-95 transition cursor-pointer"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                      {downloadingInvoice ? "Generating..." : "Download Invoice (PDF)"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadShippingLabel(selectedPayment)}
+                      disabled={downloadingLabel}
+                      className="label-xs flex items-center gap-1.5 rounded-lg bg-[#9A4D16] px-4 py-2 text-white font-medium shadow hover:opacity-95 transition cursor-pointer"
+                    >
+                      <Package className="h-3.5 w-3.5" />
+                      {downloadingLabel ? "Generating..." : "Shipping Label (4×6)"}
+                    </button>
+                  </>
                 )}
 
                 <a

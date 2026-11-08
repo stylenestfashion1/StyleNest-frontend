@@ -225,6 +225,7 @@ export default function QuickPay() {
     if (countryCode === "US" && clean.length !== 5) return;
     if (countryCode === "IN" && clean.length !== 6) return;
     if (countryCode === "SG" && clean.length !== 6) return;
+    if (countryCode === "AU" && clean.length !== 4) return;
 
     lookupTimeoutRef.current = setTimeout(async () => {
       setPostalLookupLoading(true);
@@ -297,6 +298,20 @@ export default function QuickPay() {
 
     if (!postalCode.trim()) {
       setError("Please enter your postal / ZIP code.");
+      return;
+    }
+
+    const AU_STATES = ["nsw", "vic", "qld", "wa", "sa", "tas", "act", "nt", "new south wales", "victoria", "queensland", "western australia", "south australia", "tasmania", "australian capital territory", "northern territory"];
+    const CA_PROVINCES = ["on", "bc", "qc", "ab", "mb", "sk", "ns", "nb", "nl", "pe", "ontario", "quebec", "british columbia", "alberta", "manitoba", "saskatchewan"];
+    const US_STATES = ["al","ak","az","ar","ca","co","ct","de","fl","ga","hi","id","il","in","ia","ks","ky","la","me","md","ma","mi","mn","ms","mo","mt","ne","nv","nh","nj","nm","ny","nc","nd","oh","ok","or","pa","ri","sc","sd","tn","tx","ut","vt","va","wa","wv","wi","wy"];
+
+    const cityLower = city.trim().toLowerCase();
+    if (
+      (selectedCountryCode === "AU" && AU_STATES.includes(cityLower)) ||
+      (selectedCountryCode === "CA" && CA_PROVINCES.includes(cityLower)) ||
+      (selectedCountryCode === "US" && US_STATES.includes(cityLower))
+    ) {
+      setError(`"${city.trim()}" is a state / province abbreviation. Please enter your actual town, city, or suburb name.`);
       return;
     }
 
