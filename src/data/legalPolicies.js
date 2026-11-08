@@ -44,8 +44,8 @@ export const LEGAL_POLICIES = [
         body: "We take reasonable measures to protect information. We retain information for as long as reasonably necessary for the purposes described above, including legal, accounting and dispute-resolution requirements.",
       },
       {
-        heading: "7. Cookies",
-        body: "Our website may use cookies or similar technologies to maintain functionality, remember preferences, understand website usage and improve services. You can manage cookies through your browser settings.",
+        heading: "7. Cookies and Analytics (Google Analytics & Meta Pixel)",
+        body: "Our website uses cookies, web beacons and analytics tools (including Google Analytics 4 and Meta / Facebook Pixel) to maintain site functionality, understand visitor interactions, evaluate marketing campaigns, and enhance our services. You can manage or disable cookies through your browser settings.",
       },
       {
         heading: "8. Contact",
