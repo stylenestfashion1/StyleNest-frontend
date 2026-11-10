@@ -270,25 +270,62 @@ export default function QuickPay() {
       return;
     }
 
-    if (!customerName.trim()) {
-      setError("Please enter your full customer or business name.");
+    // 1. Full Customer Name (First & Last Name required for international customs clearance)
+    const nameWords = customerName.trim().split(/\s+/).filter(Boolean);
+    if (nameWords.length < 2) {
+      setError("Please enter both your First Name and Last Name for international shipping and customs clearance.");
       return;
     }
 
-    if (!customerEmail.trim() || !customerEmail.includes("@")) {
-      setError("Please enter a valid email address for your official receipt.");
+    // 2. Email Address (standard format)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!customerEmail.trim() || !emailRegex.test(customerEmail.trim())) {
+      setError("Please enter a valid email address (e.g. name@example.com) for your official invoice receipt.");
       return;
     }
 
+    // 3. Contact Phone / WhatsApp Number (7 to 15 digits)
     const cleanPhone = customerPhone.trim();
-    if (!cleanPhone || cleanPhone.length < 5) {
-      setError("Please enter a valid contact phone or WhatsApp number.");
+    const phoneDigits = cleanPhone.replace(/\D/g, "");
+    if (!cleanPhone || phoneDigits.length < 7 || phoneDigits.length > 15) {
+      setError("Please enter a valid contact phone or WhatsApp number (7 to 15 digits).");
       return;
     }
 
-    if (!addressLine1.trim()) {
-      setError("Please enter your delivery street address.");
+    // 4. Street Address (Line 1) validation
+    const trimmedAddress1 = addressLine1.trim();
+    if (!trimmedAddress1 || trimmedAddress1.length < 5) {
+      setError("Please enter your complete delivery street address (at least 5 characters).");
       return;
+    }
+
+    // Block obvious junk/placeholder inputs
+    const lowerAddress1 = trimmedAddress1.toLowerCase();
+    const JUNK_ADDRESSES = ["na", "n/a", "none", "test", "nil", "same", "null", "house", "road", "street", "unknown", "xyz"];
+    if (JUNK_ADDRESSES.includes(lowerAddress1)) {
+      setError("Please enter your real physical street address for parcel dispatch.");
+      return;
+    }
+
+    // Block incomplete road addresses like "6680 Rd", "12 Street", "500 Ave" (missing street name)
+    const ROAD_TYPES = new Set([
+      "rd", "road", "st", "street", "ave", "avenue", "dr", "drive", "ln", "lane",
+      "blvd", "boulevard", "ct", "court", "cir", "circle", "way", "hwy", "highway",
+      "pkwy", "parkway", "pl", "place", "sq", "square", "loop", "ter", "terrace"
+    ]);
+
+    const addressTokens = trimmedAddress1
+      .replace(/[,\.#]/g, " ")
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (addressTokens.length <= 2) {
+      const isFirstTokenNumeric = /^\d+[\w-]*$/.test(addressTokens[0]);
+      const isSecondTokenRoadType = addressTokens[1] && ROAD_TYPES.has(addressTokens[1].toLowerCase());
+      if (isFirstTokenNumeric && isSecondTokenRoadType) {
+        setError(`"${trimmedAddress1}" is missing the street/road name. Please enter your complete street address (e.g. 6680 Old Pascagoula Rd).`);
+        return;
+      }
     }
 
     if (!city.trim()) {
@@ -296,8 +333,35 @@ export default function QuickPay() {
       return;
     }
 
-    if (!postalCode.trim()) {
+    // 5. Postal / ZIP Code validation per country
+    const cleanPostal = postalCode.trim();
+    if (!cleanPostal) {
       setError("Please enter your postal / ZIP code.");
+      return;
+    }
+
+    if (selectedCountryCode === "US" && !/^\d{5}(-\d{4})?$/.test(cleanPostal)) {
+      setError("Please enter a valid 5-digit US ZIP code (e.g. 36582 or 36582-1234).");
+      return;
+    }
+    if (selectedCountryCode === "AU" && !/^\d{4}$/.test(cleanPostal)) {
+      setError("Please enter a valid 4-digit Australian postal code (e.g. 2720 or 3000).");
+      return;
+    }
+    if (selectedCountryCode === "IN" && !/^\d{6}$/.test(cleanPostal)) {
+      setError("Please enter a valid 6-digit Indian PIN code (e.g. 452010).");
+      return;
+    }
+    if (selectedCountryCode === "CA" && !/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(cleanPostal)) {
+      setError("Please enter a valid 6-character Canadian postal code (e.g. M5V 2T6).");
+      return;
+    }
+    if (selectedCountryCode === "SG" && !/^\d{6}$/.test(cleanPostal)) {
+      setError("Please enter a valid 6-digit Singapore postal code.");
+      return;
+    }
+    if (selectedCountryCode === "UK" && !/^[A-Za-z]{1,2}\d[A-Za-z\d]? ?\d[A-Za-z]{2}$/i.test(cleanPostal)) {
+      setError("Please enter a valid UK postcode (e.g. SW1A 1AA).");
       return;
     }
 
@@ -463,11 +527,14 @@ export default function QuickPay() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. John Doe / Style Traders LLC"
+                        placeholder="e.g. Rachel Dunn / Style Traders LLC"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
                         className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                       />
+                      <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1">
+                        First and Last Name required for international customs clearance.
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
@@ -557,11 +624,14 @@ export default function QuickPay() {
                       </label>
                       <input
                         type="text"
-                        placeholder="Plot / Street / Suite No."
+                        placeholder="e.g. 14707 Ward Rd (House No. & Full Road Name)"
                         value={addressLine1}
                         onChange={(e) => setAddressLine1(e.target.value)}
                         className="w-full px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-input bg-background text-xs sm:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
                       />
+                      <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1">
+                        Include house/unit number and full road name (e.g. 6680 Old Pascagoula Rd).
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
