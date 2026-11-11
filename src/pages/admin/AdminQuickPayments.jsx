@@ -38,6 +38,32 @@ import { StatusPill } from "../../components/StatusPill";
 import BackButton from "../../components/BackButton";
 import { useToast } from "../../context/ToastContext";
 
+// A "FAILED" quick payment can mean three very different things to the
+// customer-facing story: the bank actually declined the card, the customer
+// backed out themselves on PayGlocal's page, or they never got that far at
+// all before the 20-minute session expired. Only `failureReason` (the raw
+// PayGlocal status, or "EXPIRED" from the abandon scheduler) distinguishes
+// these -- treating them all as "declined by bank" tells the admin to chase
+// a bank issue that was never actually contacted.
+function getFailureDetails(reason) {
+  if (!reason || reason === "EXPIRED") {
+    return {
+      title: "Customer Never Completed Payment",
+      body: "The customer opened the checkout session but never finished entering card details, and it expired automatically after 20 minutes. No bank was ever contacted and nothing was attempted. Share a fresh payment link if they still want to pay.",
+    };
+  }
+  if (reason === "CUSTOMER_CANCELLED") {
+    return {
+      title: "Cancelled by Customer",
+      body: "The customer backed out of PayGlocal's payment page themselves before completing it. Customer was NOT charged.",
+    };
+  }
+  return {
+    title: `Payment Declined by Card Issuing Bank (${reason})`,
+    body: "Customer was NOT charged. International cross-border transactions are often disabled by default in foreign banking apps. Share the retry link or contact them directly via WhatsApp below.",
+  };
+}
+
 export function isAddressIncomplete(p) {
   if (!p) return false;
   const line1 = String(p.addressLine1 || p.address_line1 || "").trim();
@@ -689,17 +715,18 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
               </div>
             )}
 
-            {selectedPayment.paymentStatus === "FAILED" && (
-              <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div className="text-xs">
-                  <p className="font-semibold text-destructive">Payment Declined by Card Issuing Bank (GENERAL_DECLINE)</p>
-                  <p className="text-muted-foreground mt-0.5">
-                    Customer was NOT charged. International cross-border transactions are often disabled by default in foreign banking apps. Share the retry link or contact them directly via WhatsApp below.
-                  </p>
+            {selectedPayment.paymentStatus === "FAILED" && (() => {
+              const { title, body } = getFailureDetails(selectedPayment.failureReason);
+              return (
+                <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div className="text-xs">
+                    <p className="font-semibold text-destructive">{title}</p>
+                    <p className="text-muted-foreground mt-0.5">{body}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {selectedPayment.paymentStatus === "PENDING" && (
               <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3">
