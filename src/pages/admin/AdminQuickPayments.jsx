@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { 
   Copy, 
@@ -25,7 +25,10 @@ import {
   CheckCircle2,
   Clock,
   ArrowUpRight,
-  Package
+  Package,
+  Pencil,
+  Save,
+  RotateCcw
 } from "lucide-react";
 import { downloadQuickPayInvoicePdf } from "../../utils/quickPayInvoicePdf";
 import { downloadShippingLabelPdf } from "../../utils/shippingLabelPdf";
@@ -35,8 +38,59 @@ import { StatusPill } from "../../components/StatusPill";
 import BackButton from "../../components/BackButton";
 import { useToast } from "../../context/ToastContext";
 
+// A "FAILED" quick payment can mean three very different things to the
+// customer-facing story: the bank actually declined the card, the customer
+// backed out themselves on PayGlocal's page, or they never got that far at
+// all before the 20-minute session expired. Only `failureReason` (the raw
+// PayGlocal status, or "EXPIRED" from the abandon scheduler) distinguishes
+// these -- treating them all as "declined by bank" tells the admin to chase
+// a bank issue that was never actually contacted.
+function getFailureDetails(reason) {
+  if (!reason || reason === "EXPIRED") {
+    return {
+      title: "Customer Never Completed Payment",
+      body: "The customer opened the checkout session but never finished entering card details, and it expired automatically after 20 minutes. No bank was ever contacted and nothing was attempted. Share a fresh payment link if they still want to pay.",
+    };
+  }
+  if (reason === "CUSTOMER_CANCELLED") {
+    return {
+      title: "Cancelled by Customer",
+      body: "The customer backed out of PayGlocal's payment page themselves before completing it. Customer was NOT charged.",
+    };
+  }
+  return {
+    title: `Payment Declined by Card Issuing Bank (${reason})`,
+    body: "Customer was NOT charged. International cross-border transactions are often disabled by default in foreign banking apps. Share the retry link or contact them directly via WhatsApp below.",
+  };
+}
+
+export function isAddressIncomplete(p) {
+  if (!p) return false;
+  const line1 = String(p.addressLine1 || p.address_line1 || "").trim();
+  if (!line1 || line1.length < 5) return true;
+
+  const ROAD_TYPES = new Set([
+    "rd", "road", "st", "street", "ave", "avenue", "dr", "drive", "ln", "lane",
+    "blvd", "boulevard", "ct", "court", "cir", "circle", "way", "hwy", "highway",
+    "pkwy", "parkway", "pl", "place", "sq", "square", "loop", "ter", "terrace"
+  ]);
+
+  const tokens = line1.replace(/[,\.#]/g, " ").split(/\s+/).filter(Boolean);
+  if (tokens.length <= 2) {
+    const isFirstNum = /^\d+[\w-]*$/.test(tokens[0]);
+    const isSecondRoad = tokens[1] && ROAD_TYPES.has(tokens[1].toLowerCase());
+    if (isFirstNum && isSecondRoad) return true;
+  }
+  const city = String(p.city || "").trim();
+  const postalCode = String(p.postalCode || p.postal_code || "").trim();
+  const country = String(p.country || "").trim();
+  if (!city || !postalCode || !country) return true;
+  return false;
+}
+
 export default function AdminQuickPayments() {
   const { notify } = useToast();
+  const queryClient = useQueryClient();
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin", "quick-payments"],
     queryFn: adminApi.getAdminQuickPayments,
@@ -67,6 +121,72 @@ export default function AdminQuickPayments() {
   const [copiedAddress, setCopiedAddress] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
   const [downloadingLabel, setDownloadingLabel] = useState(false);
+
+  // Edit Address State inside Modal
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [editAddressForm, setEditAddressForm] = useState({
+    customerName: "",
+    customerPhone: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    state: "",
+    postalCode: "",
+    country: "",
+  });
+
+  const handleStartEditAddress = (p) => {
+    setEditAddressForm({
+      customerName: p.customerName || "",
+      customerPhone: p.customerPhone || "",
+      addressLine1: p.addressLine1 || "",
+      addressLine2: p.addressLine2 || "",
+      city: p.city || "",
+      state: p.state || "",
+      postalCode: p.postalCode || "",
+      country: p.country || "UNITED STATES",
+    });
+    setIsEditingAddress(true);
+  };
+
+  const handleSaveAddress = async (e) => {
+    if (e) e.preventDefault();
+    if (!editAddressForm.addressLine1.trim()) {
+      notify("Street Address Line 1 is required");
+      return;
+    }
+    if (!editAddressForm.city.trim()) {
+      notify("City is required");
+      return;
+    }
+    if (!editAddressForm.postalCode.trim()) {
+      notify("Postal / ZIP code is required");
+      return;
+    }
+    if (!editAddressForm.country.trim()) {
+      notify("Country is required");
+      return;
+    }
+
+    try {
+      setSavingAddress(true);
+      const res = await adminApi.updateAdminQuickPaymentAddress(selectedPayment.paymentNumber, editAddressForm);
+      const updatedData = res?.data?.data || res?.data || editAddressForm;
+      setSelectedPayment((prev) => ({
+        ...prev,
+        ...updatedData,
+      }));
+      queryClient.invalidateQueries({ queryKey: ["admin", "quick-payments"] });
+      setIsEditingAddress(false);
+      notify("Shipping address updated successfully! You can now download the updated label.");
+    } catch (err) {
+      console.error("Failed to update address", err);
+      notify("Failed to update address: " + (err.response?.data?.message || err.message));
+    } finally {
+      setSavingAddress(false);
+    }
+  };
 
   const handleCopyAddress = (p) => {
     if (!p) return;
@@ -449,6 +569,11 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                       <p className="label-xs text-muted-foreground mt-0.5">
                         {[p.city, p.country].filter(Boolean).join(", ") || p.customerEmail || "—"}
                       </p>
+                      {isAddressIncomplete(p) && (
+                        <span className="inline-flex items-center gap-1 mt-1 rounded bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-400" title="Street address appears incomplete (missing road name)">
+                          ⚠️ Incomplete Address
+                        </span>
+                      )}
                     </td>
 
                     {/* Amount & Currency */}
@@ -590,17 +715,18 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
               </div>
             )}
 
-            {selectedPayment.paymentStatus === "FAILED" && (
-              <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-                <div className="text-xs">
-                  <p className="font-semibold text-destructive">Payment Declined by Card Issuing Bank (GENERAL_DECLINE)</p>
-                  <p className="text-muted-foreground mt-0.5">
-                    Customer was NOT charged. International cross-border transactions are often disabled by default in foreign banking apps. Share the retry link or contact them directly via WhatsApp below.
-                  </p>
+            {selectedPayment.paymentStatus === "FAILED" && (() => {
+              const { title, body } = getFailureDetails(selectedPayment.failureReason);
+              return (
+                <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/10 p-3.5 flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+                  <div className="text-xs">
+                    <p className="font-semibold text-destructive">{title}</p>
+                    <p className="text-muted-foreground mt-0.5">{body}</p>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {selectedPayment.paymentStatus === "PENDING" && (
               <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-3">
@@ -668,46 +794,180 @@ Instant payment confirmation and invoice receipt will be sent upon completion. T
                       <MapPin className="h-4 w-4 text-accent" />
                       Shipping Address
                     </h4>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyAddress(selectedPayment)}
-                      className="label-xs flex items-center gap-1 text-accent hover:underline"
-                      title="Copy formatted address for courier"
-                    >
-                      {copiedAddress ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                      {copiedAddress ? "Copied!" : "Copy"}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {!isEditingAddress ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleStartEditAddress(selectedPayment)}
+                            className="label-xs flex items-center gap-1 text-accent hover:underline cursor-pointer"
+                            title="Edit customer shipping address"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            Edit
+                          </button>
+                          <span className="text-muted-foreground">•</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyAddress(selectedPayment)}
+                            className="label-xs flex items-center gap-1 text-accent hover:underline cursor-pointer"
+                            title="Copy formatted address for courier"
+                          >
+                            {copiedAddress ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                            {copiedAddress ? "Copied!" : "Copy"}
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingAddress(false)}
+                          className="label-xs text-muted-foreground hover:underline cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="mt-3 space-y-2">
-                    <div>
-                      <span className="text-muted-foreground block text-[11px]">Street Address</span>
-                      <span className="font-medium text-foreground">
-                        {[selectedPayment.addressLine1, selectedPayment.addressLine2].filter(Boolean).join(", ") || "—"}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
+
+                  {/* Warning banner for incomplete address */}
+                  {!isEditingAddress && isAddressIncomplete(selectedPayment) && (
+                    <div className="mt-3 rounded-lg bg-amber-500/10 border border-amber-500/30 p-2.5 text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
+                      <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                       <div>
-                        <span className="text-muted-foreground block text-[11px]">City</span>
-                        <span className="font-medium">{selectedPayment.city || "—"}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground block text-[11px]">State / Region</span>
-                        <span className="font-medium">{selectedPayment.state || "—"}</span>
+                        <p className="font-semibold">Incomplete Delivery Address</p>
+                        <p className="text-[11px] mt-0.5">
+                          The street address <code className="bg-amber-500/20 px-1 py-0.5 rounded font-mono font-bold">{selectedPayment.addressLine1 || "empty"}</code> appears incomplete (missing road name). Please click <strong>Edit</strong> to correct before generating dispatch labels.
+                        </p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                  )}
+
+                  {/* Edit Form or Read-only Display */}
+                  {isEditingAddress ? (
+                    <form onSubmit={handleSaveAddress} className="mt-3 space-y-2.5 text-xs">
                       <div>
-                        <span className="text-muted-foreground block text-[11px]">Postal / ZIP Code</span>
-                        <span className="inline-block rounded bg-accent/15 px-2 py-0.5 font-mono text-xs font-bold text-accent">
-                          {selectedPayment.postalCode || "—"}
+                        <label className="block text-[11px] font-semibold text-muted-foreground mb-0.5">
+                          Street Address Line 1 *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={editAddressForm.addressLine1}
+                          onChange={(e) => setEditAddressForm({ ...editAddressForm, addressLine1: e.target.value })}
+                          placeholder="e.g. 6680 Old Pascagoula Rd"
+                          className="w-full px-2.5 py-1.5 rounded-lg border bg-background text-xs font-medium focus:ring-1 focus:ring-accent focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-muted-foreground mb-0.5">
+                          Address Line 2 (Apt / Suite / Unit)
+                        </label>
+                        <input
+                          type="text"
+                          value={editAddressForm.addressLine2}
+                          onChange={(e) => setEditAddressForm({ ...editAddressForm, addressLine2: e.target.value })}
+                          placeholder="e.g. Apt 4B (Optional)"
+                          className="w-full px-2.5 py-1.5 rounded-lg border bg-background text-xs font-medium focus:ring-1 focus:ring-accent focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-muted-foreground mb-0.5">City *</label>
+                          <input
+                            type="text"
+                            required
+                            value={editAddressForm.city}
+                            onChange={(e) => setEditAddressForm({ ...editAddressForm, city: e.target.value })}
+                            className="w-full px-2.5 py-1.5 rounded-lg border bg-background text-xs font-medium focus:ring-1 focus:ring-accent focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-muted-foreground mb-0.5">State / Region</label>
+                          <input
+                            type="text"
+                            value={editAddressForm.state}
+                            onChange={(e) => setEditAddressForm({ ...editAddressForm, state: e.target.value })}
+                            className="w-full px-2.5 py-1.5 rounded-lg border bg-background text-xs font-medium focus:ring-1 focus:ring-accent focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-muted-foreground mb-0.5">Postal / ZIP Code *</label>
+                          <input
+                            type="text"
+                            required
+                            value={editAddressForm.postalCode}
+                            onChange={(e) => setEditAddressForm({ ...editAddressForm, postalCode: e.target.value })}
+                            className="w-full px-2.5 py-1.5 rounded-lg border bg-background text-xs font-medium focus:ring-1 focus:ring-accent focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-muted-foreground mb-0.5">Country *</label>
+                          <input
+                            type="text"
+                            required
+                            value={editAddressForm.country}
+                            onChange={(e) => setEditAddressForm({ ...editAddressForm, country: e.target.value.toUpperCase() })}
+                            className="w-full px-2.5 py-1.5 rounded-lg border bg-background text-xs font-medium focus:ring-1 focus:ring-accent focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="pt-2 flex items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingAddress(false)}
+                          disabled={savingAddress}
+                          className="px-3 py-1.5 text-xs rounded border hover:bg-muted transition"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={savingAddress}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded bg-accent text-white font-semibold shadow hover:opacity-95 transition cursor-pointer"
+                        >
+                          <Save className="h-3 w-3" />
+                          {savingAddress ? "Saving..." : "Save Address"}
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    <div className="mt-3 space-y-2">
+                      <div>
+                        <span className="text-muted-foreground block text-[11px]">Street Address</span>
+                        <span className="font-medium text-foreground">
+                          {[selectedPayment.addressLine1, selectedPayment.addressLine2].filter(Boolean).join(", ") || "—"}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-muted-foreground block text-[11px]">Country</span>
-                        <span className="font-medium">{selectedPayment.country || "—"}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-muted-foreground block text-[11px]">City</span>
+                          <span className="font-medium">{selectedPayment.city || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block text-[11px]">State / Region</span>
+                          <span className="font-medium">{selectedPayment.state || "—"}</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <span className="text-muted-foreground block text-[11px]">Postal / ZIP Code</span>
+                          <span className="inline-block rounded bg-accent/15 px-2 py-0.5 font-mono text-xs font-bold text-accent">
+                            {selectedPayment.postalCode || "—"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground block text-[11px]">Country</span>
+                          <span className="font-medium">{selectedPayment.country || "—"}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
