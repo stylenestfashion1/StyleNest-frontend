@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Send, Truck, Download, RefreshCw, XCircle } from "lucide-react";
@@ -23,6 +23,25 @@ export default function AdminOrderDetail() {
   const [downloadingLabel, setDownloadingLabel] = useState(false);
 
   const { data: order, isLoading, isError, refetch } = useQuery({ queryKey: ["admin", "order", id], queryFn: () => adminApi.getAdminOrder(id) });
+
+  // Pre-fill the shipment edit form from the order's real current values --
+  // left at its blank initial state, clicking Update (e.g. just to change
+  // the status dropdown) would submit empty tracking/courier fields and
+  // wipe an already-booked AWB (the backend no longer accepts a blank
+  // overwrite either, but the form shouldn't invite it in the first place).
+  useEffect(() => {
+    if (!order) return;
+    setShipment({
+      shipmentStatus: order.shipmentStatus || "PROCESSING",
+      trackingNumber: order.trackingNumber || "",
+      courierName: order.courierName || "",
+      estimatedDeliveryDate: order.estimatedDeliveryDate || "",
+      // description/location are a free-text note attached to each new
+      // history entry, not a persisted current value -- nothing to pre-fill.
+      description: "",
+      location: "",
+    });
+  }, [order]);
 
   const updateStatus = useMutation({
     mutationFn: (orderStatus) => adminApi.updateOrderStatus(id, { orderStatus }),
