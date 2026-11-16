@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CreditCard, Banknote, ShieldCheck, Lock, ExternalLink } from "lucide-react";
+import { CreditCard, ShieldCheck, Lock, ExternalLink } from "lucide-react";
 import { Reveal, PageFade } from "../../components/Reveal";
 import BackButton from "../../components/BackButton";
 import { placeBulkOrder, initiatePayGlocalPayment } from "../../api/bulk";
@@ -226,7 +226,7 @@ export default function BulkCheckout() {
               {/* PAYMENT METHOD SELECTION */}
               <div className="pt-6 border-t">
                 <h2 className="text-lg font-bold text-foreground mb-3">Wholesale Payment Method</h2>
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3">
                   {/* PayGlocal Option */}
                   <label
                     className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
@@ -254,33 +254,6 @@ export default function BulkCheckout() {
                       <span className="inline-block mt-2 text-[10px] uppercase font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                         Official B2B Gateway
                       </span>
-                    </div>
-                  </label>
-
-                  {/* COD Option */}
-                  <label
-                    className={`flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      paymentMethod === "COD"
-                        ? "border-primary bg-primary/5 shadow-xs"
-                        : "border-border/70 hover:border-foreground/30 bg-card"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="COD"
-                      checked={paymentMethod === "COD"}
-                      onChange={() => setPaymentMethod("COD")}
-                      className="mt-1 accent-primary"
-                    />
-                    <div className="flex-1">
-                      <div className="flex items-center gap-1.5 font-bold text-sm text-foreground">
-                        <Banknote className="h-4 w-4 text-muted-foreground" />
-                        Cash on Delivery
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Pay upon delivery or direct shop arrangement.
-                      </p>
                     </div>
                   </label>
                 </div>
