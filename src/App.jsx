@@ -1,5 +1,7 @@
 import { trackPageView } from "./utils/metaPixel";
-import { lazy, Suspense, useLayoutEffect } from "react";
+import { initClarity } from "./utils/clarity";
+import { initGtm } from "./utils/gtm";
+import { lazy, Suspense, useLayoutEffect, useEffect } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Layout from "./components/Layout";
 import { ProtectedRoute, AdminRoute } from "./components/ProtectedRoute";
@@ -102,6 +104,11 @@ function ScrollToTop() {
 
 function App() {
   const isPaySubdomain = typeof window !== "undefined" && window.location.hostname.startsWith("pay.");
+
+  useEffect(() => {
+    initClarity();
+    initGtm();
+  }, []);
   return (
     <>
       <ScrollToTop />
