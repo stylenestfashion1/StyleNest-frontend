@@ -38,6 +38,11 @@ export const getAllProductJeansCodes = () => client.get("/admin/products/jeans-c
 export const deleteProduct = (id) => client.delete(`/admin/products/${id}`);
 
 export const createCategory = (data) => client.post("/categories", data);
+
+// Marketing Pixels, Feeds, and CAPI Configuration
+export const getMarketingPixels = () => client.get("/admin/marketing/pixels");
+export const updateMarketingPixels = (data) => client.put("/admin/marketing/pixels", data);
+
 export const updateCategory = (id, data) => client.put(`/categories/${id}`, data);
 export const deleteCategory = (id) => client.delete(`/categories/${id}`);
 

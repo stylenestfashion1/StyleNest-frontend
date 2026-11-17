@@ -61,6 +61,7 @@ const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminOrderDetail = lazy(() => import("./pages/admin/AdminOrderDetail"));
 const AdminOrderInvoice = lazy(() => import("./pages/admin/AdminOrderInvoice"));
 const AdminScrollImages = lazy(() => import("./pages/admin/AdminScrollImages"));
+const AdminMarketingPixels = lazy(() => import("./pages/admin/AdminMarketingPixels"));
 const AdminTrending = lazy(() => import("./pages/admin/AdminTrending"));
 const AdminBulkTokens = lazy(() => import("./pages/admin/AdminBulkTokens"));
 const AdminBulkCategories = lazy(() => import("./pages/admin/AdminBulkCategories"));
@@ -108,6 +109,17 @@ function App() {
   useEffect(() => {
     initClarity();
     initGtm();
+
+    // Dynamically bootstrap marketing tags if configured in Admin Panel
+    import("./api/marketing")
+      .then(({ getPublicMarketingPixels }) => getPublicMarketingPixels())
+      .then((pixels) => {
+        if (pixels) {
+          if (pixels.clarityProjectId) initClarity(pixels.clarityProjectId);
+          if (pixels.googleTagManagerId) initGtm(pixels.googleTagManagerId);
+        }
+      })
+      .catch(() => {});
   }, []);
   return (
     <>
@@ -258,6 +270,7 @@ function App() {
             <Route path="orders/:id" element={<AdminOrderDetail />} />
             <Route path="orders/:id/invoice" element={<AdminOrderInvoice />} />
             <Route path="scroll-images" element={<AdminScrollImages />} />
+            <Route path="marketing" element={<AdminMarketingPixels />} />
 
             <Route path="bulk/access-tokens" element={<AdminBulkTokens />} />
             <Route path="bulk/categories" element={<AdminBulkCategories />} />

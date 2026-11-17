@@ -18,6 +18,7 @@ const LINKS = [
   { to: "/admin/categories", label: "Categories", end: false },
   { to: "/admin/trending", label: "Trending", end: false },
   { to: "/admin/scroll-images", label: "ScrollDown Images", end: false },
+  { to: "/admin/marketing", label: "Marketing & Pixels", end: false },
 ];
 
 // A visually separate group, not appended to LINKS -- this is a fully
