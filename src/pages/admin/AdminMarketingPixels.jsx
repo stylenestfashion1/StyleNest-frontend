@@ -19,7 +19,7 @@ import LoadingState from "../../components/LoadingState";
 import ErrorState from "../../components/ErrorState";
 
 const DEFAULT_FORM = {
-  metaPixelId: "2220264888551482",
+  metaPixelId: "1104430832556005",
   metaCapiToken: "",
   googleAnalyticsId: "G-CTCTRH79QC",
   clarityProjectId: "",
@@ -43,7 +43,7 @@ export default function AdminMarketingPixels() {
   useEffect(() => {
     if (config) {
       setForm({
-        metaPixelId: config.metaPixelId || "2220264888551482",
+        metaPixelId: config.metaPixelId || "1104430832556005",
         metaCapiToken: config.metaCapiToken || "",
         googleAnalyticsId: config.googleAnalyticsId || "G-CTCTRH79QC",
         clarityProjectId: config.clarityProjectId || "",
@@ -126,7 +126,7 @@ export default function AdminMarketingPixels() {
               {isCapiConnected ? "Connected" : "Token Needed"}
             </span>
           </div>
-          <p className="mt-2 text-xs font-mono font-medium">Pixel: {form.metaPixelId || "2220264888551482"}</p>
+          <p className="mt-2 text-xs font-mono font-medium">Pixel: {form.metaPixelId || "1104430832556005"}</p>
         </div>
 
         <div className="border border-border/80 bg-background/50 p-3.5 rounded-sm">
@@ -245,7 +245,7 @@ export default function AdminMarketingPixels() {
                     type="text"
                     value={form.metaPixelId}
                     onChange={(e) => setForm({ ...form, metaPixelId: e.target.value })}
-                    placeholder="2220264888551482"
+                    placeholder="1104430832556005"
                     className="w-full bg-background border border-border px-3 py-2 text-xs font-mono rounded-sm focus:border-accent focus:outline-none"
                   />
                   <p className="mt-1 text-[11px] text-muted-foreground">Live in customer browser.</p>
