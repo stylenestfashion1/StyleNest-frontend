@@ -38,6 +38,10 @@ export const REAL_CATEGORY_PRODUCT_IMAGES = {
     image: "https://api.stylenestfashion.com/uploads/products/16240e1a-09e3-4e60-bd90-89e48ab53372.jpg", // Sky Blue Love Heart Graphic T-Shirt
     position: "50% 0%",
   },
+  WINTER_WOMEN: {
+    image: "https://api.stylenestfashion.com/uploads/categories/winter-women.jpg",
+    position: "50% 0%",
+  },
 
   // Men (Official Shopdeck StyleNest hero photography with ample headroom)
   MEN_TSHIRTS: {
@@ -52,6 +56,10 @@ export const REAL_CATEGORY_PRODUCT_IMAGES = {
     image: "https://api.stylenestfashion.com/uploads/products/041939f1-fc14-4026-a73b-01df06c854ea.jpg", // Men's Piped Track Pants with full waistband & headroom
     position: "50% 0%",
   },
+  WINTER_MEN: {
+    image: "https://api.stylenestfashion.com/uploads/categories/winter-men.jpg",
+    position: "50% 0%",
+  },
 };
 
 const KEYWORDS = [
@@ -63,29 +71,53 @@ const KEYWORDS = [
   { test: /jean|denim/i, item: REAL_CATEGORY_PRODUCT_IMAGES.JEANS },
   { test: /plazzo|palazzo|skirt/i, item: REAL_CATEGORY_PRODUCT_IMAGES.PALAZZO },
   { test: /saree/i, item: REAL_CATEGORY_PRODUCT_IMAGES.SUIT },
-  { test: /lower|trouser|pant|track/i, item: REAL_CATEGORY_PRODUCT_IMAGES.MEN_LOWER },
+  { test: /lower|trouser| pant|track/i, item: REAL_CATEGORY_PRODUCT_IMAGES.MEN_LOWER },
+  { test: /winter|hoodie|sweatshirt/i, item: REAL_CATEGORY_PRODUCT_IMAGES.WINTER_WOMEN },
 ];
 
 /**
  * Returns a real, top-quality live product image and position config for the given category name and gender.
  */
 export function getCategoryHeroImageInfo(category, gender) {
-  const catName = typeof category === "string" ? category : category?.name ?? "";
-  const gen = typeof category === "object" && category?.gender ? category.gender : gender;
+  const catObj = typeof category === "object" && category !== null ? category : null;
+  const catName = typeof category === "string" ? category : catObj?.name ?? "";
+  const gen = catObj?.gender ? catObj.gender : gender;
   const isMen = String(gen).toUpperCase() === "MEN";
 
-  // Men vs Women Co-ord sets
+  // 1. Explicit uploaded category or product image attached to category
+  const explicitUrl = catObj?.imageUrl || catObj?.image_url;
+  if (explicitUrl && (explicitUrl.includes("/uploads/categories/") || explicitUrl.includes("/uploads/products/"))) {
+    return {
+      image: explicitUrl,
+      position: "50% 0%",
+    };
+  }
+
+  // 2. Winter / Hoodies / Sweatshirts
+  if (/winter|hoodie|sweatshirt/i.test(catName)) {
+    return isMen ? REAL_CATEGORY_PRODUCT_IMAGES.WINTER_MEN : REAL_CATEGORY_PRODUCT_IMAGES.WINTER_WOMEN;
+  }
+
+  // 3. Men vs Women Co-ord sets
   if (/cordset|co-?ord/i.test(catName)) {
     return isMen ? REAL_CATEGORY_PRODUCT_IMAGES.MEN_CORDSET : REAL_CATEGORY_PRODUCT_IMAGES.WOMEN_CORDSET;
   }
 
-  // Men vs Women T-shirts
+  // 4. Men vs Women T-shirts
   if (/t-?shirt/i.test(catName)) {
     return isMen ? REAL_CATEGORY_PRODUCT_IMAGES.MEN_TSHIRTS : REAL_CATEGORY_PRODUCT_IMAGES.WOMEN_TSHIRTS;
   }
 
   const match = KEYWORDS.find((k) => k.test.test(catName));
   if (match) return match.item;
+
+  // 5. Any other custom URL that isn't the unsplash seed
+  if (explicitUrl && !explicitUrl.includes("unsplash.com")) {
+    return {
+      image: explicitUrl,
+      position: "50% 0%",
+    };
+  }
 
   return isMen ? REAL_CATEGORY_PRODUCT_IMAGES.MEN_TSHIRTS : REAL_CATEGORY_PRODUCT_IMAGES.KURTI;
 }
@@ -94,7 +126,7 @@ export function getCategoryHeroImageInfo(category, gender) {
  * Backward compatible getter for image URL string.
  */
 export function getCategoryHeroImage(category, gender) {
-  const url = typeof category === "string" ? category : category?.imageUrl;
+  const url = typeof category === "string" ? null : (category?.imageUrl || category?.image_url);
   if (url && (url.includes("/uploads/products") || url.includes("/uploads/categories"))) {
     return url;
   }
