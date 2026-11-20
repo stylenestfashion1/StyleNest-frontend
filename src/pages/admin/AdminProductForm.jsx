@@ -294,7 +294,7 @@ export default function AdminProductForm() {
             <option value="">Select category</option>
             {categories?.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.name} ({c.gender})
+                {c.parentName ? `${c.parentName} > ${c.name}` : c.name} ({c.gender})
               </option>
             ))}
           </select>
