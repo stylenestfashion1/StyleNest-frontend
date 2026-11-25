@@ -4,37 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as adminApi from "../../api/admin";
 import * as categoriesApi from "../../api/categories";
 import { formatPrice } from "../../utils/format";
+import { buildProductUpdatePayload } from "../../utils/adminProductPayload";
 import { useToast } from "../../context/ToastContext";
 import BackButton from "../../components/BackButton";
-
-/**
- * Full-object PUT, same shape AdminProductForm sends — the API has no
- * partial-update endpoint, so removing a product from Trending here (without
- * opening its full edit form) reconstructs the same payload from the already
- * -fetched product-list row plus the resolved categoryId.
- */
-function toUpdatePayload(product, categories, overrides) {
-  const categoryId =
-    product.categoryId ??
-    categories?.find((c) => c.slug === product.categorySlug)?.id ??
-    categories?.find((c) => c.name === product.categoryName && (!product.gender || c.gender === product.gender))?.id ??
-    categories?.find((c) => c.name === product.categoryName)?.id ??
-    "";
-  return {
-    name: product.name ?? "",
-    shortDescription: product.shortDescription ?? "",
-    description: product.description ?? "",
-    price: Number(product.price),
-    discountPrice: product.discountPrice ?? null,
-    fabric: product.fabric ?? "",
-    careInstructions: product.careInstructions ?? "",
-    featured: product.featured ?? false,
-    trending: product.trending ?? false,
-    active: product.active ?? true,
-    categoryId: Number(categoryId),
-    ...overrides,
-  };
-}
 
 export default function AdminTrending() {
   const queryClient = useQueryClient();
@@ -45,7 +17,7 @@ export default function AdminTrending() {
   const { data: categories } = useQuery({ queryKey: ["admin", "categories"], queryFn: () => categoriesApi.getCategories() });
 
   const removeFromTrending = useMutation({
-    mutationFn: (product) => adminApi.updateProduct(product.id, toUpdatePayload(product, categories, { trending: false })),
+    mutationFn: (product) => adminApi.updateProduct(product.id, buildProductUpdatePayload(product, categories, { trending: false })),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "products"] });
       notify("Removed from Trending", "success");

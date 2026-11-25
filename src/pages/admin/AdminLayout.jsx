@@ -17,6 +17,7 @@ const LINKS = [
   { to: "/admin/orders", label: "Orders", end: false },
   { to: "/admin/categories", label: "Categories", end: false },
   { to: "/admin/trending", label: "Trending", end: false },
+  { to: "/admin/sale-manager", label: "Sale Manager", end: false },
   { to: "/admin/scroll-images", label: "ScrollDown Images", end: false },
   { to: "/admin/marketing", label: "Marketing & Pixels", end: false },
 ];

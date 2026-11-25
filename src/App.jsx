@@ -64,6 +64,7 @@ const AdminOrderInvoice = lazy(() => import("./pages/admin/AdminOrderInvoice"));
 const AdminScrollImages = lazy(() => import("./pages/admin/AdminScrollImages"));
 const AdminMarketingPixels = lazy(() => import("./pages/admin/AdminMarketingPixels"));
 const AdminTrending = lazy(() => import("./pages/admin/AdminTrending"));
+const AdminSaleManager = lazy(() => import("./pages/admin/AdminSaleManager"));
 const AdminBulkTokens = lazy(() => import("./pages/admin/AdminBulkTokens"));
 const AdminBulkCategories = lazy(() => import("./pages/admin/AdminBulkCategories"));
 const AdminBulkProducts = lazy(() => import("./pages/admin/AdminBulkProducts"));
@@ -268,6 +269,7 @@ function App() {
             <Route path="products/:id/edit" element={<AdminProductForm />} />
             <Route path="categories" element={<AdminCategories />} />
             <Route path="trending" element={<AdminTrending />} />
+            <Route path="sale-manager" element={<AdminSaleManager />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/:id" element={<AdminOrderDetail />} />
             <Route path="orders/:id/invoice" element={<AdminOrderInvoice />} />
