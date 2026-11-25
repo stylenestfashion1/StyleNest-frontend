@@ -1,21 +1,23 @@
-import { useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import * as productsApi from "../api/products";
 import ProductGrid from "../components/ProductGrid";
 import { PageFade, Reveal } from "../components/Reveal";
 
 export default function Sale() {
-  const results = useQueries({
-    queries: ["MEN", "WOMEN"].map((gender) => ({
-      queryKey: ["products", "sale-source", gender],
-      queryFn: () => productsApi.filterProducts({ gender, sizePerPage: 48, active: true, sortBy: "createdAt", direction: "desc" }),
-    })),
+  // Filtered server-side (onSale=true) and fetched in one page large enough
+  // for the whole catalog -- a top-N-newest-per-gender slice (the old
+  // approach) silently dropped any sale item that wasn't recent, which
+  // broke as soon as a gender passed that N.
+  const { data, isLoading } = useQuery({
+    queryKey: ["products", "sale-source"],
+    queryFn: () => productsApi.filterProducts({
+      onSale: true, active: true, sizePerPage: 1000, sortBy: "createdAt", direction: "desc",
+    }),
   });
 
-  const isLoading = results.some((r) => r.isLoading);
-  const saleItems = results
-    .flatMap((r) => r.data?.content ?? [])
-    .filter((p) => p.discountPrice != null && p.discountPrice < p.price)
-    .sort((a, b) => b.price - b.discountPrice - (a.price - a.discountPrice));
+  const saleItems = (data?.content ?? [])
+    .slice()
+    .sort((a, b) => (b.price - b.discountPrice) - (a.price - a.discountPrice));
 
   return (
     <PageFade>

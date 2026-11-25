@@ -20,6 +20,7 @@ import ProductDetails from "./pages/ProductDetails";
 
 // Lazy-loaded secondary shopper routes
 const Sale = lazy(() => import("./pages/Sale"));
+const Winter = lazy(() => import("./pages/Winter"));
 const Trending = lazy(() => import("./pages/Trending"));
 const Editorial = lazy(() => import("./pages/Editorial"));
 const Support = lazy(() => import("./pages/Support"));
@@ -147,6 +148,7 @@ function App() {
             <Route path="products/:id" element={<ProductDetails />} />
             <Route path="search" element={<ProductListing />} />
             <Route path="sale" element={<Sale />} />
+            <Route path="winter" element={<Winter />} />
             <Route path="trending" element={<Trending />} />
             <Route path="editorial" element={<Editorial />} />
             <Route path="support" element={<Support />} />

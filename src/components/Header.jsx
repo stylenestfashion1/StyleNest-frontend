@@ -13,6 +13,10 @@ import * as productsApi from "../api/products";
 const NAV = [
   { label: "Men", to: "/men", gender: "men" },
   { label: "Women", to: "/women", gender: "women" },
+  // One unisex entry, not gender-split -- Winter's Sweatshirts/Hoodies are
+  // sold as one collection regardless of which gender's category they're
+  // filed under in the catalog (see Winter.jsx, which merges both).
+  { label: "Winter", to: "/winter" },
 ];
 
 // Kept separate from NAV (rather than appended to it) so it's easy to spot
@@ -26,6 +30,13 @@ const BULK_ORDERS_LINK = { label: "Bulk Orders", to: "/bulk-orders" };
 // keeps this highlighted for the whole /rental/* section (catalog, item
 // detail, booking flow), not just this landing page.
 const RENTALS_LINK = { label: "Rentals", to: "/rental" };
+
+// Moved out of the main left NAV (rather than appended there) to make room
+// for Winter Men/Winter Women -- six items plus the logo and this no longer
+// fit the left nav column at common laptop widths (1280-1440px) without
+// overlapping the centered wordmark. Still a normal top-level link, just
+// grouped with Bulk Orders/Rentals on the right instead.
+const TRACK_ORDER_LINK = { label: "Track Order", to: "/track-order" };
 
 /**
  * Hide the header on scroll-down, reveal it on scroll-up, and always show it
@@ -152,7 +163,7 @@ export function Header() {
           <Menu className="h-[18px] w-[18px]" />
         </button>
 
-        <nav className="hidden min-w-0 items-center gap-5 xl:gap-7 xl:flex">
+        <nav className="hidden min-w-0 items-center gap-5 xl:gap-4 2xl:gap-7 xl:flex">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -166,9 +177,6 @@ export function Header() {
           <NavLink to="/sale" className={({ isActive }) => `label-xs link-underline whitespace-nowrap ${isActive ? "text-accent" : ""}`}>
             Sale
           </NavLink>
-          <NavLink to="/track-order" className={({ isActive }) => `label-xs link-underline whitespace-nowrap ${isActive ? "text-accent" : ""}`}>
-            Track Order
-          </NavLink>
         </nav>
 
         {/* A proper two-part lockup rather than one flat uppercase line --
@@ -181,12 +189,20 @@ export function Header() {
             the effect above), so Layout's <main> spacing adjusts
             automatically rather than assuming a fixed single-line height. */}
         <Link to="/" className="col-start-2 flex items-center justify-center whitespace-nowrap leading-none group px-1">
-          <span className="font-serif text-[0.78rem] min-[370px]:text-[0.84rem] sm:text-2xl xl:text-2xl font-bold tracking-[0.08em] min-[370px]:tracking-[0.12em] sm:tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
+          <span className="font-serif text-[0.78rem] min-[370px]:text-[0.84rem] sm:text-2xl xl:text-2xl font-bold tracking-[0.08em] min-[370px]:tracking-[0.12em] sm:tracking-[0.22em] xl:tracking-[0.14em] 2xl:tracking-[0.22em] text-accent transition-opacity hover:opacity-90">
             STYLE NEST FASHION
           </span>
         </Link>
 
-        <div className="col-start-3 flex min-w-0 items-center justify-end gap-2.5 sm:gap-3 xl:gap-4">
+        <div className="col-start-3 flex min-w-0 items-center justify-end gap-2.5 sm:gap-3 xl:gap-2.5 2xl:gap-4">
+          <NavLink
+            to={TRACK_ORDER_LINK.to}
+            className={({ isActive }) =>
+              `label-xs link-underline hidden whitespace-nowrap xl:inline ${isActive ? "text-accent" : ""}`
+            }
+          >
+            {TRACK_ORDER_LINK.label}
+          </NavLink>
           <NavLink
             to={BULK_ORDERS_LINK.to}
             className={({ isActive }) =>
@@ -351,7 +367,7 @@ export function Header() {
             </button>
           </div>
           <nav className="flex flex-col gap-6">
-            {[...NAV, { label: "Sale", to: "/sale" }, { label: "Track Order", to: "/track-order" }, BULK_ORDERS_LINK, RENTALS_LINK].map((item) => (
+            {[...NAV, { label: "Sale", to: "/sale" }, TRACK_ORDER_LINK, BULK_ORDERS_LINK, RENTALS_LINK].map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}

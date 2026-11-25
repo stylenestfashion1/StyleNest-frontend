@@ -82,7 +82,7 @@ export default function AdminCategories() {
         <div>
           <span className="label-xs text-muted-foreground">Gender</span>
           <div className="mt-3 flex gap-2">
-            {["MEN", "WOMEN"].map((g) => (
+            {["MEN", "WOMEN", "UNISEX"].map((g) => (
               <button
                 type="button"
                 key={g}
