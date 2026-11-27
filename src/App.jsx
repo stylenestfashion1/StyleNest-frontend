@@ -147,6 +147,10 @@ function App() {
             <Route path="forgot-password" element={<ForgotPassword />} />
             <Route path="products" element={<Navigate to="/trending" replace />} />
             <Route path="products/:id" element={<ProductDetails />} />
+            {/* Google Merchant Center's checkout_link feature: adds a
+                default in-stock variant straight to cart and sends the
+                customer to /checkout, instead of the plain product page. */}
+            <Route path="buy/:id" element={<ProductDetails autoCheckout />} />
             <Route path="search" element={<ProductListing />} />
             <Route path="sale" element={<Sale />} />
             <Route path="winter" element={<Winter />} />

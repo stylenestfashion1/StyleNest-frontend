@@ -22,7 +22,7 @@ import BackButton from "../components/BackButton";
 
 const SECTIONS = ["Details", "Fabric & Care", "Shipping & Returns"];
 
-export default function ProductDetails() {
+export default function ProductDetails({ autoCheckout = false }) {
   const { id: slugOrId } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -66,10 +66,10 @@ export default function ProductDetails() {
   // than 301. See the SEO migration report for what a true 301 would
   // require here.
   useEffect(() => {
-    if (isNumericId && product?.slug) {
+    if (!autoCheckout && isNumericId && product?.slug) {
       navigate(`/products/${product.slug}`, { replace: true });
     }
-  }, [isNumericId, product, navigate]);
+  }, [autoCheckout, isNumericId, product, navigate]);
 
   // Root cause of the "images don't load after clicking a recommended
   // product" bug: React Router reuses this same component instance across
@@ -204,8 +204,74 @@ export default function ProductDetails() {
     addToCart.mutate(undefined, { onSuccess: () => buyNow && navigate("/checkout") });
   }
 
-  if (productQuery.isLoading) return <LoadingState label="Loading product" />;
+  // /buy/:id (Google Merchant's checkout_link) -- adds the first in-stock
+  // variant to cart and goes straight to checkout, qty 1, with no manual
+  // color/size pick. Runs once per mount (autoTriggered guards it even if
+  // this effect re-fires on an unrelated dependency change), and only when
+  // variants have actually finished loading so "no variants yet" doesn't
+  // get misread as "nothing in stock". If nothing is in stock or pricing
+  // isn't available in the current currency, it deliberately does nothing
+  // further -- the component just falls through to the normal product page
+  // below so the customer can see why and pick an alternative themselves.
+  const [autoCheckoutTried, setAutoCheckoutTried] = useState(false);
+
+  useEffect(() => {
+    if (!autoCheckout || autoCheckoutTried || !product || variantsQuery.isLoading) return;
+    setAutoCheckoutTried(true);
+
+    const firstInStock = variants.find((v) => v.stock > 0);
+    if (!firstInStock || !activePrice) return;
+
+    const unitPrice = activePrice.discountPrice ?? activePrice.regularPrice;
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      category: product.categoryName || product.category?.name,
+      price: unitPrice,
+      quantity: 1,
+      currency,
+    });
+
+    if (!isAuthenticated) {
+      guestCart.addItem(
+        {
+          productVariantId: firstInStock.id,
+          productId: product.id,
+          productName: product.name,
+          color: firstInStock.color,
+          size: firstInStock.size,
+          price: unitPrice,
+          stock: firstInStock.stock,
+          imageUrl: variants.find((v) => v.color === firstInStock.color)?.images?.[0]?.imageUrl ?? product.thumbnailUrl,
+        },
+        1
+      );
+      window.dispatchEvent(new Event("stylenest:cart-bump"));
+      navigate("/checkout");
+      return;
+    }
+
+    cartApi
+      .addToCart({ productVariantId: firstInStock.id, quantity: 1, currency })
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ["cart"] });
+        queryClient.invalidateQueries({ queryKey: ["checkout"] });
+        window.dispatchEvent(new Event("stylenest:cart-bump"));
+        navigate("/checkout");
+      })
+      .catch((err) => notify(err.message, "error"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoCheckout, autoCheckoutTried, product, variants, variantsQuery.isLoading, activePrice, isAuthenticated, currency]);
+
+  if (productQuery.isLoading) {
+    return <LoadingState label={autoCheckout ? "Preparing checkout" : "Loading product"} />;
+  }
   if (productQuery.isError || !product) return <ErrorState message="Product not found." />;
+  // Only once we know the product itself resolved -- an actual fetch
+  // error above must still reach ErrorState, never get stuck behind this.
+  if (autoCheckout && !autoCheckoutTried) {
+    return <LoadingState label="Preparing checkout" />;
+  }
 
   const hasDiscount = activePrice?.discountPrice != null && activePrice.discountPrice < activePrice.regularPrice;
   const outOfStock = activeVariant && activeVariant.stock <= 0;
